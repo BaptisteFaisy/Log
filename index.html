@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log — Console de test d'erreurs</title>
+  <meta name="description" content="Déclenchez et visualisez des logs d'erreur en un clic." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0b0f'/%3E%3Cpath d='M10 8v13h12' stroke='%23ff5c5c' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">L</span>
+      <div>
+        <strong>Log</strong>
+        <span class="brand-sub">Console de test d'erreurs</span>
+      </div>
+    </div>
+    <div class="status"><span class="dot"></span> En ligne</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Environnement de test</p>
+      <h1>Provoquez une erreur,<br /><span>observez le log.</span></h1>
+      <p class="lede">
+        Un clic génère une erreur réelle côté navigateur, capturée par le handler global
+        et affichée ci-dessous avec sa pile d'appels.
+      </p>
+
+      <div class="actions">
+        <button id="fire" class="btn btn-primary" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13l0-8Z"/></svg>
+          Lancer un log d'erreur
+        </button>
+        <button id="copy" class="btn" type="button">Copier</button>
+        <button id="clear" class="btn" type="button">Vider</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span id="count">0</span><small>logs</small></div>
+        <div class="stat"><span id="last">—</span><small>dernier événement</small></div>
+        <div class="stat"><span>1</span><small>source : navigateur</small></div>
+      </div>
+    </section>
+
+    <section class="console" aria-live="polite">
+      <div class="console-head">
+        <div class="console-title">
+          <span class="traffic"><i></i><i></i><i></i></span>
+          logs — session courante
+        </div>
+        <span id="clock" class="clock">--:--:--</span>
+      </div>
+      <div id="list" class="console-body">
+        <div class="empty" id="empty">
+          <p>Aucun log pour l'instant.</p>
+          <span>Cliquez sur « Lancer un log d'erreur » pour commencer.</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Log</span>
+    <span>HTML · CSS · JavaScript · déployé sur Vercel</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
