@@ -210,3 +210,47 @@ addEntry(
   "Session initialisée · handlers error et unhandledrejection actifs",
   `runtime navigateur · ${navigator.platform || "web"}`
 );
+
+const brandLogo = document.getElementById("brandLogo");
+if (brandLogo) {
+  const markEmpty = () => brandLogo.parentElement.classList.add("is-empty");
+  brandLogo.addEventListener("error", markEmpty);
+  if (brandLogo.complete && brandLogo.naturalWidth === 0) markEmpty();
+}
+
+const spotlight = document.querySelector(".spotlight");
+if (spotlight && window.matchMedia("(pointer: fine)").matches) {
+  let targetX = window.innerWidth * 0.5;
+  let targetY = window.innerHeight * 0.22;
+  let currentX = targetX;
+  let currentY = targetY;
+  let raf = null;
+
+  const paint = () => {
+    spotlight.style.setProperty("--mx", `${currentX}px`);
+    spotlight.style.setProperty("--my", `${currentY}px`);
+    currentX += (targetX - currentX) * 0.18;
+    currentY += (targetY - currentY) * 0.18;
+    if (Math.abs(targetX - currentX) > 0.5 || Math.abs(targetY - currentY) > 0.5) {
+      raf = requestAnimationFrame(paint);
+    } else {
+      raf = null;
+    }
+  };
+
+  window.addEventListener(
+    "pointermove",
+    (event) => {
+      targetX = event.clientX;
+      targetY = event.clientY;
+      if (raf === null) raf = requestAnimationFrame(paint);
+    },
+    { passive: true }
+  );
+
+  document.documentElement.addEventListener("mouseleave", () => {
+    targetX = window.innerWidth * 0.5;
+    targetY = window.innerHeight * 0.22;
+    if (raf === null) raf = requestAnimationFrame(paint);
+  });
+}
