@@ -9,9 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="logo.png" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 </head>
-<body data-bg="gloss">
+<body data-bg="halo">
   <div class="bg-stage" aria-hidden="true">
     <canvas id="warp" data-warp></canvas>
     <div class="veil"></div>
@@ -31,7 +32,7 @@
     </div>
   </header>
 
-  <main class="shell">
+  <main class="workspace">
     <section class="terminal" aria-label="Terminal de logs">
       <header class="term-head">
         <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -52,6 +53,29 @@
         </span>
       </footer>
     </section>
+
+    <aside class="agents" aria-label="Agents de correction">
+      <header class="agents-head">
+        <div class="agents-titles">
+          <strong>agents</strong>
+          <span>surveillance des erreurs</span>
+        </div>
+        <span id="agentCount" class="agents-count">0 actif</span>
+      </header>
+
+      <div id="agentList" class="agents-body">
+        <div id="agentsEmpty" class="agents-empty">
+          <span class="agents-empty-orb" aria-hidden="true"></span>
+          <p>aucun agent</p>
+          <span>en attente d'incident</span>
+        </div>
+      </div>
+
+      <footer class="agents-foot">
+        <span class="dotline" aria-hidden="true"></span>
+        <span id="agentFoot">veille active · 0 erreur</span>
+      </footer>
+    </aside>
   </main>
 
   <script src="bg.js"></script>

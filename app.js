@@ -4,12 +4,19 @@ const statusEl = document.getElementById("status");
 const clockEl = document.getElementById("clock");
 const fireBtn = document.getElementById("fire");
 
+const agentList = document.getElementById("agentList");
+const agentsEmpty = document.getElementById("agentsEmpty");
+const agentCount = document.getElementById("agentCount");
+const agentFoot = document.getElementById("agentFoot");
+
 const MAX_ROWS = 160;
+const MAX_AGENTS = 3;
+const AGENT_STEPS = ["analyse", "correctif", "vérification", "prêt"];
 
 const state = {
-  rows: 0,
   scenario: 0,
-  trace: 0,
+  errors: 0,
+  agents: [],
 };
 
 const pad = (n, size = 2) => String(n).padStart(size, "0");
@@ -64,7 +71,6 @@ function addRow(level, text) {
 
   row.append(time, lvl, msg);
 
-  state.rows += 1;
   stream.append(row);
 
   while (stream.childElementCount > MAX_ROWS) {
@@ -73,8 +79,119 @@ function addRow(level, text) {
 
   scrollDown(false);
   refreshCount();
-  setStatus(level === "err" ? "erreur" : "flux actif");
   return row;
+}
+
+/* ------------------------------------------------------------------ */
+/* Panneau agents                                                      */
+/* ------------------------------------------------------------------ */
+
+function updateAgentsMeta() {
+  const running = state.agents.filter((a) => a.state !== "done").length;
+  agentCount.textContent = `${running} actif${running > 1 ? "s" : ""}`;
+  agentCount.dataset.busy = running > 0 ? "true" : "false";
+  agentsEmpty.hidden = state.agents.length > 0;
+  agentFoot.textContent = `veille active · ${state.errors} erreur${state.errors > 1 ? "s" : ""}`;
+}
+
+function agentSlug(code) {
+  return code.toLowerCase().replace(/^err_/, "").replace(/_/g, "-");
+}
+
+function createAgent(code, trace, error) {
+  const slug = agentSlug(code);
+  const card = document.createElement("article");
+  card.className = "agent-card";
+  card.dataset.state = "run";
+
+  const top = document.createElement("div");
+  top.className = "agent-top";
+
+  const orb = document.createElement("span");
+  orb.className = "agent-orb";
+  orb.append(document.createElement("i"));
+
+  const meta = document.createElement("div");
+  meta.className = "agent-meta";
+
+  const name = document.createElement("strong");
+  name.className = "agent-name";
+  name.textContent = `agent/fix-${slug}`;
+
+  const sub = document.createElement("span");
+  sub.className = "agent-code";
+  sub.textContent = `${code} · ${trace}`;
+
+  meta.append(name, sub);
+
+  const stateEl = document.createElement("span");
+  stateEl.className = "agent-state";
+  stateEl.textContent = AGENT_STEPS[0];
+
+  top.append(orb, meta, stateEl);
+
+  const bars = document.createElement("div");
+  bars.className = "agent-bars";
+  const segments = AGENT_STEPS.map(() => {
+    const seg = document.createElement("span");
+    seg.dataset.on = "false";
+    bars.append(seg);
+    return seg;
+  });
+
+  const log = document.createElement("div");
+  log.className = "agent-log";
+  const logTag = document.createElement("b");
+  logTag.textContent = "err";
+  const logText = document.createElement("span");
+  logText.textContent = `${code} · ${error.message || String(error)}`;
+  log.append(logTag, logText);
+
+  card.append(top, bars, log);
+  agentList.prepend(card);
+
+  const entry = { node: card, state: "run", timers: [] };
+  state.agents.unshift(entry);
+
+  while (state.agents.length > MAX_AGENTS) {
+    const removed = state.agents.pop();
+    removed.timers.forEach(clearTimeout);
+    removed.node.remove();
+  }
+
+  segments[0].dataset.on = "run";
+  updateAgentsMeta();
+  addRow("inf", `agent/fix-${slug} créé · ${code} · ${trace}`);
+
+  let step = 0;
+
+  const advance = () => {
+    segments[step].dataset.on = "true";
+    step += 1;
+
+    if (step >= AGENT_STEPS.length) {
+      finish();
+      return;
+    }
+
+    segments[step].dataset.on = "run";
+    stateEl.textContent = AGENT_STEPS[step];
+    entry.timers.push(setTimeout(advance, 900 + Math.random() * 700));
+  };
+
+  const finish = () => {
+    entry.state = "done";
+    card.dataset.state = "done";
+    stateEl.textContent = "prêt";
+    logTag.textContent = "ok";
+    logText.textContent = `patch appliqué · tests 12/12 · ${code}`;
+    addRow("ok", `patch appliqué · ${code} · tests 12/12`);
+    setStatus("correctif prêt");
+    updateAgentsMeta();
+  };
+
+  entry.timers.push(setTimeout(advance, 900));
+  setStatus("agent en cours");
 }
 
 /* ------------------------------------------------------------------ */
@@ -83,10 +200,11 @@ function addRow(level, text) {
 
 function addErrorCard(error, code) {
   const trace = randomId();
-  state.trace = trace;
+  state.errors += 1;
 
   const card = document.createElement("article");
   card.className = "card card-error";
+  card.dataset.fresh = "true";
 
   const head = document.createElement("div");
   head.className = "card-head";
@@ -125,23 +243,13 @@ function addErrorCard(error, code) {
   const actions = document.createElement("div");
   actions.className = "card-actions";
 
-  const agentBtn = document.createElement("button");
-  agentBtn.type = "button";
-  agentBtn.className = "btn btn-sm btn-primary";
-  agentBtn.textContent = "Créer un agent";
-
   const copyBtn = document.createElement("button");
   copyBtn.type = "button";
   copyBtn.className = "btn btn-sm btn-ghost";
   copyBtn.textContent = "Copier la trace";
 
-  actions.append(agentBtn, copyBtn);
+  actions.append(copyBtn);
   card.append(actions);
-
-  agentBtn.addEventListener("click", () => {
-    agentBtn.remove();
-    addAgentCard(trace, code);
-  });
 
   copyBtn.addEventListener("click", async () => {
     const text = `[${code}] ${error.name}: ${error.message}\n${error.stack || ""}`;
@@ -155,142 +263,16 @@ function addErrorCard(error, code) {
   });
 
   stream.append(card);
-  state.rows += 1;
   scrollDown(true);
   refreshCount();
-  setStatus("erreur · agent disponible");
-}
+  setStatus("erreur détectée");
+  updateAgentsMeta();
 
-/* ------------------------------------------------------------------ */
-/* Agent                                                               */
-/* ------------------------------------------------------------------ */
+  setTimeout(() => {
+    card.dataset.fresh = "false";
+  }, 2000);
 
-const STEPS = [
-  "Lecture de la pile d'appels",
-  "Reproduction en sandbox",
-  "Génération du correctif",
-  "Vérification des tests",
-];
-
-function addAgentCard(trace, code) {
-  const card = document.createElement("article");
-  card.className = "card card-agent";
-
-  const head = document.createElement("div");
-  head.className = "card-head";
-
-  const orb = document.createElement("span");
-  orb.className = "orb";
-
-  const titles = document.createElement("div");
-  titles.className = "card-titles";
-  const name = document.createElement("strong");
-  name.textContent = "agent/fix-null-payload";
-  const sub = document.createElement("span");
-  sub.className = "card-sub";
-  sub.textContent = `créé en 0,4 s · ${code} · ${trace}`;
-  titles.append(name, sub);
-
-  const tag = document.createElement("span");
-  tag.className = "tag";
-  tag.dataset.state = "run";
-  tag.textContent = "en cours";
-
-  head.append(orb, titles, tag);
-
-  const list = document.createElement("ol");
-  list.className = "steps";
-
-  const items = STEPS.map((label) => {
-    const li = document.createElement("li");
-    li.dataset.state = "wait";
-    const bullet = document.createElement("span");
-    bullet.className = "bullet";
-    bullet.textContent = "✓";
-    li.append(bullet, document.createTextNode(label));
-    list.append(li);
-    return li;
-  });
-
-  const diff = document.createElement("pre");
-  diff.className = "diff";
-  diff.hidden = true;
-  diff.innerHTML =
-    '<span class="del">- const total = payload.order.items.length;</span>\n' +
-    '<span class="add">+ const total = payload.order?.items?.length ?? 0;</span>';
-
-  const actions = document.createElement("div");
-  actions.className = "card-actions";
-
-  const viewBtn = document.createElement("button");
-  viewBtn.type = "button";
-  viewBtn.className = "btn btn-sm btn-primary";
-  viewBtn.textContent = "Voir le correctif";
-  viewBtn.disabled = true;
-
-  const stopBtn = document.createElement("button");
-  stopBtn.type = "button";
-  stopBtn.className = "btn btn-sm btn-ghost";
-  stopBtn.textContent = "Arrêter";
-
-  actions.append(viewBtn, stopBtn);
-
-  card.append(head, list, diff, actions);
-  stream.append(card);
-  state.rows += 1;
-  scrollDown(true);
-  refreshCount();
-  setStatus("agent en cours");
-
-  let index = 0;
-  let timer = null;
-  let stopped = false;
-
-  const runStep = () => {
-    if (stopped) return;
-
-    if (index > 0) items[index - 1].dataset.state = "done";
-
-    if (index >= items.length) {
-      tag.dataset.state = "done";
-      tag.textContent = "prêt";
-      viewBtn.disabled = false;
-      diff.hidden = false;
-      setStatus("correctif prêt");
-      scrollDown(true);
-      return;
-    }
-
-    items[index].dataset.state = "run";
-    scrollDown(false);
-    index += 1;
-    timer = setTimeout(runStep, 700 + Math.random() * 600);
-  };
-
-  stopBtn.addEventListener("click", () => {
-    if (stopped) {
-      card.remove();
-      return;
-    }
-    stopped = true;
-    clearTimeout(timer);
-    tag.dataset.state = "wait";
-    tag.textContent = "arrêté";
-    items.forEach((li) => {
-      if (li.dataset.state === "run") li.dataset.state = "wait";
-    });
-    stopBtn.textContent = "Fermer";
-    setStatus("agent arrêté");
-  });
-
-  viewBtn.addEventListener("click", () => {
-    viewBtn.textContent = "Correctif appliqué";
-    viewBtn.disabled = true;
-    addRow("ok", `patch appliqué · ${code} · tests 12/12`);
-    setStatus("corrigé");
-  });
-
-  timer = setTimeout(runStep, 500);
+  setTimeout(() => createAgent(code, trace, error), 380);
 }
 
 /* ------------------------------------------------------------------ */
@@ -385,29 +367,20 @@ const FEED = [
   () => ["inf", `WS /socket connected · clients=${rnd(1, 240)}`],
 ];
 
-let feedTimer = null;
-
 function feed() {
   const [level, text] = pick(FEED)();
   addRow(level, text);
-  feedTimer = setTimeout(feed, Math.random() > 0.9 ? rnd(120, 380) : rnd(650, 1900));
+  setTimeout(feed, Math.random() > 0.9 ? rnd(120, 380) : rnd(650, 1900));
 }
 
 addRow("inf", "session attachée · tail -f /var/log/app.log");
 addRow("ok", "handlers error et unhandledrejection actifs");
+updateAgentsMeta();
 setTimeout(feed, 500);
 
 const params = new URLSearchParams(window.location.search);
-if (params.get("demo") === "error") {
-  setTimeout(fireError, 700);
-} else if (params.get("demo") === "agent") {
-  setTimeout(() => {
-    fireError();
-    setTimeout(() => {
-      const btn = stream.querySelector(".card-error .btn-primary");
-      if (btn) btn.click();
-    }, 500);
-  }, 500);
+if (params.get("demo") === "error" || params.get("demo") === "agent") {
+  setTimeout(fireError, 600);
 }
 
 setInterval(() => {
