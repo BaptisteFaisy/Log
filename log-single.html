@@ -1,28 +1,31 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Log — Console de test d'erreurs (fichier unique)</title>
-  <meta name="description" content="Déclenchez un log d'erreur et regardez un agent le résoudre." />
+  <title>Log — Error console</title>
+  <meta name="description" content="Trigger an error log and watch an agent resolve it." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
 :root {
-  --paper: #fdfcfb;
-  --ink: #1a1614;
-  --ink-2: #57504c;
-  --ink-3: #928a85;
-  --line: rgba(26, 22, 20, 0.09);
-  --line-soft: rgba(26, 22, 20, 0.06);
-  --red: #c8382f;
-  --red-deep: #a52a23;
-  --red-soft: #fbe9e7;
-  --red-line: rgba(200, 56, 47, 0.22);
-  --amber: #a9761f;
-  --ok: #2f7d5f;
-  --radius: 20px;
+  --paper: #f3efe8;
+  --ink: #0a0a0a;
+  --ink-2: #55504a;
+  --ink-3: #55504a;
+  --line: #0a0a0a;
+  --line-soft: rgba(10, 10, 10, 0.09);
+  --red: #ff2e93;
+  --red-deep: #0a0a0a;
+  --red-soft: #ffd8ea;
+  --red-line: #0a0a0a;
+  --amber: #0a0a0a;
+  --ok: #00843d;
+  --radius: 0px;
+  --panel: #ffffff;
+  --mono: "Space Mono", ui-monospace, monospace;
+  --display: "Anton", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -90,8 +93,8 @@ body[data-bg="gloss"] .bg-stage {
 body[data-bg="gloss"] .bg-stage::before {
   opacity: 1;
   background:
-    radial-gradient(38% 34% at 82% 8%, rgba(200, 56, 47, 0.11), transparent 70%),
-    radial-gradient(46% 40% at 12% 96%, rgba(200, 56, 47, 0.07), transparent 72%),
+    radial-gradient(38% 34% at 82% 8%, rgba(255, 46, 147, 0.11), transparent 70%),
+    radial-gradient(46% 40% at 12% 96%, rgba(255, 46, 147, 0.07), transparent 72%),
     linear-gradient(112deg, transparent 38%, rgba(255, 255, 255, 0.85) 47%, transparent 56%);
 }
 body[data-bg="gloss"] .bg-stage::after { opacity: 0.14; }
@@ -110,9 +113,9 @@ body[data-bg="aurora"] .bg-stage {
 body[data-bg="aurora"] .bg-stage::before {
   opacity: 1;
   background:
-    radial-gradient(42% 46% at 18% 18%, rgba(200, 56, 47, 0.16), transparent 70%),
+    radial-gradient(42% 46% at 18% 18%, rgba(255, 46, 147, 0.16), transparent 70%),
     radial-gradient(38% 42% at 84% 12%, rgba(255, 138, 110, 0.2), transparent 72%),
-    radial-gradient(52% 48% at 62% 94%, rgba(200, 56, 47, 0.1), transparent 74%);
+    radial-gradient(52% 48% at 62% 94%, rgba(255, 46, 147, 0.1), transparent 74%);
   filter: blur(28px);
   animation: aurora 28s ease-in-out infinite alternate;
 }
@@ -131,8 +134,8 @@ body[data-bg="topo"] .bg-stage {
 body[data-bg="topo"] .bg-stage::before {
   opacity: 1;
   background:
-    repeating-radial-gradient(circle at 26% 18%, rgba(200, 56, 47, 0.13) 0 1px, transparent 1px 26px),
-    repeating-radial-gradient(circle at 78% 84%, rgba(200, 56, 47, 0.1) 0 1px, transparent 1px 22px);
+    repeating-radial-gradient(circle at 26% 18%, rgba(255, 46, 147, 0.13) 0 1px, transparent 1px 26px),
+    repeating-radial-gradient(circle at 78% 84%, rgba(255, 46, 147, 0.1) 0 1px, transparent 1px 22px);
   -webkit-mask-image: radial-gradient(90% 70% at 50% 40%, #000 20%, transparent 78%);
   mask-image: radial-gradient(90% 70% at 50% 40%, #000 20%, transparent 78%);
   animation: topo 34s linear infinite alternate;
@@ -153,8 +156,8 @@ body[data-bg="halo"] .bg-stage::before {
   inset: 0;
   background: radial-gradient(
     460px circle at var(--mx, 50%) var(--my, 20%),
-    rgba(200, 56, 47, 0.14),
-    rgba(200, 56, 47, 0.05) 40%,
+    rgba(255, 46, 147, 0.14),
+    rgba(255, 46, 147, 0.05) 40%,
     transparent 70%
   );
 }
@@ -234,7 +237,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(200, 56, 47, 0.18);
+  box-shadow: 0 0 0 3px rgba(255, 46, 147, 0.18);
 }
 
 .btn-primary {
@@ -242,7 +245,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   background: linear-gradient(180deg, #d2463d, #bd3129);
   border-color: rgba(150, 32, 26, 0.35);
   box-shadow:
-    0 10px 24px -12px rgba(200, 56, 47, 0.75),
+    0 10px 24px -12px rgba(255, 46, 147, 0.75),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
@@ -370,7 +373,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   height: 6px;
   border-radius: 50%;
   background: var(--red);
-  box-shadow: 0 0 0 3px rgba(200, 56, 47, 0.12);
+  box-shadow: 0 0 0 3px rgba(255, 46, 147, 0.12);
   animation: pulse 2.6s ease-in-out infinite;
 }
 
@@ -663,8 +666,8 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   height: 26px;
   margin-bottom: 8px;
   border-radius: 50%;
-  border: 1px dashed rgba(200, 56, 47, 0.35);
-  box-shadow: inset 0 0 0 6px rgba(200, 56, 47, 0.05);
+  border: 1px dashed rgba(255, 46, 147, 0.35);
+  box-shadow: inset 0 0 0 6px rgba(255, 46, 147, 0.05);
 }
 
 .agents-empty[hidden] { display: none; }
@@ -714,7 +717,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(from 0deg, rgba(200, 56, 47, 0.05), rgba(200, 56, 47, 0.5), rgba(200, 56, 47, 0.05));
+  background: conic-gradient(from 0deg, rgba(255, 46, 147, 0.05), rgba(255, 46, 147, 0.5), rgba(255, 46, 147, 0.05));
   animation: orbSpin 2.2s linear infinite;
 }
 
@@ -737,7 +740,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   margin-left: -2.5px;
   border-radius: 50%;
   background: var(--red);
-  box-shadow: 0 0 6px rgba(200, 56, 47, 0.8);
+  box-shadow: 0 0 6px rgba(255, 46, 147, 0.8);
 }
 
 .agent-orb i {
@@ -747,7 +750,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   height: 9px;
   border-radius: 50%;
   background: linear-gradient(160deg, #d2463d, #8e211b);
-  box-shadow: 0 0 0 2px rgba(200, 56, 47, 0.14);
+  box-shadow: 0 0 0 2px rgba(255, 46, 147, 0.14);
   animation: orbBreathe 1.9s ease-in-out infinite;
 }
 
@@ -818,11 +821,11 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
 }
 
 .agent-bars span[data-on="true"] {
-  background: linear-gradient(90deg, rgba(200, 56, 47, 0.55), var(--red));
+  background: linear-gradient(90deg, rgba(255, 46, 147, 0.55), var(--red));
 }
 
 .agent-bars span[data-on="run"] {
-  background: rgba(200, 56, 47, 0.16);
+  background: rgba(255, 46, 147, 0.16);
   position: relative;
 }
 
@@ -846,8 +849,8 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   gap: 6px;
   padding: 7px 8px;
   border-radius: 8px;
-  background: rgba(200, 56, 47, 0.055);
-  border: 1px solid rgba(200, 56, 47, 0.14);
+  background: rgba(255, 46, 147, 0.055);
+  border: 1px solid rgba(255, 46, 147, 0.14);
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 9.5px;
   line-height: 1.5;
@@ -897,7 +900,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   height: 5px;
   border-radius: 50%;
   background: var(--red);
-  box-shadow: 0 0 0 3px rgba(200, 56, 47, 0.12);
+  box-shadow: 0 0 0 3px rgba(255, 46, 147, 0.12);
 }
 
 /* Détection d'erreur */
@@ -912,8 +915,8 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
 }
 
 @keyframes errGlow {
-  0% { box-shadow: 0 0 0 0 rgba(200, 56, 47, 0.35), 0 16px 34px -26px rgba(70, 30, 24, 0.5); }
-  100% { box-shadow: 0 0 0 10px rgba(200, 56, 47, 0), 0 16px 34px -26px rgba(70, 30, 24, 0.5); }
+  0% { box-shadow: 0 0 0 0 rgba(255, 46, 147, 0.35), 0 16px 34px -26px rgba(70, 30, 24, 0.5); }
+  100% { box-shadow: 0 0 0 10px rgba(255, 46, 147, 0), 0 16px 34px -26px rgba(70, 30, 24, 0.5); }
 }
 
 /* Footer terminal */
@@ -972,6 +975,611 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   .bg-stage::before { animation: none !important; }
 }
 
+/* ------------------------------------------------------------------ */
+/* Observabilité                                                       */
+/* ------------------------------------------------------------------ */
+
+.observability {
+  position: relative;
+  z-index: 1;
+  width: min(1020px, 100%);
+  margin: 0 auto;
+  padding: 0 clamp(12px, 3vw, 24px) clamp(30px, 5vw, 56px);
+  display: grid;
+  gap: 14px;
+}
+
+.obs-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.obs-titles { min-width: 0; }
+.obs-titles h2 {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.obs-titles p { margin: 4px 0 0; font-size: 12px; color: var(--ink-2); }
+.obs-titles code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  background: rgba(26, 22, 20, 0.05);
+  border-radius: 5px;
+  padding: 1px 4px;
+}
+
+.obs-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+.obs-source {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.obs-source[data-source="postgres"] {
+  color: var(--ok);
+  border-color: rgba(47, 125, 95, 0.28);
+  background: #eef7f2;
+}
+
+.obs-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  gap: 10px;
+}
+
+.obs-kpi {
+  display: grid;
+  gap: 3px;
+  padding: 11px 13px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 40px -38px rgba(70, 30, 24, 0.55);
+}
+
+.obs-kpi[data-tone="gain"] {
+  border-color: rgba(47, 125, 95, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(238, 247, 242, 0.86));
+}
+
+.obs-kpi-label {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.obs-kpi-value {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.obs-kpi-sub {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  color: var(--ink-3);
+}
+
+.obs-table-wrap {
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 24px 60px -50px rgba(80, 34, 28, 0.5);
+  overflow: auto;
+}
+
+.obs-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+
+.obs-table caption {
+  text-align: left;
+  padding: 13px 14px 9px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.obs-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: rgba(253, 252, 251, 0.96);
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.obs-table th:hover { color: var(--ink); }
+.obs-table th[data-sorted] { color: var(--ink); }
+.obs-table th[data-sorted="desc"]::after { content: " ↓"; }
+.obs-table th[data-sorted="asc"]::after { content: " ↑"; }
+
+.obs-table th:focus-visible,
+.obs-table tr.obs-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(255, 46, 147, 0.35);
+}
+
+.obs-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  vertical-align: top;
+}
+
+.obs-table tr.obs-row { cursor: pointer; }
+.obs-table tr.obs-row:hover { background: rgba(255, 46, 147, 0.035); }
+.obs-table tr.obs-row[aria-expanded="true"] { background: rgba(255, 46, 147, 0.05); }
+.obs-table tr.obs-row[aria-expanded="true"] td { border-bottom-color: transparent; }
+
+.obs-code { display: grid; gap: 2px; }
+.obs-code strong { font-size: 11.5px; font-weight: 600; color: var(--ink); }
+.obs-code code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  color: var(--ink-3);
+}
+
+.obs-cell-total { font-weight: 600; color: var(--ink); }
+
+.obs-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.obs-badge[data-mode="cold"],
+.agent-mode[data-mode="cold"] {
+  color: var(--red-deep);
+  background: var(--red-soft);
+  border-color: var(--red-line);
+}
+
+.obs-badge[data-mode="warm"],
+.agent-mode[data-mode="warm"] {
+  color: var(--ok);
+  background: #e7f3ed;
+  border-color: rgba(47, 125, 95, 0.24);
+}
+
+.obs-badge[data-mode="warm_degraded"],
+.agent-mode[data-mode="warm_degraded"] {
+  color: var(--amber);
+  background: #fbf1de;
+  border-color: rgba(169, 118, 31, 0.28);
+}
+
+.obs-delta { font-family: "JetBrains Mono", ui-monospace, monospace; }
+.obs-delta[data-tone="gain"] { color: var(--ok); font-weight: 600; }
+.obs-delta[data-tone="loss"] { color: var(--red-deep); font-weight: 600; }
+
+.obs-detail td {
+  padding: 4px 12px 14px;
+  background: rgba(26, 22, 20, 0.02);
+}
+
+.obs-detail-list { display: grid; gap: 8px; }
+
+.obs-run {
+  display: grid;
+  gap: 7px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.obs-run[data-status="failed"] { border-color: var(--red-line); }
+
+.obs-run-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.obs-run-title { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.obs-run-title strong { font-size: 11px; font-weight: 600; color: var(--ink); }
+.obs-run-status {
+  margin-left: auto;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.obs-run[data-status="resolved"] .obs-run-status { color: var(--ok); }
+.obs-run[data-status="failed"] .obs-run-status { color: var(--red-deep); }
+.obs-run time {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  color: var(--ink-3);
+}
+
+.obs-steps { display: flex; gap: 2px; height: 5px; border-radius: 3px; overflow: hidden; }
+.obs-steps span {
+  min-width: 2px;
+  background: linear-gradient(90deg, rgba(255, 46, 147, 0.45), rgba(255, 46, 147, 0.8));
+}
+.obs-steps span[data-name="memo_lookup"] {
+  background: linear-gradient(90deg, rgba(47, 125, 95, 0.45), rgba(47, 125, 95, 0.8));
+}
+.obs-steps span[data-name="write_memo"] {
+  background: linear-gradient(90deg, rgba(169, 118, 31, 0.4), rgba(169, 118, 31, 0.75));
+}
+
+.obs-steps-legend,
+.obs-run-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  color: var(--ink-3);
+}
+
+.obs-legend {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.obs-empty { color: var(--ink-3); font-style: italic; padding: 16px 12px; }
+
+.agent-mode {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .obs-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .obs-table,
+  .obs-table tbody,
+  .obs-table tr,
+  .obs-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .obs-table tbody tr.obs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 12px;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .obs-table tbody td { border: 0; padding: 2px 0; }
+  .obs-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .obs-cell-main { grid-column: 1 / -1; }
+  .obs-detail td::before { content: none; }
+  .obs-detail td { padding: 4px 12px 14px; }
+  .obs-legend { font-size: 11px; }
+}
+
+@media (max-width: 640px) {
+  .topbar .btn-ghost.obs-link { display: inline-flex; }
+  .observability { padding: 0 10px 32px; }
+}
+
+.agent-card[data-outcome="failed"] { border-color: var(--red-line); }
+.agent-card[data-outcome="failed"] .agent-state { background: var(--red-soft); color: var(--red-deep); }
+
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .terminal { height: min(560px, 62vh); }
+  .agents { height: 340px; }
+}
+
+@media (max-width: 640px) {
+  .workspace { padding: 12px 10px 16px; }
+  .terminal { height: min(520px, 58vh); border-radius: 16px; }
+  .agents { height: 320px; border-radius: 16px; }
+  .row { grid-template-columns: 78px 38px minmax(0, 1fr); column-gap: 8px; font-size: 11px; padding: 3px 10px; }
+  .row time { font-size: 9.5px; }
+  .btn { padding: 11px 16px; font-size: 12.5px; }
+  .topbar .btn-ghost[href] { display: none; }
+  .brand-logo { height: 26px; }
+  .card { margin: 8px 8px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row, .card, .agent-card { animation: none; }
+  .card-error[data-fresh="true"] { animation: none; }
+  .agent-orb, .agent-orb i, .agent-bars span[data-on="run"]::after, .term-live i { animation: none; }
+  .bg-stage::before { animation: none !important; }
+}
+
+/* Direction 01 - Hot Pink Brutalist */
+/* ------------------------------------------------------------------ */
+
+.bg-stage { display: none; }
+
+body {
+  font-family: "Inter", sans-serif;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(10, 10, 10, 0.07) 79px 80px),
+    var(--paper);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(46% 34% at 88% -6%, rgba(255, 46, 147, 0.4), transparent 68%);
+}
+
+.fx-scan {
+  position: relative;
+  z-index: 2;
+  display: block;
+  height: 30px;
+  margin-bottom: 30px;
+  background: var(--red);
+  border-top: 3px solid var(--line);
+  border-bottom: 3px solid var(--line);
+  overflow: hidden;
+}
+
+.fx-scan::before {
+  content: "LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · ";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  line-height: 24px;
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  animation: marq 22s linear infinite;
+}
+
+@keyframes marq { to { transform: translateX(-50%); } }
+
+.topbar {
+  background: var(--panel);
+  border-bottom: 3px solid var(--line);
+  padding: 10px clamp(16px, 4vw, 28px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.brand-logo { height: 26px; }
+
+.btn {
+  border: 3px solid var(--line);
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 var(--line);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--line); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--line); }
+.btn-ghost { background: var(--panel); color: var(--ink); }
+.btn-ghost:hover { background: var(--red); color: var(--ink); border-color: var(--line); }
+.btn-primary { background: var(--red); color: var(--ink); border-color: var(--line); }
+.btn-primary:hover { background: var(--red); color: var(--ink); }
+.btn:focus-visible { box-shadow: 4px 4px 0 var(--line), 0 0 0 3px rgba(10, 10, 10, 0.18); }
+.btn-sm { padding: 7px 11px; font-size: 10.5px; box-shadow: 3px 3px 0 var(--line); }
+
+.terminal,
+.agents {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 9px 9px 0 var(--red), 9px 9px 0 3px var(--line);
+}
+
+.term-head {
+  background: var(--red);
+  border-bottom: 3px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.traffic i { border-radius: 0; background: var(--ink); opacity: 1; }
+.term-title { color: var(--ink); font-weight: 700; }
+.term-live { color: var(--ink); }
+.term-live i {
+  border-radius: 0;
+  background: var(--ink);
+  box-shadow: none;
+  animation: blink 1.2s steps(2, end) infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.row {
+  border-bottom: 1px solid rgba(10, 10, 10, 0.07);
+  font-family: var(--mono);
+  color: var(--ink-2);
+  transition: background 0.12s ease;
+}
+
+.row:hover { background: rgba(255, 46, 147, 0.16); }
+.row time { color: var(--ink-3); }
+
+.lvl {
+  border: 2px solid var(--line);
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.row[data-level="err"] .lvl { background: var(--red); color: var(--ink); }
+.row[data-level="err"] .msg { color: var(--ink); font-weight: 700; }
+.row[data-level="ok"] .lvl { background: #d6f5e3; color: var(--ink); }
+.row[data-level="ok"] .msg { color: #00602c; }
+.row[data-level="wrn"] .lvl { background: #ffe9b8; color: var(--ink); }
+.row[data-level="wrn"] .msg { color: #7a5a00; }
+
+.card,
+.agent-card {
+  border: 2px solid var(--line);
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: 5px 5px 0 var(--line);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.card-error { background: #ffeaf5; border-color: var(--line); }
+.card-icon { border-radius: 0; border: 2px solid var(--line); background: var(--red-soft); color: var(--ink); }
+.card-titles strong { color: var(--ink); }
+.card-sub { color: var(--ink-3); }
+.card-head time { color: var(--ink-3); }
+.card-msg { font-weight: 700; color: var(--ink); }
+.card-stack {
+  border-radius: 0;
+  border: 2px solid var(--line);
+  background: #fff;
+  color: var(--ink-2);
+}
+
+.agents-head { border-bottom: 3px solid var(--line); background: var(--ink); color: #fff; }
+.agents-titles strong {
+  font-family: var(--display);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.agents-titles span { color: rgba(255, 255, 255, 0.65); }
+.agents-count { border: 2px solid #fff; border-radius: 0; color: #fff; background: transparent; }
+.agents-count[data-busy="true"] { background: var(--red); color: var(--ink); border-color: var(--red); }
+
+.agents-empty { color: var(--ink-3); }
+.agents-empty p { color: var(--ink); }
+.agents-empty-orb {
+  border-radius: 0;
+  border: 3px dashed var(--red);
+  box-shadow: none;
+  animation: spin 9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.agent-orb { background: repeating-conic-gradient(var(--red) 0 12deg, transparent 12deg 24deg); }
+.agent-orb::before { inset: 4px; border: 2px solid var(--line); background: #fff; }
+.agent-orb::after { background: var(--ink); box-shadow: none; }
+.agent-orb i { border-radius: 0; background: var(--ink); box-shadow: none; }
+.agent-name { color: var(--ink); }
+.agent-code { color: var(--ink-3); }
+.agent-state { border-radius: 0; border: 2px solid var(--line); background: #fff; color: var(--ink); }
+.agent-card[data-state="done"] .agent-state { background: #d6f5e3; color: var(--ink); }
+.agent-bars span { border-radius: 0; height: 5px; background: rgba(10, 10, 10, 0.12); }
+.agent-bars span[data-on="true"] { background: var(--red); }
+.agent-bars span[data-on="run"] { background: rgba(255, 46, 147, 0.24); }
+.agent-bars span[data-on="run"]::after { background: linear-gradient(90deg, transparent, var(--ink), transparent); }
+.agent-log {
+  border-radius: 0;
+  border: 2px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.agent-log b { color: var(--ink); }
+.agent-card[data-state="done"] .agent-log { background: #e9f9f0; border-color: var(--line); color: var(--ink); }
+.agent-card[data-state="done"] .agent-log b { color: #00602c; }
+
+.agents-foot,
+.term-foot {
+  background: var(--panel);
+  border-top: 3px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.dotline { border-radius: 0; background: var(--red); box-shadow: none; }
+
+@media (max-width: 640px) {
+  .terminal,
+  .agents { border-radius: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-scan::before,
+  .agents-empty-orb,
+  .term-live i { animation: none; }
+}
 </style>
   <link rel="icon" href="data:image/png;base64,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" type="image/png" />
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABKXSURBVHhe7Z17lE7lF8fdY1xGjTSSXMfUdCO6EU0uKyKrpihCqxBKugxyG8kUKmR1Yw25JguVIqULqbBqXFIt99KUkjuFQarzW993rVnL2rv6GfY5Zz/7vJ+1vv/44/2es5+vec/7nOfZTxEvThxDFKH/ECeOy8QDHccU8UDHMUU80HFMEQ90HFNEJtBvv/229/DDD3uPPvqoqPCZWVlZXn5+PrX8V3755RfvoYceYp8lpVWrVlHLyBCJQK9YscI766yzvCJFivii4cOHU8v/5Pjx415GRgb7HClVr1499p8mipgP9I4dO7yaNWuyQZdSmzZtqOUp8dtvv3l169Zlnyel9PR0748//qC25jEdaPwlbNasGRtsKVWuXNnbvn07tT1lli1b5hUvXpx9rpQefPBBamke04Hu27cvG2RJzZs3j1oWmiFDhrDPldSkSZOopWnMBhpho4Mrqa5du1LL0+LYsWNegwYN2OdLqWzZst66deuorVlMBjovL88799xz2eBKKTk52du5cye1PW1WrlzplShRgvlICf9hjh49Sm1NYi7Qf/31l9eiRQs2qJKaMWMGtT1jMjMzmY+kHnnkEWppEnOBHjlyJBtMSbVt25ZainDo0CEvJSWF+UnqnXfeobbmMBXoNWvWeCVLlmQDKaUKFSp433//PbUVY9GiRcxTUhdccIG3e/duamsKM4E+ceKEd91117FBlNRTTz1FbcVp374985VUt27dqKUpzAR69OjRbPAklZqa6h05coTairN161avXLlyzF9S+CawiolAr1+/PjY9RQdOUm+99Ra19Y1hw4Yxf0nVrl3bO3jwILU1gYlA+z2r0bp1a2rpK7///rtXq1Ytdh2SwqIqizgf6Ndff50NlqRKlSrlff3119TWd2bPns2uRVL48bx27Vpq6zxOBxoLfGrUqMEGS1I9evSgtoGA+fRrr72WXY+kWrZsSW2dx+lADx06lA2SpPDjzM9puv/H4sWL2TVJa+7cudTWaZwN9ObNm32fDcDbu7Bp3rw5uy5J1alTJ/bMbgVnA92pUyc2OJKqVKlSbC112Hz22Wfs2qSVnZ1N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" />
@@ -988,16 +1596,18 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
     </a>
 
     <div class="topbar-actions">
-      <span class="btn btn-ghost" role="note" title="Fonds : ?bg=gloss|space|aurora|topo|halo">?bg= pour les fonds</span>
+      <a class="btn btn-ghost obs-link" href="#observabilite">Observability</a>
       <button id="fire" class="btn btn-primary" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13l0-8Z"/></svg>
-        Lancer un log d'erreur
+        Trigger an error log
       </button>
     </div>
   </header>
 
+  <div class="fx-scan" aria-hidden="true"></div>
+
   <main class="workspace">
-    <section class="terminal" aria-label="Terminal de logs">
+    <section class="terminal" aria-label="Log terminal">
       <header class="term-head">
         <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="term-title">log@vercel — ~/logs</span>
@@ -1007,9 +1617,9 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
       <div id="stream" class="term-body" role="log" aria-live="polite"></div>
 
       <footer class="term-foot">
-        <span id="count">0 ligne</span>
+        <span id="count">0 line</span>
         <span class="sep">·</span>
-        <span id="status">en attente</span>
+        <span id="status">waiting</span>
         <span class="foot-right">
           <span>UTF-8</span>
           <span class="sep">·</span>
@@ -1018,29 +1628,69 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
       </footer>
     </section>
 
-    <aside class="agents" aria-label="Agents de correction">
+    <aside class="agents" aria-label="Fix agents">
       <header class="agents-head">
         <div class="agents-titles">
           <strong>agents</strong>
-          <span>surveillance des erreurs</span>
+          <span>error monitoring</span>
         </div>
-        <span id="agentCount" class="agents-count">0 actif</span>
+        <span id="agentCount" class="agents-count">0 active</span>
       </header>
 
       <div id="agentList" class="agents-body">
         <div id="agentsEmpty" class="agents-empty">
           <span class="agents-empty-orb" aria-hidden="true"></span>
-          <p>aucun agent</p>
-          <span>en attente d'incident</span>
+          <p>no agents</p>
+          <span>waiting for an incident</span>
         </div>
       </div>
 
       <footer class="agents-foot">
         <span class="dotline" aria-hidden="true"></span>
-        <span id="agentFoot">veille active · 0 erreur</span>
+        <span id="agentFoot">watching · 0 errors</span>
       </footer>
     </aside>
   </main>
+
+  <section id="observabilite" class="observability" aria-labelledby="obsTitle">
+    <header class="obs-head">
+      <div class="obs-titles">
+        <h2 id="obsTitle">Observability</h2>
+        <p>
+          before = first resolution (no memo) · after = recurrence using the resolution method
+          stored in the database
+        </p>
+      </div>
+      <div class="obs-actions">
+        <span id="obsSource" class="obs-source">source · localStorage</span>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="json">Export JSON</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="csv">Export CSV</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="memos">Clear memos</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="reset">Reset</button>
+      </div>
+    </header>
+
+    <div id="obsKpis" class="obs-kpis" aria-live="polite"></div>
+
+    <div class="obs-table-wrap">
+      <table id="obsTable" class="obs-table">
+        <caption>
+          Per-error metrics — resolution time and tokens before / after memoization.
+          Click a row to expand the step details.
+        </caption>
+        <thead></thead>
+        <tbody id="obsTableBody"></tbody>
+      </table>
+    </div>
+
+    <p class="obs-legend">
+      <span class="obs-badge" data-mode="cold">cold</span> before = first resolution, no
+      memo · <span class="obs-badge" data-mode="warm">warm · memo</span> after = recurrence using the
+      resolution method read from the database ·
+      <span class="obs-badge" data-mode="warm_degraded">warm degraded</span> recurrence with no
+      usable memo (excluded from warm averages)
+    </p>
+  </section>
 
   <script>
 (function () {
@@ -1171,6 +1821,442 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
 
 </script>
   <script>
+    /* API d'ingestion (Vercel Functions + PostgreSQL Aiven, cf. api/).
+       Vide = 100 % local (localStorage). Mettre "/api" pour brancher la base. */
+    window.LOG_METRICS_API = "";
+  </script>
+  <script>
+/* Observabilité des résolutions — aucune dépendance, compatible site statique. */
+(function () {
+  const KEY = "log.observability.v1";
+  const MAX_RUNS = 500;
+  const STEPS = [
+    "receive",
+    "fingerprint",
+    "memo_lookup",
+    "diagnose",
+    "patch",
+    "verify",
+    "write_memo",
+  ];
+
+  const state = { version: 1, runs: [], memos: {} };
+  const active = new Map();
+  const listeners = new Set();
+  const api = {
+    base: null,
+    online: false,
+  };
+
+  /* ---------------------------------------------------------------- */
+  /* Identité d'une erreur                                             */
+  /* ---------------------------------------------------------------- */
+
+  function normalizeMessage(message) {
+    return String(message || "")
+      .toLowerCase()
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, "<uuid>")
+      .replace(/\b0x[0-9a-f]+\b/g, "<hex>")
+      .replace(/\b[0-9a-f]{12,}\b/g, "<hex>")
+      .replace(/\d{4}-\d{2}-\d{2}t[\d:.]+z?/g, "<ts>")
+      .replace(/[a-z]:\\[^\s:]+/gi, "<path>")
+      .replace(/(^|\s)\/(?:[\w.-]+\/)+[\w.-]+/g, "$1<path>")
+      .replace(/\d+/g, "<n>")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160);
+  }
+
+  function firstFrame(stack) {
+    const line = String(stack || "")
+      .split("\n")
+      .find((l) => /\bat\b|:\d+:\d+/.test(l) && !/metrics\.js|observability\.js/.test(l));
+    return line ? line.trim().slice(0, 120) : "";
+  }
+
+  function hash(text) {
+    let h1 = 0xdeadbeef;
+    let h2 = 0x41c6ce57;
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, "0");
+  }
+
+  function fingerprint(code, message, stack) {
+    return hash(`${code}|${normalizeMessage(message)}|${firstFrame(stack)}`);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Persistance locale + base PostgreSQL                              */
+  /* ---------------------------------------------------------------- */
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (!saved || saved.version !== 1) return;
+      const seen = new Set(state.runs.map((r) => r.run_id));
+      (saved.runs || []).forEach((r) => {
+        if (r && r.run_id && !seen.has(r.run_id)) state.runs.push(r);
+      });
+      state.runs.sort((a, b) => String(a.started_at).localeCompare(String(b.started_at)));
+      Object.assign(state.memos, saved.memos || {});
+    } catch {
+      /* storage indisponible ou corrompu : on repart à vide */
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch {
+      /* quota atteint : la session reste en mémoire */
+    }
+  }
+
+  function notify() {
+    const snapshot = getSnapshot();
+    listeners.forEach((fn) => fn(snapshot));
+  }
+
+  function request(path, options) {
+    if (!api.online) return Promise.resolve(null);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    return fetch(`${api.base}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: { "content-type": "application/json", ...(options && options.headers) },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null)
+      .finally(() => clearTimeout(timer));
+  }
+
+  function hydrate() {
+    const base = typeof window.LOG_METRICS_API === "string" ? window.LOG_METRICS_API.trim() : "";
+    api.base = base.replace(/\/$/, "");
+    api.online = Boolean(api.base) && window.location.protocol !== "file:";
+    if (!api.online) return Promise.resolve(false);
+    return request("/metrics").then((data) => {
+      if (!data) {
+        api.online = false;
+        notify();
+        return false;
+      }
+      const seen = new Set(state.runs.map((r) => r.run_id));
+      (data.runs || []).forEach((r) => {
+        if (r && r.run_id && !seen.has(r.run_id)) state.runs.push(r);
+      });
+      state.runs.sort((a, b) => String(a.started_at).localeCompare(String(b.started_at)));
+      if (state.runs.length > MAX_RUNS) state.runs.splice(0, state.runs.length - MAX_RUNS);
+      (data.memos || []).forEach((memo) => {
+        if (!memo || !memo.fingerprint) return;
+        const local = state.memos[memo.fingerprint];
+        if (!local || String(memo.updated_at) >= String(local.updated_at)) {
+          state.memos[memo.fingerprint] = memo;
+        }
+      });
+      save();
+      notify();
+      return true;
+    });
+  }
+
+  function persistRun(run) {
+    request("/runs", { method: "POST", body: JSON.stringify(run) });
+  }
+
+  function persistMemo(memo) {
+    request("/memos", { method: "POST", body: JSON.stringify(memo) });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Mesure                                                            */
+  /* ---------------------------------------------------------------- */
+
+  const clock = () => performance.now();
+  const iso = () => new Date().toISOString();
+
+  function startRun({ code, message, stack, agent }) {
+    const fp = fingerprint(code, message, stack);
+    const seen = state.runs.some((r) => r.fingerprint === fp);
+    const memo = state.memos[fp];
+    const mode = memo ? "warm" : seen ? "warm_degraded" : "cold";
+    const run = {
+      run_id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+      fingerprint: fp,
+      code,
+      mode,
+      status: "resolved",
+      started_at: iso(),
+      ended_at: null,
+      duration_ms: 0,
+      agent_ms: 0,
+      steps: [],
+      tokens: { input: 0, output: 0, cache_read: 0, cache_write: 0, estimated: false },
+      tokens_total: 0,
+      memo: { hit: Boolean(memo), path: memo ? memo.path || null : null, stale: false },
+      agent: agent || null,
+      attempt: state.runs.filter((r) => r.fingerprint === fp).length + 1,
+    };
+    active.set(run.run_id, { run, t0: clock(), stepT0: clock(), stepName: "receive" });
+    step(run.run_id, "fingerprint");
+    step(run.run_id, "memo_lookup");
+    return { run_id: run.run_id, fingerprint: fp, mode, started_at: run.started_at };
+  }
+
+  function step(runId, name) {
+    const live = active.get(runId);
+    if (!live || STEPS.indexOf(name) === -1) return;
+    const t = clock();
+    if (live.stepName) {
+      live.run.steps.push({ name: live.stepName, duration_ms: Math.round(t - live.stepT0) });
+    }
+    live.stepName = name;
+    live.stepT0 = t;
+  }
+
+  function addTokens(runId, tokens) {
+    const live = active.get(runId);
+    if (!live || !tokens) return;
+    const t = live.run.tokens;
+    t.input += Number(tokens.input) || 0;
+    t.output += Number(tokens.output) || 0;
+    t.cache_read += Number(tokens.cache_read) || 0;
+    t.cache_write += Number(tokens.cache_write) || 0;
+    if (tokens.estimated) t.estimated = true;
+    live.run.tokens_total = t.input + t.output;
+  }
+
+  function endRun(runId, { status = "resolved" } = {}) {
+    const live = active.get(runId);
+    if (!live) return null;
+    const { run } = live;
+    const t = clock();
+    if (live.stepName) {
+      run.steps.push({ name: live.stepName, duration_ms: Math.round(t - live.stepT0) });
+    }
+    run.status = status;
+    run.ended_at = iso();
+    run.duration_ms = Math.round(t - live.t0);
+    run.agent_ms = run.steps.reduce((sum, s) => sum + s.duration_ms, 0);
+    run.tokens_total = run.tokens.input + run.tokens.output;
+
+    if (status === "resolved" && !run.memo.hit) {
+      const memo = {
+        fingerprint: run.fingerprint,
+        code: run.code,
+        path: `db://error_resolutions/${run.fingerprint}`,
+        cause: `erreur ${run.code} reproduite et corrigée`,
+        fix: `correctif appliqué par ${run.agent || "agent"}`,
+        files: [],
+        verification: "tests 12/12",
+        tokens_used: run.tokens_total,
+        duration_ms: run.duration_ms,
+        agent: run.agent,
+        runs: 1,
+        updated_at: run.ended_at,
+      };
+      state.memos[run.fingerprint] = memo;
+      persistMemo(memo);
+    } else if (status === "resolved" && state.memos[run.fingerprint]) {
+      const memo = state.memos[run.fingerprint];
+      memo.runs = (memo.runs || 0) + 1;
+      memo.updated_at = run.ended_at;
+      persistMemo(memo);
+    }
+
+    active.delete(runId);
+    state.runs.push(run);
+    if (state.runs.length > MAX_RUNS) state.runs.splice(0, state.runs.length - MAX_RUNS);
+    save();
+    persistRun(run);
+    notify();
+    return run;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Agrégats                                                          */
+  /* ---------------------------------------------------------------- */
+
+  function median(values) {
+    if (!values.length) return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  const pct = (cold, warm) => (cold && warm != null ? (cold - warm) / cold : null);
+
+  function statsFor(runs) {
+    const resolved = runs.filter((r) => r.status === "resolved");
+    const byMode = (mode) => resolved.filter((r) => r.mode === mode);
+    const cold = byMode("cold");
+    const warm = byMode("warm");
+    const med = (list, key) => median(list.map((r) => r[key]));
+    return {
+      n_cold: runs.filter((r) => r.mode === "cold").length,
+      n_warm: runs.filter((r) => r.mode === "warm").length,
+      n_warm_degraded: runs.filter((r) => r.mode === "warm_degraded").length,
+      n_failed: runs.filter((r) => r.status !== "resolved").length,
+      median_duration_cold: med(cold, "duration_ms"),
+      median_duration_warm: med(warm, "duration_ms"),
+      median_tokens_cold: med(cold, "tokens_total"),
+      median_tokens_warm: med(warm, "tokens_total"),
+    };
+  }
+
+  function getSnapshot() {
+    const runs = state.runs;
+    const all = statsFor(runs);
+    const perFingerprint = new Map();
+
+    runs.forEach((run) => {
+      if (!perFingerprint.has(run.fingerprint)) perFingerprint.set(run.fingerprint, []);
+      perFingerprint.get(run.fingerprint).push(run);
+    });
+
+    const fingerprints = [...perFingerprint.entries()]
+      .map(([fp, list]) => {
+        const s = statsFor(list);
+        const last = list[list.length - 1];
+        return {
+          fingerprint: fp,
+          code: last.code,
+          ...s,
+          delta_time_pct: pct(s.median_duration_cold, s.median_duration_warm),
+          delta_tokens_pct: pct(s.median_tokens_cold, s.median_tokens_warm),
+          tokens_total: list.reduce((sum, r) => sum + r.tokens_total, 0),
+          estimated: list.some((r) => r.tokens.estimated),
+          last_seen_at: last.ended_at || last.started_at,
+          runs: list,
+        };
+      })
+      .sort((a, b) => b.tokens_total - a.tokens_total);
+
+    const coldResolved = runs.filter((r) => r.mode === "cold" && r.status === "resolved");
+    const warmResolved = runs.filter((r) => r.mode === "warm" && r.status === "resolved");
+
+    let tokensSaved = 0;
+    let timeSaved = 0;
+    warmResolved.forEach((run) => {
+      const fp = fingerprints.find((f) => f.fingerprint === run.fingerprint);
+      if (!fp) return;
+      tokensSaved += Math.max(0, (fp.median_tokens_cold || 0) - run.tokens_total);
+      timeSaved += Math.max(0, (fp.median_duration_cold || 0) - run.duration_ms);
+    });
+
+    const seenFingerprints = new Set();
+    let coldRecurrences = 0;
+    runs.forEach((run) => {
+      if (run.mode === "cold" && seenFingerprints.has(run.fingerprint)) coldRecurrences += 1;
+      seenFingerprints.add(run.fingerprint);
+    });
+    const memoBase = all.n_warm + all.n_warm_degraded + coldRecurrences;
+
+    return {
+      runs,
+      memos: state.memos,
+      source: api.online ? "postgres" : "local",
+      totals: {
+        ...all,
+        runs: runs.length,
+        resolved: runs.filter((r) => r.status === "resolved").length,
+        tokens_total: runs.reduce((sum, r) => sum + r.tokens_total, 0),
+        tokens_cold: coldResolved.reduce((sum, r) => sum + r.tokens_total, 0),
+        tokens_warm: warmResolved.reduce((sum, r) => sum + r.tokens_total, 0),
+        tokens_saved: Math.round(tokensSaved),
+        time_saved_ms: Math.round(timeSaved),
+        delta_time_pct: pct(all.median_duration_cold, all.median_duration_warm),
+        delta_tokens_pct: pct(all.median_tokens_cold, all.median_tokens_warm),
+        memo_hit_rate: memoBase ? all.n_warm / memoBase : null,
+        cold_recurrences: coldRecurrences,
+      },
+      fingerprints,
+    };
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Export / reset                                                    */
+  /* ---------------------------------------------------------------- */
+
+  function exportJSON() {
+    return JSON.stringify({ version: 1, runs: state.runs, memos: state.memos }, null, 2);
+  }
+
+  function exportCSV() {
+    const cols = [
+      "run_id", "fingerprint", "code", "mode", "status", "started_at", "ended_at",
+      "duration_ms", "agent_ms", "tokens_input", "tokens_output", "tokens_total",
+      "estimated", "memo_hit", "memo_path", "agent", "attempt",
+    ];
+    const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+    const rows = state.runs.map((r) =>
+      [
+        r.run_id, r.fingerprint, r.code, r.mode, r.status, r.started_at, r.ended_at,
+        r.duration_ms, r.agent_ms, r.tokens.input, r.tokens.output, r.tokens_total,
+        r.tokens.estimated, r.memo.hit, r.memo.path, r.agent, r.attempt,
+      ]
+        .map(esc)
+        .join(","),
+    );
+    return [cols.join(","), ...rows].join("\n");
+  }
+
+  function reset() {
+    active.clear();
+    state.runs = [];
+    state.memos = {};
+    save();
+    notify();
+  }
+
+  function clearMemos() {
+    state.memos = {};
+    save();
+    notify();
+  }
+
+  load();
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== KEY) return;
+    state.runs = [];
+    state.memos = {};
+    load();
+    notify();
+  });
+
+  window.LogMetrics = {
+    STEPS,
+    fingerprint,
+    startRun,
+    step,
+    addTokens,
+    endRun,
+    getSnapshot,
+    exportJSON,
+    exportCSV,
+    reset,
+    clearMemos,
+    hydrate,
+    isOnline: () => api.online,
+    onChange(fn) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
+  };
+})();
+
+</script>
+  <script>
 const stream = document.getElementById("stream");
 const countEl = document.getElementById("count");
 const statusEl = document.getElementById("status");
@@ -1184,7 +2270,20 @@ const agentFoot = document.getElementById("agentFoot");
 
 const MAX_ROWS = 160;
 const MAX_AGENTS = 3;
-const AGENT_STEPS = ["analyse", "correctif", "vérification", "prêt"];
+const AGENT_STEPS = ["analyze", "patch", "verify", "ready"];
+const STEP_NAMES = {
+  analyze: "diagnose",
+  patch: "patch",
+  verify: "verify",
+  ready: "write_memo",
+};
+
+const params = new URLSearchParams(window.location.search);
+const metrics = window.LogMetrics;
+const DEMO_WARM = params.get("demo") === "warm";
+const SPEED = DEMO_WARM ? 0.35 : 1;
+const PINNED = params.get("scenario");
+const FAIL = params.get("fail") === "1";
 
 const state = {
   scenario: 0,
@@ -1216,12 +2315,12 @@ function randomId(len = 6) {
 
 function setStatus(text) {
   statusEl.textContent = text;
-  clockEl.textContent = new Date().toLocaleTimeString("fr-FR", { hour12: false });
+  clockEl.textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
 }
 
 function refreshCount() {
   const n = stream.childElementCount;
-  countEl.textContent = `${n} ligne${n > 1 ? "s" : ""}`;
+  countEl.textContent = `${n} line${n > 1 ? "s" : ""}`;
 }
 
 const LABELS = { dbg: "dbg", inf: "inf", wrn: "wrn", ok: "ok", err: "err" };
@@ -1256,15 +2355,15 @@ function addRow(level, text) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Panneau agents                                                      */
+/* Agents panel                                                      */
 /* ------------------------------------------------------------------ */
 
 function updateAgentsMeta() {
   const running = state.agents.filter((a) => a.state !== "done").length;
-  agentCount.textContent = `${running} actif${running > 1 ? "s" : ""}`;
+  agentCount.textContent = `${running} active`;
   agentCount.dataset.busy = running > 0 ? "true" : "false";
   agentsEmpty.hidden = state.agents.length > 0;
-  agentFoot.textContent = `veille active · ${state.errors} erreur${state.errors > 1 ? "s" : ""}`;
+  agentFoot.textContent = `watching · ${state.errors} error${state.errors === 1 ? "" : "s"}`;
 }
 
 function agentSlug(code) {
@@ -1273,9 +2372,18 @@ function agentSlug(code) {
 
 function createAgent(code, trace, error) {
   const slug = agentSlug(code);
+  const label = `agent/fix-${slug}`;
+  const run = metrics.startRun({
+    code,
+    message: error ? error.message : "",
+    stack: error ? error.stack : "",
+    agent: label,
+  });
+
   const card = document.createElement("article");
   card.className = "agent-card";
   card.dataset.state = "run";
+  card.dataset.mode = run.mode;
 
   const top = document.createElement("div");
   top.className = "agent-top";
@@ -1289,7 +2397,7 @@ function createAgent(code, trace, error) {
 
   const name = document.createElement("strong");
   name.className = "agent-name";
-  name.textContent = `agent/fix-${slug}`;
+  name.textContent = label;
 
   const sub = document.createElement("span");
   sub.className = "agent-code";
@@ -1297,11 +2405,23 @@ function createAgent(code, trace, error) {
 
   meta.append(name, sub);
 
+  const modeEl = document.createElement("span");
+  modeEl.className = "agent-mode";
+  modeEl.dataset.mode = run.mode;
+  modeEl.textContent =
+    run.mode === "warm" ? "warm · memo" : run.mode === "warm_degraded" ? "warm degraded" : "cold";
+  modeEl.title =
+    run.mode === "warm"
+      ? "resolution memo loaded from the database"
+      : run.mode === "warm_degraded"
+        ? "recurrence with no usable memo"
+        : "first resolution, no memo";
+
   const stateEl = document.createElement("span");
   stateEl.className = "agent-state";
   stateEl.textContent = AGENT_STEPS[0];
 
-  top.append(orb, meta, stateEl);
+  top.append(orb, meta, modeEl, stateEl);
 
   const bars = document.createElement("div");
   bars.className = "agent-bars";
@@ -1323,7 +2443,7 @@ function createAgent(code, trace, error) {
   card.append(top, bars, log);
   agentList.prepend(card);
 
-  const entry = { node: card, state: "run", timers: [] };
+  const entry = { node: card, state: "run", timers: [], run, modeEl, code, label };
   state.agents.unshift(entry);
 
   while (state.agents.length > MAX_AGENTS) {
@@ -1334,37 +2454,87 @@ function createAgent(code, trace, error) {
 
   segments[0].dataset.on = "run";
   updateAgentsMeta();
-  addRow("inf", `agent/fix-${slug} créé · ${code} · ${trace}`);
+  addRow("inf", `${label} created · ${code} · ${trace} · ${run.mode}`);
 
   let step = 0;
 
+  const nextDelay = () =>
+    (run.mode === "warm" ? 320 + Math.random() * 260 : 900 + Math.random() * 700) * SPEED;
+
+  const fail = () => {
+    entry.state = "done";
+    card.dataset.state = "done";
+    card.dataset.outcome = "failed";
+    stateEl.textContent = "failed";
+    logTag.textContent = "err";
+    logText.textContent = `patch rejected · tests 6/12 · ${code}`;
+    addRow("err", `patch rejected · ${code} · tests 6/12`);
+    setStatus("resolution failed");
+    metrics.addTokens(run.run_id, { ...simulatedTokens(run.fingerprint, run.mode), estimated: true });
+    metrics.endRun(run.run_id, { status: "failed" });
+    updateAgentsMeta();
+  };
+
   const advance = () => {
+    metrics.step(run.run_id, STEP_NAMES[AGENT_STEPS[step]]);
     segments[step].dataset.on = "true";
     step += 1;
 
+    if (FAIL && step === 3) {
+      fail();
+      return;
+    }
+
     if (step >= AGENT_STEPS.length) {
-      finish();
+      entry.timers.push(setTimeout(finish, 300 * SPEED));
       return;
     }
 
     segments[step].dataset.on = "run";
     stateEl.textContent = AGENT_STEPS[step];
-    entry.timers.push(setTimeout(advance, 900 + Math.random() * 700));
+    entry.timers.push(setTimeout(advance, nextDelay()));
   };
 
   const finish = () => {
     entry.state = "done";
     card.dataset.state = "done";
-    stateEl.textContent = "prêt";
+    stateEl.textContent = "ready";
     logTag.textContent = "ok";
-    logText.textContent = `patch appliqué · tests 12/12 · ${code}`;
-    addRow("ok", `patch appliqué · ${code} · tests 12/12`);
-    setStatus("correctif prêt");
+    logText.textContent = `patch applied · tests 12/12 · ${code}`;
+    addRow("ok", `patch applied · ${code} · tests 12/12`);
+    setStatus("fix ready");
+
+    const tokens = simulatedTokens(run.fingerprint, run.mode);
+    metrics.addTokens(run.run_id, { ...tokens, estimated: true });
+    metrics.endRun(run.run_id, { status: "resolved" });
     updateAgentsMeta();
   };
 
-  entry.timers.push(setTimeout(advance, 900));
-  setStatus("agent en cours");
+  entry.timers.push(setTimeout(advance, (run.mode === "warm" ? 320 : 900) * SPEED));
+  setStatus("agent running");
+}
+
+/* ------------------------------------------------------------------ */
+/* Simulated tokens - deterministic per fingerprint                     */
+/* ------------------------------------------------------------------ */
+
+function seededRandom(text) {
+  let seed = 2166136261;
+  for (let i = 0; i < text.length; i += 1) seed = Math.imul(seed ^ text.charCodeAt(i), 16777619);
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function simulatedTokens(fingerprint, mode) {
+  const rand = seededRandom(`${fingerprint}|${mode}`);
+  const between = (min, max) => Math.round((min + rand() * (max - min)) / 10) * 10;
+  if (mode === "warm") return { input: between(2000, 6000), output: between(400, 1200) };
+  return { input: between(18000, 42000), output: between(2000, 6000) };
 }
 
 /* ------------------------------------------------------------------ */
@@ -1419,7 +2589,7 @@ function addErrorCard(error, code) {
   const copyBtn = document.createElement("button");
   copyBtn.type = "button";
   copyBtn.className = "btn btn-sm btn-ghost";
-  copyBtn.textContent = "Copier la trace";
+  copyBtn.textContent = "Copy trace";
 
   actions.append(copyBtn);
   card.append(actions);
@@ -1428,17 +2598,17 @@ function addErrorCard(error, code) {
     const text = `[${code}] ${error.name}: ${error.message}\n${error.stack || ""}`;
     try {
       await navigator.clipboard.writeText(text);
-      copyBtn.textContent = "Copié";
+      copyBtn.textContent = "Copied";
     } catch {
-      copyBtn.textContent = "Copie refusée";
+      copyBtn.textContent = "Copy blocked";
     }
-    setTimeout(() => (copyBtn.textContent = "Copier la trace"), 1500);
+    setTimeout(() => (copyBtn.textContent = "Copy trace"), 1500);
   });
 
   stream.append(card);
   scrollDown(true);
   refreshCount();
-  setStatus("erreur détectée");
+  setStatus("error detected");
   updateAgentsMeta();
 
   setTimeout(() => {
@@ -1449,48 +2619,91 @@ function addErrorCard(error, code) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Erreurs réelles                                                     */
+/* Real errors                                                          */
 /* ------------------------------------------------------------------ */
 
+/* The five error types tracked by the agent. Keep aligned with
+   scripts/lib/errors.mjs (same code/message/stack -> same fingerprint). */
 const SCENARIOS = [
   {
-    code: "ERR_PAYLOAD_INVALID",
-    run() {
-      const payload = { orderId: null };
-      return payload.order.items.length;
-    },
+    code: "ERR_DB_POOL_EXHAUSTED",
+    name: "Database connection pool exhausted",
+    service: "checkout-api",
+    message:
+      "HikariPool-1 - Connection is not available, request timed out after 30000ms (total=20, active=20, idle=0, waiting=17)",
+    stack: [
+      "java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30000ms",
+      "    at com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:696)",
+      "    at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:181)",
+      "    at com.acme.checkout.OrderRepository.find(OrderRepository.java:88)",
+      "    at com.acme.checkout.OrderService.checkout(OrderService.java:42)",
+    ].join("\n"),
   },
   {
-    code: "ERR_UNDEFINED_CALL",
-    run() {
-      const session = {};
-      return session.refreshToken();
-    },
+    code: "ERR_PG_TIMEOUT_5432",
+    name: "Connection timeout on port 5432",
+    service: "orders-api",
+    message: 'connection to server at "db.internal" (10.0.0.12), port 5432 failed: timeout expired',
+    stack: [
+      'org.postgresql.util.PSQLException: connection to server at "db.internal" (10.0.0.12), port 5432 failed: timeout expired',
+      "    at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:315)",
+      "    at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:117)",
+      "    at com.acme.orders.Db.connect(Db.java:31)",
+    ].join("\n"),
   },
   {
-    code: "ERR_PARSE_FAILED",
-    run() {
-      return JSON.parse('{"user": "gaia", }');
-    },
+    code: "ERR_KAFKA_UNREACHABLE",
+    name: "Kafka Broker Unreachable",
+    service: "event-worker",
+    message:
+      "Kafka broker unreachable: Connection to node -1 (kafka:9092) could not be established. Broker may not be available.",
+    stack: [
+      "org.apache.kafka.common.errors.TimeoutException: Topic orders.created not present in metadata after 60000 ms.",
+      "    at org.apache.kafka.clients.producer.KafkaProducer.doSend(KafkaProducer.java:1000)",
+      "    at org.apache.kafka.clients.producer.KafkaProducer.send(KafkaProducer.java:936)",
+      "    at com.acme.events.OrderPublisher.publish(OrderPublisher.java:57)",
+    ].join("\n"),
   },
   {
-    code: "ERR_RANGE_OVERFLOW",
-    run() {
-      const buffer = [1, 2, 3];
-      return buffer[12].toString();
-    },
+    code: "ERR_OOM_HEAP",
+    name: "OutOfMemoryError (OOM) / Java heap space saturated",
+    service: "reporting-worker",
+    message: "java.lang.OutOfMemoryError: Java heap space",
+    stack: [
+      "java.lang.OutOfMemoryError: Java heap space",
+      "    at java.base/java.util.Arrays.copyOf(Arrays.java:3537)",
+      "    at java.base/java.util.ArrayList.grow(ArrayList.java:238)",
+      "    at com.acme.reporting.CsvExporter.export(CsvExporter.java:74)",
+    ].join("\n"),
+  },
+  {
+    code: "ERR_DISK_FULL",
+    name: "Disk Full / No space left on device",
+    service: "postgres",
+    message: "write /var/lib/postgresql/data/base/pgsql_tmp/pgsql_tmp1421.0: No space left on device",
+    stack: [
+      'org.postgresql.util.PSQLException: ERROR: could not write to file "base/pgsql_tmp/pgsql_tmp1421.0": No space left on device',
+      "    at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2725)",
+      "    at com.acme.reports.MaterializedView.refresh(MaterializedView.java:63)",
+    ].join("\n"),
   },
 ];
 
 function fireError() {
-  const scenario = SCENARIOS[state.scenario % SCENARIOS.length];
+  const scenario = PINNED
+    ? SCENARIOS.find((s) => s.code === PINNED) || SCENARIOS[0]
+    : DEMO_WARM
+      ? SCENARIOS[0]
+      : SCENARIOS[state.scenario % SCENARIOS.length];
   state.scenario += 1;
 
-  addRow("err", `POST /api/checkout → 500 · ${scenario.code}`);
+  addRow("err", `ERROR · ${scenario.name} · ${scenario.code} · ${scenario.service}`);
 
   try {
-    scenario.run();
-    addRow("ok", `${scenario.code} · aucune exception`);
+    const error = new Error(scenario.message);
+    error.name = scenario.name;
+    error.stack = scenario.stack;
+    throw error;
   } catch (error) {
     addErrorCard(error, scenario.code);
     console.error(`[${scenario.code}]`, error);
@@ -1498,7 +2711,7 @@ function fireError() {
 }
 
 window.addEventListener("error", (event) => {
-  const error = event.error instanceof Error ? event.error : new Error(event.message || "Erreur inconnue");
+  const error = event.error instanceof Error ? event.error : new Error(event.message || "Unknown error");
   addErrorCard(error, "ERR_UNCAUGHT");
 });
 
@@ -1535,7 +2748,7 @@ const FEED = [
   () => ["inf", `POST ${pick(ROUTES)} 201 · ${rnd(20, 260)} ms · ${rnd(2, 40)} kb`],
   () => ["dbg", `queue consume · batch=${rnd(1, 12)} · lag=${rnd(0, 90)} ms`],
   () => ["inf", `deploy ready · dpl_${randomId(9)}`],
-  () => ["wrn", `slow query · ${pick(["orders", "sessions", "events"])} ${rnd(420, 1800)} ms (seuil 400 ms)`],
+  () => ["wrn", `slow query · ${pick(["orders", "sessions", "events"])} ${rnd(420, 1800)} ms (threshold 400 ms)`],
   () => ["dbg", `trace ${randomId(16)} · sampled=0.${rnd(1, 9)}`],
   () => ["inf", `WS /socket connected · clients=${rnd(1, 240)}`],
 ];
@@ -1546,19 +2759,322 @@ function feed() {
   setTimeout(feed, Math.random() > 0.9 ? rnd(120, 380) : rnd(650, 1900));
 }
 
-addRow("inf", "session attachée · tail -f /var/log/app.log");
-addRow("ok", "handlers error et unhandledrejection actifs");
+addRow("inf", "session attached · tail -f /var/log/app.log");
+addRow("ok", "error and unhandledrejection handlers active");
 updateAgentsMeta();
 setTimeout(feed, 500);
 
-const params = new URLSearchParams(window.location.search);
 if (params.get("demo") === "error" || params.get("demo") === "agent") {
   setTimeout(fireError, 600);
 }
 
+if (DEMO_WARM) {
+  const repeat = 3;
+  for (let i = 0; i < repeat; i += 1) {
+    setTimeout(fireError, 500 + i * 2600);
+  }
+}
+
 setInterval(() => {
-  clockEl.textContent = new Date().toLocaleTimeString("fr-FR", { hour12: false });
+  clockEl.textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
 }, 1000);
+
+</script>
+  <script>
+/* Observability dashboard rendering. */
+(function () {
+  const M = window.LogMetrics;
+  const section = document.getElementById("observabilite");
+  if (!M || !section) return;
+
+  const kpisEl = document.getElementById("obsKpis");
+  const tableEl = document.getElementById("obsTable");
+  const bodyEl = document.getElementById("obsTableBody");
+  const sourceEl = document.getElementById("obsSource");
+  const sortState = { key: "tokens_total", dir: -1 };
+  const expanded = new Set();
+
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+
+  const fmtMs = (ms) => {
+    if (ms == null) return "—";
+    return ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
+  };
+
+  const fmtTokens = (n) => {
+    if (n == null) return "—";
+    return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(Math.round(n));
+  };
+
+  const fmtDelta = (p) => {
+    if (p == null) return "—";
+    const v = Math.round(p * 100);
+    if (v === 0) return "0 %";
+    return v > 0 ? `−${v} %` : `+${Math.abs(v)} %`;
+  };
+
+  const fmtDate = (iso) => {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleString("fr-FR", {
+      day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+    });
+  };
+
+  const weak = (n) => (n != null && n < 3 ? " · small sample" : "");
+
+  function kpi(label, value, sub, tone) {
+    const card = el("div", "obs-kpi");
+    if (tone) card.dataset.tone = tone;
+    card.append(el("span", "obs-kpi-label", label), el("strong", "obs-kpi-value", value));
+    if (sub) card.append(el("span", "obs-kpi-sub", sub));
+    return card;
+  }
+
+  function renderSource(snap) {
+    if (!sourceEl) return;
+    const remote = snap.source === "postgres";
+    sourceEl.dataset.source = remote ? "postgres" : "local";
+    sourceEl.textContent = remote ? "source · PostgreSQL" : "source · localStorage";
+  }
+
+  function renderKpis(snap) {
+    const t = snap.totals;
+    const approx = snap.runs.some((r) => r.tokens.estimated) ? "≈" : "";
+    const tok = (n) => (n == null ? "—" : `${approx}${fmtTokens(n)}`);
+    kpisEl.replaceChildren(
+      kpi("Median time before", fmtMs(t.median_duration_cold), `cold · n=${t.n_cold}${weak(t.n_cold)}`),
+      kpi("Median time after", fmtMs(t.median_duration_warm), `warm · n=${t.n_warm}${weak(t.n_warm)}`),
+      kpi("Time saved", fmtDelta(t.delta_time_pct), `${fmtMs(t.time_saved_ms)} saved`, "gain"),
+      kpi("Median tokens before", tok(t.median_tokens_cold), `cold · n=${t.n_cold}${weak(t.n_cold)}`),
+      kpi("Median tokens after", tok(t.median_tokens_warm), `warm · n=${t.n_warm}${weak(t.n_warm)}`),
+      kpi("Tokens saved", fmtDelta(t.delta_tokens_pct), `${fmtTokens(t.tokens_saved)} saved`, "gain"),
+      kpi("Tokens used", tok(t.tokens_total), `${fmtTokens(t.tokens_cold)} cold · ${fmtTokens(t.tokens_warm)} warm`),
+      kpi("Memo hit rate", t.memo_hit_rate == null ? "—" : `${Math.round(t.memo_hit_rate * 100)} %`, `${t.n_warm} warm · ${t.n_warm_degraded} degraded`),
+      kpi("Resolutions", `${t.resolved} / ${t.runs}`, `${t.n_cold} cold · ${t.n_warm} warm · ${t.n_failed} failed`),
+    );
+  }
+
+  const COLUMNS = [
+    { key: "code", label: "Log d'erreur" },
+    { key: "n_cold", label: "Cold / warm" },
+    { key: "median_duration_cold", label: "Temps cold → warm" },
+    { key: "delta_time_pct", label: "Δ temps" },
+    { key: "median_tokens_cold", label: "Tokens cold → warm" },
+    { key: "delta_tokens_pct", label: "Δ tokens" },
+    { key: "tokens_total", label: "Tokens total" },
+    { key: "last_seen_at", label: "Last seen" },
+  ];
+
+  function renderHead() {
+    const head = tableEl.tHead || tableEl.createTHead();
+    const row = el("tr");
+    COLUMNS.forEach((col) => {
+      const th = el("th", null, col.label);
+      th.scope = "col";
+      th.dataset.key = col.key;
+      if (col.key === sortState.key) th.dataset.sorted = sortState.dir < 0 ? "desc" : "asc";
+      th.tabIndex = 0;
+      th.setAttribute("role", "button");
+      th.title = "Trier";
+      row.append(th);
+    });
+    head.replaceChildren(row);
+  }
+
+  function sortRows(rows) {
+    return [...rows].sort((a, b) => {
+      const av = a[sortState.key];
+      const bv = b[sortState.key];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "string") return av.localeCompare(bv) * sortState.dir;
+      return (av - bv) * sortState.dir;
+    });
+  }
+
+  function cell(label, content, className) {
+    const td = el("td", className);
+    td.dataset.label = label;
+    if (content instanceof Node) td.append(content);
+    else td.textContent = content;
+    return td;
+  }
+
+  function badge(mode) {
+    const text = mode === "warm" ? "warm · memo" : mode === "warm_degraded" ? "warm degraded" : "cold";
+    const b = el("span", "obs-badge", text);
+    b.dataset.mode = mode;
+    return b;
+  }
+
+  function runCard(run) {
+    const tokens = run.tokens || { input: 0, output: 0 };
+    const memo = run.memo || {};
+    const card = el("article", "obs-run");
+    card.dataset.status = run.status;
+
+    const top = el("div", "obs-run-top");
+    const title = el("div", "obs-run-title");
+    title.append(el("strong", null, run.code), badge(run.mode));
+    top.append(title, el("time", null, fmtDate(run.ended_at)), el("span", "obs-run-status", run.status === "resolved" ? "resolved" : "failed"));
+    card.append(top);
+
+    const steps = el("div", "obs-steps");
+    const total = run.agent_ms || 1;
+    (run.steps || []).forEach((s) => {
+      const seg = el("span");
+      seg.style.flexGrow = String(Math.max(s.duration_ms, 1) / total);
+      seg.title = `${s.name} · ${fmtMs(s.duration_ms)}`;
+      seg.dataset.name = s.name;
+      steps.append(seg);
+    });
+    card.append(steps);
+
+    const meta = el("div", "obs-run-meta");
+    meta.append(
+      el("span", null, `duration ${fmtMs(run.duration_ms)}`),
+      el("span", null, `agent ${fmtMs(run.agent_ms)}`),
+      el("span", null, `${fmtTokens(run.tokens_total)} tokens (${fmtTokens(tokens.input)} in / ${fmtTokens(tokens.output)} out)${tokens.estimated ? " ≈" : ""}`),
+      el("span", null, memo.hit ? `memo ${memo.path}` : "no memo"),
+    );
+    card.append(meta);
+    return card;
+  }
+
+  function detailRow(fingerprint, snap) {
+    const tr = el("tr", "obs-detail");
+    const td = el("td");
+    td.colSpan = COLUMNS.length;
+    const list = el("div", "obs-detail-list");
+    const runs = snap.runs.filter((r) => r.fingerprint === fingerprint).slice(-3).reverse();
+    runs.forEach((run) => list.append(runCard(run)));
+    td.append(list);
+    tr.append(td);
+    return tr;
+  }
+
+  function renderTable(snap) {
+    const rows = sortRows(snap.fingerprints);
+    bodyEl.replaceChildren();
+
+    if (!rows.length) {
+      const tr = el("tr");
+      const td = el("td", "obs-empty", "Aucune mesure — lancez un log d'erreur.");
+      td.colSpan = COLUMNS.length;
+      tr.append(td);
+      bodyEl.append(tr);
+      return;
+    }
+
+    rows.forEach((f) => {
+      const open = expanded.has(f.fingerprint);
+      const tr = el("tr", "obs-row");
+      tr.dataset.fp = f.fingerprint;
+      tr.tabIndex = 0;
+      tr.setAttribute("aria-expanded", String(open));
+
+      const code = el("div", "obs-code");
+      code.append(el("strong", null, f.code), el("code", null, f.fingerprint.slice(0, 10)));
+      code.append(badge(f.n_warm > 0 ? "warm" : f.n_warm_degraded > 0 ? "warm_degraded" : "cold"));
+      tr.append(cell("Log d'erreur", code, "obs-cell-main"));
+      tr.append(cell("Cold / warm", `${f.n_cold} / ${f.n_warm}${f.n_warm_degraded ? ` (+${f.n_warm_degraded} deg.)` : ""}`));
+      tr.append(cell("Temps cold → warm", `${fmtMs(f.median_duration_cold)} → ${fmtMs(f.median_duration_warm)}`));
+      const dTime = el("span", "obs-delta", fmtDelta(f.delta_time_pct));
+      if (f.delta_time_pct != null) dTime.dataset.tone = f.delta_time_pct >= 0 ? "gain" : "loss";
+      tr.append(cell("Δ temps", dTime));
+      const approx = f.estimated ? "≈" : "";
+      const tok = (n) => (n == null ? "—" : `${approx}${fmtTokens(n)}`);
+      tr.append(cell("Tokens cold → warm", `${tok(f.median_tokens_cold)} → ${tok(f.median_tokens_warm)}`));
+      const dTok = el("span", "obs-delta", fmtDelta(f.delta_tokens_pct));
+      if (f.delta_tokens_pct != null) dTok.dataset.tone = f.delta_tokens_pct >= 0 ? "gain" : "loss";
+      tr.append(cell("Δ tokens", dTok));
+      tr.append(cell("Tokens total", tok(f.tokens_total), "obs-cell-total"));
+      tr.append(cell("Last seen", fmtDate(f.last_seen_at)));
+
+      bodyEl.append(tr);
+      if (open) bodyEl.append(detailRow(f.fingerprint, snap));
+    });
+  }
+
+  function render(snap) {
+    renderSource(snap);
+    renderKpis(snap);
+    renderTable(snap);
+  }
+
+  function download(name, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = el("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  section.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-action]")?.dataset.action;
+    if (!action) return;
+    if (action === "json") download("log-metrics.json", M.exportJSON(), "application/json");
+    if (action === "csv") download("log-metrics.csv", M.exportCSV(), "text/csv");
+    if (action === "memos") M.clearMemos();
+    if (action === "reset" && window.confirm("Reset all metrics and memos?")) {
+      expanded.clear();
+      M.reset();
+    }
+  });
+
+  function toggleRow(tr) {
+    const fp = tr.dataset.fp;
+    if (!fp) return;
+    if (expanded.has(fp)) expanded.delete(fp);
+    else expanded.add(fp);
+    render(M.getSnapshot());
+  }
+
+  bodyEl.addEventListener("click", (event) => {
+    const tr = event.target.closest("tr.obs-row");
+    if (tr) toggleRow(tr);
+  });
+
+  bodyEl.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const tr = event.target.closest("tr.obs-row");
+    if (!tr) return;
+    event.preventDefault();
+    toggleRow(tr);
+  });
+
+  tableEl.tHead.addEventListener("click", (event) => {
+    const th = event.target.closest("th[data-key]");
+    if (!th) return;
+    if (sortState.key === th.dataset.key) sortState.dir *= -1;
+    else {
+      sortState.key = th.dataset.key;
+      sortState.dir = th.dataset.key === "code" || th.dataset.key === "last_seen_at" ? 1 : -1;
+    }
+    renderHead();
+    render(M.getSnapshot());
+  });
+
+  tableEl.tHead.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const th = event.target.closest("th[data-key]");
+    if (!th) return;
+    event.preventDefault();
+    th.click();
+  });
+
+  renderHead();
+  render(M.getSnapshot());
+  M.onChange(render);
+  M.hydrate();
+})();
 
 </script>
 </body>

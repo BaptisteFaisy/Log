@@ -13,7 +13,9 @@ const dataUri = (name, mime) =>
 
 const css = read("styles.css");
 const bg = read("bg.js");
+const metrics = read("metrics.js");
 const app = read("app.js");
+const observability = read("observability.js");
 const logo = dataUri("logo.png", "image/png");
 const icon = dataUri("favicon.png", "image/png");
 const touch = dataUri("apple-touch-icon.png", "image/png");
@@ -29,7 +31,9 @@ const swaps = [
   ['<link rel="apple-touch-icon" href="apple-touch-icon.png" />', `<link rel="apple-touch-icon" href="${touch}" />`],
   ['<img class="brand-logo" src="logo.png" alt="Log" />', `<img class="brand-logo" src="${logo}" alt="Log" />`],
   ['<script src="bg.js"></script>', `<script>\n${bg}\n</script>`],
+  ['<script src="metrics.js"></script>', `<script>\n${metrics}\n</script>`],
   ['<script src="app.js"></script>', `<script>\n${app}\n</script>`],
+  ['<script src="observability.js"></script>', `<script>\n${observability}\n</script>`],
 ];
 
 for (const [from, to] of swaps) {

@@ -1,12 +1,23 @@
 # Prompt — Observabilité des résolutions d'erreurs (site log-errors)
 
-Tu travailles dans `C:\Users\gaiam\Downloads\Log`, site statique vanilla (HTML/CSS/JS, aucun build, aucun framework) déployé sur Vercel sous `https://log-errors.vercel.app/`. Fichiers : `index.html`, `app.js`, `styles.css`, `bg.js`, `previews.html`. La console simule des logs d'erreur et des agents qui les résolvent (voir `createAgent` et `finish` dans `app.js`).
+**Le site n'est pas un projet local : sa source de vérité est le dépôt GitHub
+[`GaiaSG94/Log`](https://github.com/GaiaSG94/Log) (branche `main`), déployé sur Vercel
+sous `https://log-errors.vercel.app/`.** Toute modification doit être faite dans ce
+dépôt (clone / `git pull` avant de travailler), jamais uniquement sur un dossier local.
+Le dépôt [`BaptisteFaisy/Log`](https://github.com/BaptisteFaisy/Log) contient les journaux
+et le travail base de données / Kafka avec lequel cette instrumentation doit rester
+compatible.
+
+Site statique vanilla (HTML/CSS/JS, aucun build, aucun framework). Fichiers :
+`index.html`, `app.js`, `styles.css`, `bg.js`, `metrics.js`, `observability.js`,
+`previews.html`. La console simule des logs d'erreur et des agents qui les résolvent
+(voir `createAgent` et `finish` dans `app.js`).
 
 ## Objectif
 
 Ajouter une instrumentation et un tableau de bord « Observabilité » qui mesurent et affichent, par log d'erreur et globalement :
 
-1. **Temps de résolution avant/après** (médiane et moyenne, en ms et en s).
+1. **Temps de résolution avant/après** (médiane, en ms et en s ; la moyenne est volontairement écartée pour rester lisible sur de petits échantillons).
 2. **Tokens consommés pour la résolution avant/après** (par log d'erreur).
 3. **Total de tokens consommés pour résoudre les problèmes** (cumul, avec répartition cold/warm).
 4. **Durée de chaque tâche** du pipeline de résolution (décomposition par étape), car les métriques ci-dessus en dépendent.
@@ -14,45 +25,40 @@ Ajouter une instrumentation et un tableau de bord « Observabilité » qui mesur
 ### Définition de « avant » et « après » (à respecter strictement)
 
 - **avant / cold** = première résolution réussie d'un log d'erreur donné (aucun mémo disponible).
-- **après / warm** = le même log d'erreur se représente et un agent précédent a laissé un mémo `.md` ; l'agent courant le lit avant de commencer, ce qui doit réduire temps et tokens.
+- **après / warm** = le même log d'erreur se représente et un agent précédent a laissé une méthode de résolution en base ; l'agent courant la lit avant de commencer, ce qui doit réduire temps et tokens.
 - **warm dégradé** = récurrence sans mémo exploitable (absent, illisible, obsolète). À compter et afficher séparément, **exclu** des moyennes warm.
-- L'identité d'un log d'erreur est un `fingerprint` stable, pas le message brut : `sha256(code + "|" + message_normalisé + "|" + première_frame_de_stack_utile)`. Normaliser le message (IDs, nombres, timestamps, chemins absolus remplacés par des placeholders) pour que deux occurrences du même bug partagent le fingerprint.
+- L'identité d'un log d'erreur est un `fingerprint` stable, pas le message brut : hash de `code + "|" + message_normalisé + "|" + première_frame_de_stack_utile` (14 hex). Normaliser le message (IDs, nombres, timestamps, chemins absolus remplacés par des placeholders) pour que deux occurrences du même bug partagent le fingerprint. La base peut imposer `sha256` : dans ce cas, ne pas recalculer ailleurs, lire la valeur fournie par la base.
 - Un « run » = une tentative de résolution, de la réception du log à la fin (résolue, échouée ou abandonnée). Un run échoué n'entre pas dans les moyennes de temps/tokens mais compte dans le taux d'échec.
 
-## Contrat de mémo `.md`
+## Mémo de résolution (base de données, pas un fichier local)
 
-Chaque résolution réussie cold écrit un mémo réutilisable :
+La méthode de résolution vit dans la base PostgreSQL `historique` gérée par Baptiste
+(service Aiven `pg-memoire`). Le front ne crée pas de fichier `.md` : il enregistre un
+document identifié par le `fingerprint`, exposé sous `db://error_resolutions/<fingerprint>`.
+Un export `.md` reste possible pour la lecture humaine, mais la source de vérité est la base.
 
-```
-docs/error-memos/<fingerprint>.md
----
-fingerprint: <sha256>
-code: ERR_...
-cause: ...
-fix: ...
-files: [ ... ]
-verification: ...
-tokens_used: 12345
-duration_ms: 4567
-agent: agent/fix-...
-updated_at: 2026-10-22T10:00:00.000Z
-runs: 1
----
-<explication courte, pièges, commandes de vérification>
-```
+Champs minimaux enregistrés : `fingerprint`, `code`, `cause`, `fix`, `files`,
+`verification`, `tokens_used`, `duration_ms`, `agent`, `updated_at`, `runs`.
+Si le schéma exact de la base n'est pas disponible dans le dépôt `Log`, demander les noms
+de tables/colonnes à Baptiste au lieu de les inventer.
 
-Un agent warm **doit** charger ce mémo avant toute analyse ; s'il ne le trouve pas, le run est `warm_degraded`, pas `cold`. Le mémo est mis à jour (compteur `runs`, `updated_at`) après chaque warm réussi.
+Un agent warm **doit** charger ce mémo avant toute analyse ; s'il ne le trouve pas, le run
+est `warm_degraded`, pas `cold`. Le mémo est mis à jour (compteur `runs`, `updated_at`)
+après chaque warm réussi. Le stockage local (`localStorage`) sert de cache / fallback
+quand l'API PostgreSQL n'est pas configurée.
 
 ## Instrumentation à ajouter
 
 Créer un module `metrics.js` (vanilla, IIFE ou objet global `window.LogMetrics`, aucune dépendance) exposant :
 
 - `startRun({ code, fingerprint, message, stack })` → `run_id`, `started_at`, `mode` attendu.
-- `startStep(runId, name)` / `endStep(runId, name)` pour les étapes : `receive`, `fingerprint`, `memo_lookup`, `reproduce`, `diagnose`, `patch`, `verify`, `write_memo`.
+- `step(runId, name)` pour les étapes : `receive`, `fingerprint`, `memo_lookup`, `diagnose`, `patch`, `verify`, `write_memo`.
 - `addTokens(runId, { input, output, cache_read, cache_write, estimated })`.
 - `endRun(runId, { status: "resolved" | "failed" | "abandoned" })`.
 - `getSnapshot()` → agrégats prêts à afficher.
-- `exportJSON()` / `exportCSV()` / `reset()`.
+- `exportJSON()` / `exportCSV()` / `reset()` / `clearMemos()`.
+- `hydrate()` / `isOnline()` : lecture optionnelle de l'API PostgreSQL quand
+  `window.LOG_METRICS_API` est défini (vide par défaut → 100 % local).
 
 Règles de mesure :
 
@@ -80,7 +86,7 @@ Règles de mesure :
       "steps": [{ "name": "memo_lookup", "duration_ms": 12 }],
       "tokens": { "input": 12000, "output": 1800, "cache_read": 0, "cache_write": 0, "estimated": false },
       "tokens_total": 13800,
-      "memo": { "hit": true, "path": "docs/error-memos/9f2c....md", "stale": false },
+      "memo": { "hit": true, "path": "db://error_resolutions/9f2c...", "stale": false },
       "agent": "agent/fix-payload-invalid",
       "attempt": 2
     }
@@ -94,7 +100,7 @@ Règles de mesure :
 Par fingerprint (une ligne du tableau) :
 
 - `n_cold`, `n_warm`, `n_warm_degraded`, `n_failed`.
-- `median_duration_cold`, `median_duration_warm` (médiane = métrique principale, moyenne en secondaire), `delta_time_pct = (cold − warm) / cold`.
+- `median_duration_cold`, `median_duration_warm`, `delta_time_pct = (cold − warm) / cold`.
 - `median_tokens_cold`, `median_tokens_warm`, `delta_tokens_pct`.
 - `tokens_total` (somme de tous les runs de ce fingerprint).
 - `last_seen_at`.
@@ -118,8 +124,8 @@ Contenu :
 1. **Bandeau KPI** (cartes) : Temps médian avant / après + gain % ; Tokens médians avant / après + gain % ; Tokens totaux consommés ; Taux de mémoïsation ; Résolutions (cold/warm/échecs).
 2. **Tableau par log d'erreur** : `code`, badge mode, `n cold` / `n warm`, `temps cold`, `temps warm`, `Δ temps`, `tokens cold`, `tokens warm`, `Δ tokens`, `tokens total`, `dernière occurrence`. Tri par tokens totaux décroissants, en-têtes cliquables.
 3. **Détail d'un run** (ligne dépliable) : barre empilée des étapes (`receive → … → write_memo`), `duration_ms`, `agent_ms`, tokens input/output, mémo chargé (chemin), statut.
-4. **Actions** : « Exporter JSON », « Exporter CSV », « Réinitialiser les métriques » (confirmation).
-5. **Légende explicite** : « avant = 1re résolution (aucun mémo) » / « après = récurrence avec mémo .md ».
+4. **Actions** : « Exporter JSON », « Exporter CSV », « Vider les mémos », « Réinitialiser les métriques » (confirmation).
+5. **Légende explicite** : « avant = 1re résolution (aucun mémo) » / « après = récurrence avec la méthode de résolution enregistrée en base ».
 
 Accessibilité : tableaux avec `<caption>` et `scope`, focus visible, contrastes AA, responsive (le tableau devient des cartes sous 720 px), `aria-live="polite"` sur les KPI mis à jour.
 
@@ -128,25 +134,41 @@ Accessibilité : tableaux avec `<caption>` et `scope`, focus visible, contrastes
 Instrumenter le flux existant `createAgent` → `finish` dans `app.js` :
 
 - Au lancement : `startRun`, mode déterminé par l'existence d'un mémo pour le fingerprint.
-- Les 4 étapes actuelles (`analyse`, `correctif`, `vérification`, `prêt`) deviennent des steps chronométrées ; conserver les timings visuels actuels.
+- Les 4 étapes actuelles (`analyse`, `correctif`, `vérification`, `prêt`) deviennent des steps chronométrées (`diagnose`, `patch`, `verify`, `write_memo`) ; les timings visuels sont conservés, mais les runs warm sont accélérés.
 - À `finish` : `endRun(resolved)`, tokens simulés plausibles et **déterministes par fingerprint** (PRNG seedé) : cold ≈ 18k–42k input + 2k–6k output ; warm ≈ 2k–6k input + 400–1.2k output. Écrire/mettre à jour le mémo après un cold réussi ; les occurrences suivantes du même scénario sont warm.
 - Ajouter un badge `cold` / `warm · memo` sur la carte agent.
-- Le bouton « Lancer un log d'erreur » doit alterner les scénarios comme aujourd'hui ; lancer 4 fois le même scénario doit produire 1 cold + 3 warm.
-- Prévoir `?demo=warm` pour précharger 1 cold + 2 warm et rendre le tableau lisible immédiatement.
+- Le bouton « Lancer un log d'erreur » alterne les scénarios comme aujourd'hui. Pour répéter le même scénario : `?scenario=ERR_PAYLOAD_INVALID` (ou un autre code). 4 lancements séquentiels du même scénario produisent 1 cold + 3 warm.
+- `?demo=warm` précharge 1 cold + 2 warm (scénario forcé sur le premier code) et accélère l'animation pour rendre le tableau lisible immédiatement.
 
-## Phase 2 (optionnelle, à spécifier mais pas à implémenter sans accord)
+## Phase 2 (hooks présents, serveur non déployé)
 
-Ingestion réelle : `POST /api/runs` (Vercel Function) acceptant le même schéma, validation stricte, stockage KV/Postgres, agrégation côté serveur, et bascule du front sur `GET /api/metrics` si `window.LOG_METRICS_API` est défini. Le mode localStorage reste le fallback par défaut.
+`metrics.js` sait déjà lire `GET /api/metrics`, `POST /api/runs` et `POST /api/memos`
+quand `window.LOG_METRICS_API` est défini, avec fallback silencieux sur `localStorage`.
+`index.html` le laisse vide : aucun appel réseau en mode démo. Le branchement réel
+(Vercel Function + PostgreSQL Aiven) reste à faire côté serveur, en réutilisant le schéma
+`historique` de Baptiste.
 
 ## Critères d'acceptation
 
-- 4 clics sur le même scénario : 1 run cold, 3 warm ; le tableau affiche les deux colonnes et un gain positif en temps et en tokens.
+- 4 lancements du même scénario (`?scenario=...`) : 1 run cold, 3 warm ; le tableau affiche les deux colonnes et un gain positif en temps et en tokens.
 - Rechargement de la page : les métriques persistent ; aucun doublon de `run_id`.
 - Un run échoué n'apparaît pas dans les médianes mais est compté dans les échecs.
 - Mémo supprimé puis même erreur : le run est `warm_degraded`, visible séparément, pas compté en cold ni en warm.
 - Export JSON conforme au schéma, export CSV avec une ligne par run, reset vidant storage + UI.
 - Aucune erreur console, aucun appel réseau nouveau en mode démo, fonctionne en statique sur Vercel, responsive 360 px → 1440 px.
 - Vérifier manuellement dans le navigateur (pas de framework de test) et documenter les commandes d'ouverture dans le README si tu en ajoutes un. Ne pas commit sans demande explicite.
+
+## État de l'implémentation (2026-10-22)
+
+- `metrics.js` : mesure, fingerprint, persistance `log.observability.v1`, agrégats, exports,
+  hooks API optionnels. Aucune dépendance, aucun build.
+- `observability.js` : rendu des KPI, tableau triable, détail dépliable par run, exports/reset.
+- `app.js` : instrumentation de `createAgent` → `finish`, tokens simulés déterministes,
+  badge de mode, `?demo=warm` et `?scenario=<CODE>`.
+- `index.html` : section `#observabilite` + lien dans la barre supérieure.
+- `styles.css` : styles de la section, responsive < 720 px (tableau en cartes).
+- Vérification : ouvrir `https://log-errors.vercel.app/?demo=warm` (déployé) ou, en local,
+  servir le dossier avec `npx serve .` puis ouvrir `http://localhost:3000/?demo=warm`.
 
 ## Hors périmètre
 

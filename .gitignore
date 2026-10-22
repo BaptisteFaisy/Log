@@ -1,2 +1,9 @@
 .vercel
 previews-20/
+node_modules/
+.env
+.env.*
+!.env.example
+.certs/
+docs/error-memos/*.md
+docs/error-memos/*.json
