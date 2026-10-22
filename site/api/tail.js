@@ -14,6 +14,29 @@
  */
 const { tailMessages, publicReason, KafkaConfigError } = require('./_kafka.js');
 
+// Le site est public : la lecture est bornee par IP. Chaque instance de
+// fonction a sa propre memoire, ce qui suffit a empecher une boucle navigateur
+// de relancer un consommateur Kafka en rafale.
+const RATE_PER_MIN = 90;
+const hits = new Map();
+
+function rateLimited(ip) {
+  const now = Date.now();
+  const window = hits.get(ip);
+  if (!window || now - window.start > 60000) {
+    hits.set(ip, { start: now, count: 1 });
+    if (hits.size > 5000) hits.clear();
+    return false;
+  }
+  window.count += 1;
+  return window.count > RATE_PER_MIN;
+}
+
+function clientIp(req) {
+  const forwarded = String((req.headers && req.headers['x-forwarded-for']) || '');
+  return forwarded.split(',')[0].trim() || 'unknown';
+}
+
 function json(res, code, payload) {
   res.statusCode = code;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -30,6 +53,14 @@ module.exports = async function handler(req, res) {
 
   const requested = Number((req.query && req.query.limit) || 60);
   const limit = Number.isFinite(requested) ? Math.max(1, Math.min(requested, 200)) : 60;
+
+  if (rateLimited(clientIp(req))) {
+    return json(res, 429, {
+      ok: false,
+      error: 'rate_limited',
+      hint: 'trop de lectures en une minute — attends un instant',
+    });
+  }
 
   let result;
   try {

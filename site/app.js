@@ -498,6 +498,9 @@ const TRACE_KEY = "log.agent.traces.v1";
 const TRACE_MAX = 30; // borne de la memoire locale : les 30 plus recentes
 const TAIL_LIMIT = 60;
 const TAIL_TIMEOUT_MS = 6000;
+// Duree de vie d'une trace « a nous » sans rapport : au-dela, l'agent a fini
+// (delai maximal 45 min) ou n'a jamais demarre, donc plus rien a attendre.
+const RECENT_MS = 60 * 60 * 1000;
 const TRACE_ID_RE = /^[0-9A-Za-z_-]{8,64}$/;
 
 function loadKnownTraces() {
@@ -587,6 +590,31 @@ function tracesFromTail(messages) {
   return out;
 }
 
+/**
+ * Demande a /api/report si CETTE trace a un rapport. Sert a ne pas reprendre
+ * une carte d'agent qui n'a jamais existe : une simple ligne d'erreur dans
+ * otel.logs ne prouve pas qu'un agent a tourne (AGENTS.md : pas de flux
+ * d'agent factice cote front). Jamais bloquant : null si le serveur ne sait pas.
+ */
+async function readReport(traceId) {
+  const controller = new AbortController();
+  const guard = setTimeout(() => controller.abort(), TAIL_TIMEOUT_MS);
+  try {
+    const response = await fetch(`/api/report?trace_id=${encodeURIComponent(traceId)}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => null);
+    if (response.ok && data && data.ok === true) return data; // l'agent a vraiment tourne
+    return null; // 404 pending : aucun rapport
+  } catch (err) {
+    return null;
+  } finally {
+    clearTimeout(guard);
+  }
+}
+
 /** Lecture de /api/tail : jamais bloquante, jamais d'exception qui remonte. */
 async function readTail() {
   const controller = new AbortController();
@@ -613,7 +641,10 @@ async function readTail() {
 }
 
 async function restoreAgents() {
+  // `stored` = les traces publiees par CE navigateur (rememberTrace au clic).
+  // C'est la seule chose qui prouve qu'on attend un agent encore en cours.
   const stored = loadKnownTraces();
+  const mine = new Set(stored.map((t) => t.trace_id));
   const tail = await readTail();
 
   try {
@@ -626,8 +657,6 @@ async function restoreAgents() {
       merged.push(item);
     });
 
-    saveKnownTraces(merged);
-
     if (tail.reason) {
       addRow(
         "dbg",
@@ -636,24 +665,53 @@ async function restoreAgents() {
     }
 
     // pas de doublon : une trace qui a deja sa carte n'en recoit pas d'autre
-    const todo = merged
+    const candidates = merged
       .filter((item) => !state.agents.some((agent) => agent.traceId === item.trace_id))
-      .slice(0, MAX_AGENTS);
+      .slice(0, MAX_AGENTS * 2);
 
-    if (!todo.length) return;
+    if (!candidates.length) return;
+
+    // Une carte d'agent n'est reprise que si elle a une REALITE cote serveur :
+    //   - un rapport publie dans otel-reports  -> l'agent a vraiment tourne ;
+    //   - une trace publiee par ce navigateur  -> l'agent peut etre en cours.
+    // Une simple ligne d'erreur dans otel.logs ne suffit pas : sinon la page
+    // affiche des « agents en cours » qui n'ont jamais existe et qui tournent a
+    // vide jusqu'au bout du delai d'attente (bug constate le 2026-10-22).
+    const checked = await Promise.all(
+      candidates.map(async (item) => ({ item, report: await readReport(item.trace_id) })),
+    );
+
+    // Une trace « a nous » sans rapport n'est reprise que si elle est RECENTE :
+    // au-dela, l'agent a forcement fini (ou n'a jamais demarre) et sa carte
+    // tournerait a vide. Purge aussi les vieilles entrees de la memoire locale,
+    // sinon un navigateur qui a connu l'ancien code garde des cartes fantomes.
+    const fresh = (item) => {
+      const at = Date.parse(item.ts || "");
+      return Number.isFinite(at) && Date.now() - at < RECENT_MS;
+    };
+    const keep = checked.filter(({ item, report }) => report || (mine.has(item.trace_id) && fresh(item)));
+    const ignored = checked.length - keep.length;
+    const kept = new Set(keep.map(({ item }) => item.trace_id));
+    saveKnownTraces(stored.filter((t) => kept.has(t.trace_id) || fresh(t)));
+
+    if (ignored > 0) {
+      addRow(
+        "dbg",
+        `reprise agents · ${ignored} trace(s) sans agent ignoree(s) (aucun rapport publie)`,
+      );
+    }
+    if (!keep.length) return;
 
     addRow(
       "inf",
-      tail.reason
-        ? `reprise agents · ${todo.length} carte(s) relue(s) depuis la memoire locale`
-        : `reprise agents · ${todo.length} carte(s) relue(s) dans otel.logs`,
+      `reprise agents · ${keep.length} carte(s) reprise(s) · ${keep.filter((c) => c.report).length} avec rapport`,
     );
 
     // du plus ancien au plus recent : la carte la plus recente finit en tete
-    todo
-      .slice()
+    keep
+      .slice(0, MAX_AGENTS)
       .reverse()
-      .forEach((item, index) => {
+      .forEach(({ item }, index) => {
         setTimeout(() => {
           if (state.agents.some((agent) => agent.traceId === item.trace_id)) return;
           const code = item.code || codeForTrace(item);
@@ -962,10 +1020,11 @@ let kafkaFailures = 0;
 /* Banniere : source reelle des lignes                                 */
 /* ------------------------------------------------------------------ */
 
-/* La banniere du terminal affiche la meme verite que le bouton : « kafka
-   aiven » seulement apres une reponse reelle de GET /api/logs. Elle ne fait
-   aucun appel reseau de son propre chef — elle lit l'etat deja verifie par
-   verifyKafka(), pour ne pas doubler les requetes ni contredire le bouton. */
+/* La banniere du terminal dit d'ou viennent les lignes, et seulement ce qui a
+   ete prouve : « kafka aiven » n'apparait qu'apres une lecture reelle de
+   GET /api/tail (topic Aiven otel.logs). Aucun libelle n'est ecrit en dur dans
+   le HTML, et la banniere ne fait aucun appel reseau de son propre chef : elle
+   lit l'etat deja verifie par tailOnce() (lecture) et verifyKafka() (bouton). */
 const sourceEl = document.getElementById("source");
 
 function paintSource(kind, label, title) {
@@ -1072,15 +1131,17 @@ function offsetKey(msg) {
 
 function paintTailSource(up, count, detail) {
   if (up === true) {
+    // Le mot « aiven » n'apparait qu'ici : apres une lecture reelle du topic
+    // Aiven otel.logs (GET /api/tail). Aucun libelle n'est ecrit en dur.
     paintSource(
       "kafka",
-      `kafka · otel.logs`,
-      `${count} message${count > 1 ? "s" : ""} lu${count > 1 ? "s" : ""} dans le topic Aiven otel.logs${detail ? ` · ${detail}` : ""}`,
+      `kafka aiven · otel.logs`,
+      `${count} message${count > 1 ? "s" : ""} lu${count > 1 ? "s" : ""} dans le topic Aiven otel.logs (kafka-1687d005)${detail ? ` · ${detail}` : ""}`,
     );
   } else if (up === false) {
-    paintSource("down", "kafka · injoignable", detail || "Lecture de otel.logs impossible.");
+    paintSource("down", "kafka aiven · injoignable", detail || "Lecture de otel.logs impossible.");
   } else {
-    paintSource("pending", "kafka · …", detail || "Lecture de otel.logs en cours…");
+    paintSource("pending", "kafka aiven · …", detail || "Lecture de otel.logs en cours…");
   }
 }
 

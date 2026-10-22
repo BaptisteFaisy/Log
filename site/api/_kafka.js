@@ -519,7 +519,7 @@ function startTail(cfg) {
         // eachBatch (et non eachMessage) pour pouvoir SAUTER le debut du topic :
         // relire 10 000 messages a chaque demarrage a froid ferait expirer la
         // fonction Vercel. On recule seulement de TAIL_BACKFILL messages.
-        eachBatch: async ({ batch }) => {
+        eachBatch: async ({ batch, resolveOffset, heartbeat }) => {
           const partition = Number(batch.partition);
           const high = self.targets.get(partition);
           if (!seeked.has(partition)) {
@@ -544,7 +544,11 @@ function startTail(cfg) {
           for (const message of batch.messages) {
             self.reached.set(partition, Number(message.offset) + 1);
             pushTail(self, partition, message);
+            // Sans resolveOffset, kafkajs ne fait pas avancer la position du
+            // lot : le consommateur resterait bloque sur les memes messages.
+            resolveOffset(message.offset);
           }
+          await heartbeat();
           if (!self.ready && settled()) self.ready = true;
         },
       });
