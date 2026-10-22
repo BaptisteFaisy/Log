@@ -17,7 +17,10 @@ const DATABASES = (process.env.PG_MEMOIRE_DATABASES || "historique")
   .filter(Boolean);
 
 const SAMPLE_ROWS = 25;
-const CELL_CHARS = 320;
+// Un guide (trace de resolution) fait facilement 1 000 caracteres : 320 le
+// coupait en pleine phrase et le rendait inutilisable pour l'agent suivant.
+const CELL_CHARS = 8000;
+const CELL_SQL_CHARS = 8000;
 const TIMEOUT_MS = Number(process.env.PG_MEMOIRE_TIMEOUT_MS) || 8000;
 const CACHE_OK = "public, max-age=0, s-maxage=30, stale-while-revalidate=300";
 const CACHE_ERROR = "public, max-age=0, s-maxage=10";
@@ -100,7 +103,7 @@ function keyColumn(columns, pk) {
 function selectExpression(column) {
   const id = quoteIdent(column.name);
   if (column.type === "timestamptz") return `to_char(${id} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
-  return `left(${id}::text, 2000)`;
+  return `left(${id}::text, ${CELL_SQL_CHARS})`;
 }
 
 async function readDatabase(database) {
