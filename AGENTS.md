@@ -23,9 +23,11 @@ Règles :
 
 Toute mise à jour du site https://log-lac-five.vercel.app suit ce chemin unique :
 
-1. **Vercel** : déployer depuis ce dossier avec `npx vercel --prod`, projet
-   `log` (`.vercel/project.json` → `prj_kNIldg2h6v3Q0VjdJGQizMkMGrwU`).
-   Ne jamais relier ce dossier à un autre projet (ex. `log-errors`).
+1. **Vercel** : déployer depuis `site/` avec `npx vercel deploy --prod --yes`,
+   projet `log` (`site/.vercel/project.json` →
+   `prj_kNIldg2h6v3Q0VjdJGQizMkMGrwU`). Le site publié est
+   https://log-lac-five.vercel.app. Ne jamais relier ce dossier à un autre
+   projet (ex. `log-errors`).
 2. **GitHub** : committer puis pousser sur `BaptisteFaisy/Log` (remote
    `baptiste`, branche `main`), jamais sur un dépôt parallèle.
 3. **Compatibilité** : avant de pousser, `git fetch baptiste` puis vérifier que

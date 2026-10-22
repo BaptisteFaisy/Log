@@ -2,6 +2,8 @@
 (function () {
   const ENDPOINT = "/api/pg-memoire";
   const DUMP_ENDPOINT = "/api/dump";
+  // Ligne entière : /api/pg-memoire tronque les cellules, la popup a besoin du texte complet.
+  const ROW_ENDPOINT = "/api/pg-memoire-row";
   const REFRESH_MS = 30000;
 
   const section = document.getElementById("observabilite");
@@ -328,10 +330,9 @@
 
   const wrap = el("div", "obs-table-wrap");
   const tableEl = el("table", "obs-table");
-  const caption = el("caption");
   const thead = el("thead");
   const tbody = el("tbody");
-  tableEl.append(caption, thead, tbody);
+  tableEl.append(thead, tbody);
   wrap.append(tableEl);
 
   const legend = el("p", "obs-legend");
@@ -426,28 +427,14 @@
 
   function renderKpis() {
     const cards = [];
-    const historique = find("historique.historique");
-    const memos = find("historique.error_resolutions");
     const runs = find("historique.agent_runs");
     const logs = find("historique.logs");
-
-    if (historique) {
-      const rows = rowsOf(historique.table);
-      cards.push(kpi("Problèmes connus", String(historique.table.rows), `${sum(rows, "occurrences")} occurrences${sampled(historique.table)}`));
-    }
-
-    if (memos) {
-      const rows = rowsOf(memos.table);
-      cards.push(kpi("Mémos de résolution", String(memos.table.rows), `${sum(rows, "runs")} runs · ${fmtTokens(sum(rows, "tokens_used"))} tokens${sampled(memos.table)}`));
-    }
 
     if (runs) {
       const rows = rowsOf(runs.table);
       const count = (test) => rows.filter(test).length;
-      const hits = count((r) => r.memo_hit === "true");
       cards.push(
         kpi("Runs d'agents", String(runs.table.rows), `${count((r) => r.mode === "cold")} cold · ${count((r) => r.mode === "warm")} warm · ${count((r) => r.status !== "resolved")} failed`),
-        kpi("Memo hit rate", rows.length ? `${Math.round((hits / rows.length) * 100)} %` : "—", `${hits} / ${rows.length} runs`, hits ? "gain" : null),
         kpi("Tokens des runs", fmtTokens(sum(rows, "tokens_total")), `${fmtMs(sum(rows, "duration_ms"))} au total${sampled(runs.table)}`),
       );
     }
@@ -458,13 +445,8 @@
       cards.push(kpi("Logs reçus", String(logs.table.rows), last ? `dernier ${fmtDate(last)}` : "aucun"));
     }
 
-    const all = tables();
-    cards.push(
-      kpi("Lignes", String(all.reduce((total, { table }) => total + table.rows, 0)), `${plural(all.length, "table")} · ${plural(state.data.databases.length, "base")}`),
-      kpi("PostgreSQL", state.data.version || "—", state.data.databases.map((db) => `${db.name} ${db.size || "indisponible"}`).join(" · ")),
-    );
-
     kpisEl.replaceChildren(...cards);
+    kpisEl.hidden = cards.length === 0;
   }
 
   function renderTabs() {
@@ -575,13 +557,58 @@
 
     dialog.showModal();
     dialogBody.scrollTop = 0;
+
+    loadFullGuide(entry);
+  }
+
+  /* Texte complet du guide -------------------------------------------- */
+  // /api/pg-memoire tronque chaque cellule à 320 caractères : assez pour la
+  // liste, pas pour lire une résolution. La popup demande donc la ligne entière,
+  // puis reconstruit le guide avec les mêmes règles que le tableau.
+
+  let fullGuideToken = 0;
+
+  async function loadFullGuide(entry) {
+    const database = entry.key.split(".")[0];
+    const primaryKey = entry.table.key;
+    const id = primaryKey ? entry.r[primaryKey] : null;
+    if (!database || !entry.table.name || !primaryKey || id == null || id === "") return;
+
+    const token = ++fullGuideToken;
+    dialogStatus.textContent = "chargement du texte complet…";
+
+    const query = new URLSearchParams({ db: database, table: entry.table.name, id: String(id), key: primaryKey });
+
+    try {
+      const response = await fetch(`${ROW_ENDPOINT}?${query}`, { headers: { Accept: "application/json" } });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || !Array.isArray(data.columns)) {
+        throw new Error((data && data.error) || `HTTP ${response.status}`);
+      }
+      // Une autre ligne a été ouverte entre-temps : ce résultat est périmé.
+      if (token !== fullGuideToken) return;
+
+      // La ligne complète, remise sous la même forme que dans la liste.
+      const full = {};
+      data.columns.forEach((column, i) => {
+        full[column.name] = data.values[i];
+      });
+
+      entry.full = full;
+      dialogText.textContent = entry.preset.guide(full).text;
+      dialogStatus.textContent = data.truncated ? `texte coupé à ${data.cellLimit} caractères` : "";
+      log("inf", `GET ${ROW_ENDPOINT} 200 · ${database}.${entry.table.name} ${primaryKey}=${id} · texte complet`);
+    } catch (error) {
+      if (token !== fullGuideToken) return;
+      dialogStatus.textContent = "texte complet indisponible — texte tronqué affiché";
+      log("wrn", `GET ${ROW_ENDPOINT} failed · ${error.message}`);
+    }
   }
 
   function renderTable() {
     const found = find(state.current);
 
     if (!found) {
-      caption.textContent = "pg-memoire";
       thead.replaceChildren();
       tbody.replaceChildren(emptyRow("Aucune table lisible.", 1));
       return;
@@ -590,12 +617,6 @@
     const { db, table } = found;
     const preset = PRESETS[`${db.name}.${table.name}`] || generic(table);
     const columns = preset.columns;
-
-    const bits = [`${db.name}.${table.name}`, plural(table.rows, "ligne")];
-    if (table.rows > table.sample.length) bits.push(`${table.sample.length} plus récentes`);
-    if (table.orderBy) bits.push(`tri ${table.orderBy} ↓`);
-    if (table.hidden.length) bits.push(`colonnes masquées : ${table.hidden.join(", ")}`);
-    caption.textContent = `${bits.join(" · ")}. Cliquez une ligne pour le détail.`;
 
     const head = el("tr");
     columns.forEach((column, i) => {
@@ -639,7 +660,6 @@
   }
 
   function renderStatus(text) {
-    caption.textContent = "pg-memoire";
     thead.replaceChildren();
     kpisEl.replaceChildren();
     tbody.replaceChildren(emptyRow(text, 1));
@@ -777,8 +797,10 @@
   copyButton.addEventListener("click", async () => {
     const { entry } = guideView;
     if (!entry) return;
+    // Le texte complet s'il a été chargé, sinon celui de la liste (tronqué).
+    const text = entry.full ? entry.preset.guide(entry.full).text : entry.info.text;
     try {
-      await navigator.clipboard.writeText(entry.info.text);
+      await navigator.clipboard.writeText(text);
       dialogStatus.textContent = "Guide copié";
       log("ok", `guide copié · ${entry.key} · ${entry.title}`);
     } catch {

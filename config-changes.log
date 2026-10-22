@@ -1,0 +1,8 @@
+2026-10-22T13:15Z  opencode/net-resilience  BACKOFF LONG RENDU PERMANENT
+  Demande : "enregistrer cela : Retrying in 34s · attempt 4 · ECONNRESET"
+  Fait : section "Resilience reseau" ajoutee a ~/.config/opencode/AGENTS.md
+         (regle : ne pas retirer le plugin, un Retrying in Ns n'est pas une panne)
+         + clarification README plugin : "Retrying in Ns" = compte a rebours.
+  Etat : plugin net-resilience active (opencode api get /api/plugin), declare
+         dans opencode.json ligne 7.
+  Backup : ~/.config/opencode/backups/net-resilience-20261022-131509.tgz
