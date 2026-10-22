@@ -1,0 +1,67 @@
+{"ts": "2026-10-21T00:36:28+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "baptiste.faisy@gmail.com", "name": "Baptiste Faisy", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:36:28+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "baptiste.faisy@gmail.com", "name": "Baptiste Faisy", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:36:34+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "baptiste.faisy@gmail.com", "name": "Baptiste Faisy", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:36:34+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "baptiste.faisy@gmail.com", "name": "Baptiste Faisy", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:36:53+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 186794}
+{"ts": "2026-10-21T00:36:56+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:36:56+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:36:56+02:00", "event": "request", "method": "GET", "path": "/audit", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:37:12+02:00", "event": "request", "method": "GET", "path": "/audit", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:37:12+02:00", "event": "request", "method": "GET", "path": "/logcat", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:37:31+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 186905}
+{"ts": "2026-10-21T00:37:35+02:00", "event": "request", "method": "GET", "path": "/audit", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:41:11+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:42:46+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:43:01+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:43:15+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:44:39+02:00", "event": "request", "method": "POST", "path": "/shell", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T00:44:39+02:00", "event": "request", "method": "POST", "path": "/install", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:00:53+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:15:44+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 196132}
+{"ts": "2026-10-21T01:15:46+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:15:46+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:15:49+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 33, "dump_ms": 3548}
+{"ts": "2026-10-21T01:16:03+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:16:05+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 33, "dump_ms": 2739}
+{"ts": "2026-10-21T01:19:10+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 197325}
+{"ts": "2026-10-21T01:19:12+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:19:12+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:19:14+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 10, "dump_ms": 2667}
+{"ts": "2026-10-21T01:19:14+02:00", "event": "request", "method": "POST", "path": "/shell", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:19:14+02:00", "event": "shell", "user": "local@vm", "name": "local", "cmd": "getprop ro.product.model", "rc": 0, "duration_ms": 54, "stdout_bytes": 11, "stderr_bytes": 0, "dangerous": false, "client": "127.0.0.1"}
+{"ts": "2026-10-21T01:20:15+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:20:18+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 68, "dump_ms": 3159}
+{"ts": "2026-10-21T01:20:18+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:20:21+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 68, "dump_ms": 2738}
+{"ts": "2026-10-21T01:20:25+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:20:30+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 73, "dump_ms": 4621}
+{"ts": "2026-10-21T01:20:36+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:20:39+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 73, "dump_ms": 2935}
+{"ts": "2026-10-21T01:20:39+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:20:42+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 73, "dump_ms": 2959}
+{"ts": "2026-10-21T01:20:45+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:20:45+02:00", "event": "request", "method": "GET", "path": "/audit", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:34:39+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 201677}
+{"ts": "2026-10-21T01:34:41+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T01:34:44+02:00", "event": "state", "user": null, "serial": "100.79.244.93:43493", "fields": 20, "dump_ms": 2747}
+{"ts": "2026-10-21T01:34:44+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:00:54+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:03:57+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 209515}
+{"ts": "2026-10-21T02:03:59+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:03:59+02:00", "event": "state", "user": null, "serial": "10.188.216.105:43493", "fields": 213, "dump_ms": 145}
+{"ts": "2026-10-21T02:04:03+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:04:03+02:00", "event": "state", "user": null, "serial": "10.188.216.105:43493", "fields": 213, "dump_ms": 25}
+{"ts": "2026-10-21T02:04:03+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:04:03+02:00", "event": "state", "user": null, "serial": "10.188.216.105:43493", "fields": 213, "dump_ms": 25}
+{"ts": "2026-10-21T02:04:03+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:04:03+02:00", "event": "state", "user": null, "serial": "10.188.216.105:43493", "fields": 213, "dump_ms": 23}
+{"ts": "2026-10-21T02:12:12+02:00", "event": "request", "method": "GET", "path": "/health", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:14:07+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 213360}
+{"ts": "2026-10-21T02:14:09+02:00", "event": "request", "method": "GET", "path": "/status", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:14:33+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:14:37+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:14:50+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 213513}
+{"ts": "2026-10-21T02:14:51+02:00", "event": "request", "method": "GET", "path": "/state", "client": "127.0.0.1", "user": "local@vm", "name": "local", "authorized": true, "reason": null}
+{"ts": "2026-10-21T02:14:52+02:00", "event": "state", "user": null, "serial": "100.79.244.93:5555", "fields": 378, "dump_ms": 3}
+{"ts": "2026-10-21T03:28:12+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 640058}
+{"ts": "2026-10-21T11:48:04+02:00", "event": "start", "port": 8787, "serial": "100.79.244.93:5555", "pid": 651086}

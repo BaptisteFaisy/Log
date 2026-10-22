@@ -1,0 +1,174 @@
+    PID    PPID     ELAPSED CMD
+      1       0    04:25:26 /sbin/init
+      2       0    04:25:26 [kthreadd]
+      3       2    04:25:26 [pool_workqueue_release]
+      4       2    04:25:26 [kworker/R-rcu_g]
+      5       2    04:25:26 [kworker/R-rcu_p]
+      6       2    04:25:26 [kworker/R-slub_]
+      7       2    04:25:26 [kworker/R-netns]
+     12       2    04:25:26 [kworker/R-mm_pe]
+     13       2    04:25:26 [rcu_tasks_kthread]
+     14       2    04:25:26 [rcu_tasks_trace_kthread]
+     15       2    04:25:26 [ksoftirqd/0]
+     16       2    04:25:26 [rcu_preempt]
+     17       2    04:25:26 [migration/0]
+     18       2    04:25:26 [cpuhp/0]
+     19       2    04:25:26 [cpuhp/1]
+     20       2    04:25:26 [migration/1]
+     21       2    04:25:26 [ksoftirqd/1]
+     23       2    04:25:26 [kworker/1:0H-events_highpri]
+     24       2    04:25:26 [cpuhp/2]
+     25       2    04:25:26 [migration/2]
+     26       2    04:25:26 [ksoftirqd/2]
+     28       2    04:25:26 [kworker/2:0H-events_highpri]
+     29       2    04:25:26 [cpuhp/3]
+     30       2    04:25:26 [migration/3]
+     31       2    04:25:26 [ksoftirqd/3]
+     33       2    04:25:26 [kworker/3:0H-kblockd]
+     38       2    04:25:26 [kdevtmpfs]
+     39       2    04:25:26 [kworker/R-inet_]
+     40       2    04:25:26 [kauditd]
+     41       2    04:25:26 [oom_reaper]
+     43       2    04:25:26 [kworker/R-write]
+     44       2    04:25:26 [kcompactd0]
+     45       2    04:25:26 [kworker/R-crypt]
+     46       2    04:25:26 [kworker/R-kinte]
+     47       2    04:25:26 [kworker/R-kbloc]
+     48       2    04:25:26 [kworker/R-blkcg]
+     51       2    04:25:26 [kworker/R-tpm_d]
+     52       2    04:25:26 [watchdogd]
+     54       2    04:25:26 [kworker/1:1H-kblockd]
+     55       2    04:25:26 [kworker/R-rpcio]
+     56       2    04:25:26 [kworker/R-xprti]
+     57       2    04:25:26 [kswapd0]
+     58       2    04:25:26 [kworker/R-nfsio]
+     59       2    04:25:25 [kworker/R-kthro]
+     60       2    04:25:25 [khvcd]
+     61       2    04:25:25 [hwrng]
+     62       2    04:25:25 [kworker/R-dm_bu]
+     63       2    04:25:25 [kworker/R-mld]
+     64       2    04:25:25 [kworker/R-ipv6_]
+     66       2    04:25:25 [kworker/R-btrfs]
+     67       2    04:25:25 [kworker/R-btrfs]
+     68       2    04:25:25 [kworker/R-btrfs]
+     69       2    04:25:25 [kworker/R-btrfs]
+     70       2    04:25:25 [kworker/R-btrfs]
+     71       2    04:25:25 [kworker/R-btrfs]
+     72       2    04:25:25 [kworker/R-btrfs]
+     73       2    04:25:25 [kworker/R-btrfs]
+     74       2    04:25:25 [kworker/R-btrfs]
+     75       2    04:25:25 [kworker/R-btrfs]
+     76       2    04:25:25 [kworker/R-btrfs]
+     77       2    04:25:25 [kworker/R-btrfs]
+     78       2    04:25:25 [kworker/R-btrfs]
+     79       2    04:25:25 [btrfs-cleaner]
+     80       2    04:25:25 [btrfs-transaction]
+     88       2    04:25:25 [kworker/3:1H-kblockd]
+    100       2    04:25:25 [kworker/0:1H-kblockd]
+    109       2    04:25:25 [kworker/2:1H-kblockd]
+    114       1    04:25:25 /usr/lib/systemd/systemd-journald
+    158       1    04:25:24 /usr/lib/systemd/systemd-timesyncd
+    166       1    04:25:24 /usr/lib/systemd/systemd-udevd
+    170       2    04:25:24 [psimon]
+    215       2    04:25:24 [kworker/R-ext4-]
+    251       1    04:25:23 /usr/sbin/cron -f
+    252       1    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/port_listener --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/port_listener.elf
+    253       1    04:25:23 /usr/bin/dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+    257       1    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/maitred --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/maitred.elf
+    259       1    04:25:23 /usr/lib/systemd/systemd-logind
+    263       1    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/vshd --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/vshd.elf
+    280       1    04:25:23 /sbin/agetty -o -- \u --noreset --noclear - linux
+    283       1    04:25:23 /sbin/agetty -o -- \u --noreset --noclear --keep-baud 115200,57600,38400,9600 - vt220
+    305       2    04:25:23 [fusedog1/151]
+    325       1    04:25:23 /usr/lib/systemd/systemd --user
+    335     325    04:25:23 (sd-pam)
+    351     325    04:25:23 /usr/bin/dbus-daemon --session --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+    353     325    04:25:23 /usr/bin/pipewire
+    355     325    04:25:23 /usr/bin/pipewire -c filter-chain.conf
+    367     325    04:25:23 /usr/bin/wireplumber
+    368     325    04:25:23 /usr/bin/pipewire-pulse
+    384     325    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /usr/bin/sommelier --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/sommelier.elf --parent --sd-notify=READY=1 --socket=wayland-0 --stable-scaling --enable-linux-dmabuf /bin/sh -c systemctl --user set-environment WAYLAND_DISPLAY=${WAYLAND_DISPLAY};                     systemctl --user import-environment SOMMELIER_VERSION
+    386     325    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /usr/bin/sommelier --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/sommelier.elf --parent --sd-notify=READY=1 --socket=wayland-1 --stable-scaling --enable-linux-dmabuf /bin/sh -c systemctl --user set-environment WAYLAND_DISPLAY_LOW_DENSITY=${WAYLAND_DISPLAY};                     systemctl --user import-environment SOMMELIER_VERSION
+    389     325    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /usr/bin/sommelier --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/sommelier.elf -X --x-display=0 --sd-notify=READY=1 --no-exit-with-child --x-auth=/home/baptistefaisy/.Xauthority --stable-scaling --enable-xshape --enable-linux-dmabuf /bin/sh -c systemctl --user set-environment DISPLAY=${DISPLAY};                     systemctl --user set-environment XCURSOR_SIZE=${XCURSOR_SIZE};                     systemctl --user import-environment SOMMELIER_VERSION;                     touch /home/baptistefaisy/.Xauthority;                     xauth -f /home/baptistefaisy/.Xauthority add :0 . $(xxd -l 16 -p /dev/urandom);                     . /etc/sommelierrc
+    392     325    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /usr/bin/sommelier --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/sommelier.elf -X --x-display=1 --sd-notify=READY=1 --no-exit-with-child --x-auth=/home/baptistefaisy/.Xauthority --stable-scaling --enable-xshape --enable-linux-dmabuf /bin/sh -c systemctl --user set-environment DISPLAY_LOW_DENSITY=${DISPLAY};                     systemctl --user set-environment XCURSOR_SIZE_LOW_DENSITY=${XCURSOR_SIZE};                     systemctl --user import-environment SOMMELIER_VERSION;                     touch /home/baptistefaisy/.Xauthority;                     xauth -f /home/baptistefaisy/.Xauthority add :1 . $(xxd -l 16 -p /dev/urandom);                     . /etc/sommelierrc
+    416     389    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/Xwayland --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/Xwayland.elf -nolisten tcp -rootless -shm -displayfd 22 -wm 23 -auth /home/baptistefaisy/.Xauthority -fp /usr/share/fonts/X11/misc, /usr/share/fonts/X11/cyrillic, /usr/share/fonts/X11/100dpi/:unscaled, /usr/share/fonts/X11/75dpi/:unscaled, /usr/share/fonts/X11/Type1, /usr/share/fonts/X11/100dpi, /usr/share/fonts/X11/75dpi, built-ins
+    420     392    04:25:23 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/Xwayland --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/Xwayland.elf :1 -nolisten tcp -rootless -shm -displayfd 22 -wm 23 -auth /home/baptistefaisy/.Xauthority -fp /usr/share/fonts/X11/misc, /usr/share/fonts/X11/cyrillic, /usr/share/fonts/X11/100dpi/:unscaled, /usr/share/fonts/X11/75dpi/:unscaled, /usr/share/fonts/X11/Type1, /usr/share/fonts/X11/100dpi, /usr/share/fonts/X11/75dpi, built-ins
+    542     325    04:25:22 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/garcon --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/garcon.elf --server
+    616       1    04:25:22 /usr/lib/polkit-1/polkitd --no-debug --log-level=notice
+    679       1    04:25:22 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+    830     542    04:25:17 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/vshd --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/vshd.elf --inherit_env --forward_to_host_port=751420037
+    832     830    04:25:17 -bash
+   2213     832    04:21:59 bash
+   2223    2213    04:20:37 opencode
+   2893     542    04:18:00 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/vshd --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/vshd.elf --inherit_env --forward_to_host_port=751420038
+   2895    2893    04:18:00 -bash
+   2949    2895    04:17:44 opencode
+   3334       1    04:16:02 /usr/sbin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --port=41641 --tun=tailscale0
+   3526     325    04:15:05 /usr/bin/ssh-agent -D
+   4304     542    04:08:53 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/vshd --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/vshd.elf --inherit_env --forward_to_host_port=751420039
+   4306    4304    04:08:53 -bash
+   4330    4306    04:08:43 opencode
+   5371    4330    04:02:10 /home/baptistefaisy/.opencode/bin/opencode serve --service
+   7289     542    03:46:06 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/vshd --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/vshd.elf --inherit_env --forward_to_host_port=751420040
+   7291    7289    03:46:06 -bash
+   8481     542    03:36:32 /usr/lib/openssh/sftp-server
+  10928     325    03:24:59 /bin/bash -c cd /home/baptistefaisy/stt-android && nohup python3 -m http.server 8000 --bind 0.0.0.0 > /tmp/opencode/http.log 2>&1 & sleep 2; echo "--- test local ---"; curl -sS -o /dev/null -w "http=%{http_code} taille=%{size_download}\n" http://100.99.253.18:8000/Voix-1.0.apk
+  10930   10928    03:24:59 python3 -m http.server 8000 --bind 0.0.0.0
+  11356     325    03:21:28 /home/baptistefaisy/.cargo/bin/zeroclaw daemon
+ 186339       2    02:44:41 [kworker/u9:1-btrfs-endio-write]
+ 187729       1    02:37:24 /usr/bin/python3 -m http.server 8080 --bind 127.0.0.1 --directory /home/baptistefaisy/bin
+ 193390    7291    02:09:38 opencode
+ 194819     325    02:06:44 adb -L tcp:5037 fork-server server --reply-fd 4
+ 197006       1    02:01:18 bash /home/baptistefaisy/bin/phone-watch
+ 203698       2    01:36:41 [kworker/u11:2-btrfs-endio-write]
+ 207384       2    01:23:16 [kworker/u11:0-events_unbound]
+ 213513       1    01:04:33 /usr/bin/python3 /home/baptistefaisy/phone-api/phone_api.py
+ 215953       2       51:26 [kworker/0:2H]
+ 216682       2       46:43 [psimon]
+ 216683       1       46:43 /usr/bin/python3 /home/baptistefaisy/bin/scope-watch
+ 216896       2       45:03 [kworker/u12:1-flush-btrfs-1]
+ 217995       2       42:49 [kworker/2:2-virtio_vsock]
+ 218707       2       35:58 [kworker/u12:3-events_unbound]
+ 219063       2       32:56 [kworker/u10:4-events_unbound]
+ 220936       2       30:03 [kworker/u8:0-btrfs-delayed-meta]
+ 220937       2       30:03 [kworker/u8:1-ipv6_addrconf]
+ 221944       2       29:14 [kworker/u11:4-btrfs-endio-write]
+ 279974       2       25:58 [kworker/u9:4-events_unbound]
+ 365425       2       22:49 [kworker/3:0-cgroup_free]
+ 365455       2       22:29 [kworker/u11:3-btrfs-endio-write]
+ 365783       2       20:59 [kworker/u12:2-btrfs-endio-write]
+ 366039     325       19:53 /bin/bash -c cd /tmp/opencode && nohup adb -s 10.188.216.105:40047 logcat -v time > li-log.txt 2>&1 & sleep 2; echo started
+ 366041  366039       19:53 adb -s 10.188.216.105:40047 logcat -v time
+ 366075       2       19:39 [kworker/1:1-virtio_vsock]
+ 560970       2       14:11 [kworker/2:0-virtio_vsock]
+ 592548       2       13:49 [kworker/u10:0-events_unbound]
+ 621845       2       13:29 [kworker/0:0-virtio_vsock]
+ 629623     384       12:17 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /usr/bin/sommelier --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/sommelier.elf --peer-pid=193390 --client-fd=6 --enable-linux-dmabuf
+ 629633     542       12:14 /opt/google/cros-containers/bin/../lib/ld-linux-x86-64.so.2 --argv0 /opt/google/cros-containers/bin/vshd --library-path /opt/google/cros-containers/bin/../lib --inhibit-rpath  /opt/google/cros-containers/bin/vshd.elf --inherit_env --forward_to_host_port=751420042
+ 629635  629633       12:14 -bash
+ 629805       2       11:41 [kworker/3:3-virtio_vsock]
+ 629847       2       11:23 [kworker/u10:3-btrfs-endio]
+ 629870     325       11:20 /usr/bin/python3 /home/baptistefaisy/bin/decision-router --port 8799
+ 629871     325       11:20 /usr/bin/ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o BatchMode=yes -R 8799:127.0.0.1:8799 ms7d18
+ 631241       2       08:39 [kworker/1:0-cgroup_free]
+ 631259       2       08:34 [kworker/2:1-virtio_vsock]
+ 631297       2       08:24 [kworker/u9:5-btrfs-endio-write]
+ 631327       2       08:11 [kworker/u11:5-btrfs-endio-write]
+ 631422       2       07:37 [kworker/0:1-cgroup_free]
+ 631686       2       06:28 [kworker/3:1-cgroup_release]
+ 631714       2       06:18 [kworker/u10:2-events_unbound]
+ 633474       2       04:44 [kworker/2:3-virtio_vsock]
+ 633678       2       04:14 [kworker/3:2-cgroup_release]
+ 634919       2       03:30 [kworker/u12:0-btrfs-endio-write]
+ 635004       2       02:59 [kworker/u9:0-events_unbound]
+ 635069       2       02:40 [kworker/1:2-virtio_vsock]
+ 635090       2       02:34 [kworker/0:2-virtio_vsock]
+ 635210       2       02:06 [kworker/u12:4-flush-btrfs-1]
+ 635560  197006       00:04 sleep 20
+ 635561    5371       00:03 /bin/bash -c cd /home/baptistefaisy && bash -n bin/emul-scope && bash -n bin/emul-fleet && scp -q bin/emul-scope bin/emul-fleet ms7d18:~/bin/ && timeout 300 ssh -o BatchMode=yes ms7d18 'chmod +x ~/bin/emul-scope ~/bin/emul-fleet; ~/bin/emul-scope 2>&1 | tail -12' 2>&1
+ 635566  635561       00:02 timeout 300 ssh -o BatchMode=yes ms7d18 chmod +x ~/bin/emul-scope ~/bin/emul-fleet; ~/bin/emul-scope 2>&1 | tail -12
+ 635567  635566       00:02 ssh -o BatchMode=yes ms7d18 chmod +x ~/bin/emul-scope ~/bin/emul-fleet; ~/bin/emul-scope 2>&1 | tail -12
+ 635568     166       00:00 (udev-worker)
+ 635569     166       00:00 (udev-worker)
+ 635575    5371       00:00 /bin/bash -c mkdir -p /home/baptistefaisy/logs/pre-kill-$(date +%Y%m%d-%H%M%S) && SNAP=$(ls -d /home/baptistefaisy/logs/pre-kill-* | tail -1) && echo "snapshot: $SNAP" && ps -eo pid,ppid,etime,cmd > "$SNAP/processes.txt" && systemctl list-units --all > "$SNAP/systemd.txt" 2>&1 && adb -s adb-2c6852ac-v3zO57._adb-tls-connect._tcp shell 'settings get secure enabled_accessibility_services; pm list packages -3' > "$SNAP/phone.txt" 2>&1 && echo "OK" && ls -la "$SNAP"
+ 635581  635575       00:00 ps -eo pid,ppid,etime,cmd

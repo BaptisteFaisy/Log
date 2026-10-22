@@ -1,0 +1,14 @@
+[Unit]
+Description=Chien de garde du miroir d'ecran (service d'accessibilite) et d'adb
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/baptistefaisy
+ExecStart=/home/baptistefaisy/bin/scope-watch
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

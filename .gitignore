@@ -1,0 +1,30 @@
+# =====================================================================
+# BaptisteFaisy/Log — journaux du poste
+# ---------------------------------------------------------------------
+# Deny-list de securite : aucun secret ne doit jamais etre versionne.
+# Regle : "un log qui contiendrait un token est un incident, pas un push".
+# =====================================================================
+
+# jetons et mots de passe
+.aiven_token
+*.aiven_token
+token
+*.token
+remote-password*.txt
+*.pem
+*.key
+id_ed25519*
+id_rsa*
+known_hosts
+
+# configuration contenant des secrets
+.env
+.env.*
+!.env.example
+creds.env
+secrets/
+
+# divers
+*.pyc
+__pycache__/
+.DS_Store

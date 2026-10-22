@@ -1,0 +1,15 @@
+INCIDENT dans le flux Kafka.
+topic        : otel.traces
+TraceId      : 508f09ad8fe440ef8d26e3fe32b4ffd8
+severite     : ERROR
+error.type   : db_pool_exhausted
+horodatage   : 2026-10-21 18:02:18.799
+scenario     : platform_db_pool_exhausted
+profil       : infra
+message      : com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Database connection pool exhausted (20/20 in use, 0 available)
+attributs    : {"exception.message": "com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Database connection pool exhausted (20/20 in use, 0 available)", "http.response.status_code": "500", "db.system": "postgresql", "db.connection_pool.name": "HikariPool-1", "db.connection_pool.active": "20", "db.connection_pool.idle": "0", "db.connection_pool.max": "20", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":4}"}
+
+PREUVE (obligatoire avant toute conclusion) :
+  /home/baptistefaisy/aiven-kafka-demo/trace-dump 508f09ad8fe440ef8d26e3fe32b4ffd8 --detectors
+
+Reponds en 4 blocs : PANNIE / CAUSE / PREUVES / ACTION, en distinguant le symptome de la cause racine. N'appelle kafka-health que si le type d'erreur l'exige.

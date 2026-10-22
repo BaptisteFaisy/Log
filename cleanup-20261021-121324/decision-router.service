@@ -1,0 +1,22 @@
+[Unit]
+Description=decision-router - routeur local pour modeles de decision (System One)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=baptistefaisy
+WorkingDirectory=/home/baptistefaisy
+ExecStart=/usr/bin/python3 /home/baptistefaisy/bin/decision-router --port 8799
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/baptistefaisy/logs
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

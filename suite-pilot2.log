@@ -1,0 +1,12 @@
+[1/4] settings-night-mode-on
+      ECHEC  (2 tours, 4160 ms)  [boucle] cmd 'settings get secure ui_night_mode' -> '0' (attendu {'equals': '2'})
+[2/4] settings-open
+      OK   (2 tours, 1967 ms)
+[3/4] open-chrome
+      ECHEC  (4 tours, 206761 ms)  [boucle] app au premier plan '' (attendu 'com.android.chrome')
+[4/4] open-calculator
+      ECHEC  (2 tours, 96353 ms)  [boucle] app au premier plan 'com.zhiliaoapp.musically' (attendu 'com.miui.calculator')
+
+=== 1/4 reussies (25.0 %) — moyenne 2.5 tours — $0.004080 ===
+echecs : boucle=3
+rapport : /home/baptistefaisy/.phone-tasks/suite/20261021-032520.md

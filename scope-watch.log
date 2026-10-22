@@ -1,0 +1,237 @@
+2026-10-21T02:32:12 etat: miroir=True adb=False launch=False
+2026-10-21T02:32:12 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T02:32:39 scope-watch demarre (intervalle 60s)
+2026-10-21T02:32:39 etat: miroir=True adb=False launch=False
+2026-10-21T02:32:39 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T02:33:39 etat: miroir=True adb=False launch=False
+2026-10-21T02:33:39 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T02:34:39 etat: miroir=True adb=True launch=True
+2026-10-21T02:35:39 etat: miroir=True adb=True launch=True
+2026-10-21T02:36:39 etat: miroir=True adb=True launch=True
+2026-10-21T02:37:40 etat: miroir=True adb=True launch=True
+2026-10-21T02:38:40 etat: miroir=True adb=True launch=True
+2026-10-21T02:39:40 etat: miroir=True adb=True launch=True
+2026-10-21T02:40:40 etat: miroir=True adb=True launch=True
+2026-10-21T02:41:42 etat: miroir=False adb=True launch=True
+2026-10-21T02:41:42 miroir KO -> reactivation du service d'accessibilite
+2026-10-21T02:41:45 miroir toujours KO
+2026-10-21T02:42:45 etat: miroir=False adb=True launch=False
+2026-10-21T02:42:45 miroir KO -> reactivation du service d'accessibilite
+2026-10-21T02:42:48 etat: miroir=False adb=True launch=False
+2026-10-21T02:42:48 miroir KO -> reactivation du service d'accessibilite
+2026-10-21T02:42:49 miroir toujours KO
+2026-10-21T02:42:51 miroir toujours KO
+2026-10-21T02:43:09 etat: miroir=False adb=True launch=False
+2026-10-21T02:43:09 miroir KO -> reactivation du service d'accessibilite
+2026-10-21T02:43:19 miroir toujours KO (service: com.teamviewer.quicksupport.addon.universal/.TvAccessibilityService)
+2026-10-21T02:43:49 etat: miroir=True adb=True launch=True
+2026-10-21T02:44:49 etat: miroir=True adb=True launch=True
+2026-10-21T02:45:49 etat: miroir=True adb=True launch=True
+2026-10-21T02:46:49 etat: miroir=True adb=True launch=True
+2026-10-21T02:47:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:48:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:49:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:50:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:51:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:52:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:53:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:54:50 etat: miroir=True adb=True launch=True
+2026-10-21T02:55:51 etat: miroir=True adb=True launch=True
+2026-10-21T02:56:51 etat: miroir=True adb=True launch=True
+2026-10-21T02:57:51 etat: miroir=True adb=True launch=True
+2026-10-21T02:58:51 etat: miroir=True adb=True launch=True
+2026-10-21T02:59:51 etat: miroir=True adb=True launch=True
+2026-10-21T03:00:51 etat: miroir=True adb=True launch=True
+2026-10-21T03:01:52 etat: miroir=True adb=True launch=True
+2026-10-21T03:02:52 etat: miroir=True adb=True launch=True
+2026-10-21T03:03:52 etat: miroir=True adb=True launch=True
+2026-10-21T03:04:53 etat: miroir=True adb=True launch=True
+2026-10-21T03:05:53 etat: miroir=True adb=True launch=True
+2026-10-21T03:06:53 etat: miroir=True adb=True launch=True
+2026-10-21T03:07:53 etat: miroir=True adb=True launch=True
+2026-10-21T03:08:53 etat: miroir=True adb=True launch=True
+2026-10-21T03:09:54 etat: miroir=True adb=True launch=True
+2026-10-21T03:10:54 etat: miroir=True adb=True launch=True
+2026-10-21T03:11:54 etat: miroir=True adb=True launch=True
+2026-10-21T03:12:54 etat: miroir=True adb=True launch=True
+2026-10-21T03:13:54 etat: miroir=True adb=True launch=True
+2026-10-21T03:14:55 etat: miroir=True adb=True launch=True
+2026-10-21T03:15:55 etat: miroir=True adb=True launch=True
+2026-10-21T03:16:55 etat: miroir=True adb=True launch=True
+2026-10-21T03:17:55 etat: miroir=True adb=True launch=True
+2026-10-21T03:18:55 etat: miroir=True adb=True launch=True
+2026-10-21T03:27:00 etat: miroir=False adb=True launch=False
+2026-10-21T03:27:00 miroir KO -> reactivation du service d'accessibilite
+2026-10-21T03:27:09 miroir relance
+2026-10-21T03:28:12 scope-watch demarre (intervalle 60s)
+2026-10-21T03:28:12 etat: miroir=True adb=True launch=True
+2026-10-21T03:29:26 etat: miroir=False adb=True launch=False
+2026-10-21T03:29:26 miroir KO -> reactivation du service d'accessibilite
+2026-10-21T03:29:35 miroir toujours KO (service: null)
+2026-10-21T11:00:01 scope-watch demarre (intervalle 60s)
+2026-10-21T11:00:01 etat: miroir=True adb=True launch=True
+2026-10-21T11:01:01 etat: miroir=True adb=True launch=True
+2026-10-21T11:02:01 etat: miroir=True adb=True launch=True
+2026-10-21T11:10:56 etat: miroir=True adb=False launch=True
+2026-10-21T11:10:56 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:11:56 etat: miroir=True adb=False launch=True
+2026-10-21T11:11:56 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:12:56 etat: miroir=True adb=False launch=True
+2026-10-21T11:12:56 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:13:56 etat: miroir=True adb=False launch=True
+2026-10-21T11:13:56 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:14:57 etat: miroir=True adb=False launch=True
+2026-10-21T11:14:57 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:15:57 etat: miroir=True adb=False launch=True
+2026-10-21T11:15:57 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:16:57 etat: miroir=True adb=False launch=True
+2026-10-21T11:16:57 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:17:57 etat: miroir=True adb=False launch=True
+2026-10-21T11:17:57 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:18:57 etat: miroir=True adb=False launch=True
+2026-10-21T11:18:57 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:19:59 etat: miroir=True adb=False launch=True
+2026-10-21T11:19:59 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:21:00 etat: miroir=True adb=False launch=True
+2026-10-21T11:21:00 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:22:00 etat: miroir=True adb=False launch=True
+2026-10-21T11:22:00 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:23:00 etat: miroir=True adb=False launch=True
+2026-10-21T11:23:00 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:24:14 etat: miroir=True adb=False launch=True
+2026-10-21T11:24:14 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:25:09 etat: miroir=True adb=False launch=True
+2026-10-21T11:25:09 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:25:14 etat: miroir=True adb=False launch=True
+2026-10-21T11:25:14 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:26:14 etat: miroir=True adb=False launch=True
+2026-10-21T11:26:14 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:27:14 etat: miroir=True adb=False launch=True
+2026-10-21T11:27:14 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:28:15 etat: miroir=True adb=False launch=True
+2026-10-21T11:28:15 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:29:15 etat: miroir=True adb=False launch=True
+2026-10-21T11:29:15 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:30:15 etat: miroir=True adb=False launch=True
+2026-10-21T11:30:15 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:31:15 etat: miroir=True adb=False launch=True
+2026-10-21T11:31:15 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:32:16 etat: miroir=True adb=False launch=True
+2026-10-21T11:32:16 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:33:16 etat: miroir=True adb=False launch=True
+2026-10-21T11:33:16 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:34:17 etat: miroir=True adb=False launch=True
+2026-10-21T11:34:17 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:35:17 etat: miroir=True adb=False launch=True
+2026-10-21T11:35:17 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:36:17 etat: miroir=True adb=False launch=True
+2026-10-21T11:36:17 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:37:18 etat: miroir=True adb=False launch=True
+2026-10-21T11:37:18 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:38:18 etat: miroir=True adb=False launch=True
+2026-10-21T11:38:18 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:39:18 etat: miroir=True adb=False launch=True
+2026-10-21T11:39:18 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:40:18 etat: miroir=True adb=False launch=True
+2026-10-21T11:40:18 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:41:18 etat: miroir=True adb=False launch=True
+2026-10-21T11:41:18 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:42:19 etat: miroir=True adb=False launch=True
+2026-10-21T11:42:19 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:43:19 etat: miroir=True adb=False launch=True
+2026-10-21T11:43:19 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:44:20 etat: miroir=True adb=False launch=True
+2026-10-21T11:44:20 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:45:20 etat: miroir=True adb=False launch=True
+2026-10-21T11:45:20 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:46:20 etat: miroir=True adb=False launch=True
+2026-10-21T11:46:20 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:47:20 etat: miroir=True adb=False launch=True
+2026-10-21T11:47:20 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:48:20 etat: miroir=True adb=False launch=True
+2026-10-21T11:48:20 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:49:20 etat: miroir=True adb=False launch=True
+2026-10-21T11:49:21 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:50:21 etat: miroir=True adb=False launch=True
+2026-10-21T11:50:21 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:51:21 etat: miroir=True adb=False launch=True
+2026-10-21T11:51:21 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:52:21 etat: miroir=True adb=False launch=True
+2026-10-21T11:52:21 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:53:21 etat: miroir=True adb=False launch=True
+2026-10-21T11:53:21 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:54:22 etat: miroir=True adb=False launch=True
+2026-10-21T11:54:22 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:55:22 etat: miroir=True adb=False launch=True
+2026-10-21T11:55:22 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:56:22 etat: miroir=True adb=False launch=True
+2026-10-21T11:56:22 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:57:22 etat: miroir=True adb=False launch=True
+2026-10-21T11:57:22 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:58:22 etat: miroir=True adb=False launch=True
+2026-10-21T11:58:22 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T11:59:23 etat: miroir=True adb=False launch=True
+2026-10-21T11:59:23 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:00:11 etat: miroir=True adb=False launch=True
+2026-10-21T12:00:11 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:00:23 etat: miroir=True adb=False launch=True
+2026-10-21T12:00:23 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:00:23 etat: miroir=True adb=False launch=True
+2026-10-21T12:00:24 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:02:38 scope-watch demarre (intervalle 60s)
+2026-10-21T12:02:38 etat: miroir=True adb=False launch=True
+2026-10-21T12:02:38 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:03:39 etat: miroir=True adb=False launch=True
+2026-10-21T12:03:39 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:04:31 etat: miroir=True adb=False launch=True
+2026-10-21T12:04:32 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:04:39 etat: miroir=True adb=False launch=True
+2026-10-21T12:04:39 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:04:52 scope-watch demarre (intervalle 60s)
+2026-10-21T12:04:52 etat: miroir=True adb=False launch=True
+2026-10-21T12:04:52 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:05:53 etat: miroir=True adb=False launch=True
+2026-10-21T12:05:53 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:06:53 etat: miroir=True adb=False launch=True
+2026-10-21T12:06:53 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:07:53 etat: miroir=True adb=False launch=True
+2026-10-21T12:07:53 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:08:53 etat: miroir=True adb=False launch=True
+2026-10-21T12:08:53 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:09:54 etat: miroir=True adb=False launch=True
+2026-10-21T12:09:54 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:10:54 etat: miroir=True adb=False launch=True
+2026-10-21T12:10:54 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:11:54 etat: miroir=True adb=False launch=True
+2026-10-21T12:11:54 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T12:12:54 etat: miroir=True adb=False launch=True
+2026-10-21T12:12:54 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T13:57:50 scope-watch demarre (intervalle 60s)
+2026-10-21T13:57:50 etat: miroir=True adb=False launch=True
+2026-10-21T13:57:50 ecran locked -> reveil + deverrouillage
+2026-10-21T13:57:56    -> ecran locked
+2026-10-21T13:57:56 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T13:58:56 etat: miroir=True adb=False launch=True
+2026-10-21T13:58:56 ecran locked -> reveil + deverrouillage
+2026-10-21T13:59:03    -> ecran locked
+2026-10-21T13:59:03 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:00:04 etat: miroir=True adb=False launch=True
+2026-10-21T14:00:04 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:01:04 etat: miroir=True adb=False launch=True
+2026-10-21T14:01:04 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:02:04 etat: miroir=True adb=False launch=True
+2026-10-21T14:02:04 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:03:05 etat: miroir=True adb=False launch=True
+2026-10-21T14:03:05 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:04:05 etat: miroir=True adb=False launch=True
+2026-10-21T14:04:05 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:05:05 etat: miroir=True adb=False launch=True
+2026-10-21T14:05:05 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:06:06 etat: miroir=True adb=False launch=True
+2026-10-21T14:06:06 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:07:06 etat: miroir=True adb=False launch=True
+2026-10-21T14:07:06 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:08:06 etat: miroir=True adb=False launch=True
+2026-10-21T14:08:06 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
+2026-10-21T14:09:06 etat: miroir=True adb=False launch=True
+2026-10-21T14:09:06 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)

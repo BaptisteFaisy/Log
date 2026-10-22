@@ -1,0 +1,14 @@
+[Unit]
+Description=Watcher ADB distant - reconnexion auto du telephone (mDNS + Tailscale)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/baptistefaisy
+ExecStart=/home/baptistefaisy/bin/phone-watch
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

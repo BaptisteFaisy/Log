@@ -1,0 +1,39 @@
+2026-10-22T01:40:00+02:00 [agent-opencode] PROMPT-HISTORIQUE-PGROUCHE.md : version 3 reecrite
+  - etat verifie : service Aiven "pg-memoire" ABSENT (0 service dans baptiste-c04f) -> prompt v1 obsolete
+  - SQL du prompt valide en execution sur PostgreSQL 17 local (cluster jetable /tmp, arrete et supprime)
+  - 14 pieges reproduits/correctes (dont RETURN QUERY non-SETOF, citext=text sensible a la casse, composite psycopg en chaine)
+  - aucune modification Aiven, aucun secret ecrit, depot BaptisteFaisy/Log toujours inexistant
+
+2026-10-22T09:12:00+02:00 [agent-opencode] PROMPT-HISTORIQUE-PGROUCHE.md : EXECUTION complete (v3)
+  - provisionnement : service Aiven pg-memoire ABSENT -> recree (pg / free-1-1gb / do-lon) -> etat RUNNING
+  - service_uri_params relus via API : host=pg-memoire-baptiste-c04f.i.aivencloud.com port=21492 (jamais code en dur)
+  - utilisateurs : avnadmin (primary) + app (normal) ; mots de passe REAFFECTES depuis .secrets/creds.env (PGADMIN/PGAPP), aucun regenere
+  - bases : defaultdb (existante) + historique (CREEE via avn service database-create)
+  - .env : UNE SEULE ligne reecrite (DATABASE_URL, host/port), mode 600 preserve ; VALKEY_URL/MODEL_*/DEMO_USER_ID/RECALL_K intacts
+  - livrables : scripts/historique_schema.sql, historique_admin.py, historique_seed.sql, historique_demo.sql, historique_client.py
+  - base historique : 4 extensions (citext 1.8, pg_trgm 1.6, unaccent 1.1, hstore 1.8), 11 colonnes (3 generated), 8 index, contrainte historique_format_2lignes, trigger historique_touch_trg, 8 fonctions historique_*
+  - scenario §8 : ETAPE 1 (lookup inconnu=0) -> CAS B (creation) -> ETAPE 1 (trouve) -> CAS A (occurrences=2) -> format_ok=true
+  - correspondance sans accents / reformulation / casse : OK ; historique_set refuse d'ecraser (erreur attendue) : OK
+  - rejeu admin+seed+demo : 0 erreur, 5 documents / 5 noms distincts, occurrences du test toujours 2
+  - export client : 5 fichiers .md ecrits ; un seed = exactement 2 lignes (ligne 1 = nom)
+  - connexion en tant qu'app : OK (current_user=app, aucun manque de droits)
+  - aucun secret en clair dans scripts/historique_* (2 greps §8.11 + controle sur les 3 valeurs de creds.env)
+  - VIGILANCE : defaultdb a perdu les tables applicatives (messages, memories, documents, chunks) et l'extension vector avec le service ; re-creation = runtime de l'app (hors perimetre)
+  - aucun git, aucun depot cree, Kafka local (:9092) non touche, services Kafka des autres agents non modifies
+
+2026-10-22T09:45:00+02:00 [agent-opencode] AIVEN PAYANT : passage en plans payants + restauration applicative
+  - contexte : l'agent precedent avait laisse 2 services absents (valkey-memoire inexistant -> plus de DNS ; defaultdb vide)
+  - credits Aiven : 48.98 USD restants (trial 50 USD, billing group 2b9ab17a-6551-499e-9451-7a559734257f, org5ebc6e00530)
+  - pg-memoire : plan free-1-1gb -> hobbyist (1 CPU / 1 GB RAM / 8 GB disk, $0.016/h), etat REBALANCING -> RUNNING
+  - valkey-memoire : CREE sur plan hobbyist (1 CPU / 1 GB RAM, $0.026/h) -> RUNNING, user app + ACL +@all/*, mdp VALAPP depuis creds.env
+  - piege API : le plan se donne SANS prefixe de service ("hobbyist" et non "valkey:hobbyist") sinon 400 Invalid input for plan
+  - piege critique : host/port lus via service_uri_params -> pg=...i.aivencloud.com:21492 / valkey=...b.aivencloud.com:21493
+    (le code en dur de setup_aiven.sh (.k. / .e.) produisait un .env INCONNECTABLE -> CORRIGE : lecture API obligatoire)
+  - .env : VALKEY_URL rafraichie (une seule ligne), DATABASE_URL deja a jour ; mode 600 preserve ; autres cles intactes
+  - defaultdb : extension vector 0.8.7 posee via scripts/pg_admin.py, schema applicatif reapplique (schema.apply_schema(384))
+    -> tables messages/memories/documents/chunks, colonnes vector(384), index HNSW
+  - sauvegarde avant upgrade : /tmp/opencode/backup/historique_rows.csv (donnees) + scripts du depot (rejouables)
+  - verif apres upgrade/rebalance : 5 documents, occurrences=2 pour le test, 8 fonctions historique_*, format_ok=t partout
+  - app demarre (uvicorn 8077) : /healthz -> {"ok":true,"pgvector":true,"embed_dim":384,"database":true,"valkey":true}
+  - valkey : ping True (Valkey 7.2.4), set/get OK en TLS, schema.rds() OK
+  - Kafka (:9092) et services Kafka des autres agents non touches ; aucun git ; depot Log toujours inexistant

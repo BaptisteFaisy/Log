@@ -1,0 +1,119 @@
+[0m
+> runtime-diagnose · combo/cheap
+I'll start by pulling the trace evidence.
+[0m$ [0mls -la /home/baptistefaisy/aiven-kafka-demo/trace-dump 2>&1; echo "---"; /home/baptistefaisy/aiven-kafka-demo/trace-dump 2b96d53c08c64a19925d693db35ad3a1 --detectors 2>&1 | head -100
+-rwxr-xr-x 1 baptistefaisy baptistefaisy 8900 Oct 22 09:19 /home/baptistefaisy/aiven-kafka-demo/trace-dump
+---
+%4|1792653645.122|CONFWARN|rdkafka#consumer-1| [thrd:app]: Configuration property request.timeout.ms is a producer property and will be ignored by this consumer instance
+=== trace 2b96d53c08c64a19925d693db35ad3a1 ===
+scenario=platform_oom profile=infra error.type=oom
+--- spans (2) ---
+  2026-10-21 18:02:18.799 agent.run                 1800.0ms Error  {"error.type": "oom", "exception.message": "java.lang.OutOfMemoryError: Java heap space", "exception.type": "java.lang.OutOfMemoryError", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}"}
+  2026-10-21 18:02:18.849 jvm.heap                  1600.0ms Error  {"error.type": "oom", "jvm.memory.used": "2147483648", "jvm.memory.max": "2147483648", "jvm.gc.pause": "1600", "exception.type": "java.lang.OutOfMemoryError"}
+--- logs (1) ---
+  2026-10-21 18:02:20.499 ERROR (sev 17) java.lang.OutOfMemoryError: Java heap space
+--- metriques (6) ---
+  jvm.memory.used = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.memory.limit = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.gc.pause = 1600 [ms] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.gc.action": "end of major GC"}
+  jvm.memory.used = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.memory.limit = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.gc.pause = 1600 [ms] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.gc.action": "end of major GC"}
+--- detecteurs ---
+  [ok      ] retry_spiral     aucune spirale de retry (> 2 appels)
+  [ok      ] silent_failure   aucune promesse non tenue par l'outil
+  [ok      ] stale_source     aucune version perimee
+> runtime-diagnose · combo/cheap
+[0m$ [0mcd /home/baptistefaisy/aiven-kafka-demo && ./trace-dump 2b96d53c08c64a19925d693db35ad3a1 2>&1 | head -120
+%4|1792653657.118|CONFWARN|rdkafka#consumer-1| [thrd:app]: Configuration property request.timeout.ms is a producer property and will be ignored by this consumer instance
+=== trace 2b96d53c08c64a19925d693db35ad3a1 ===
+scenario=platform_oom profile=infra error.type=oom
+--- spans (2) ---
+  2026-10-21 18:02:18.799 agent.run                 1800.0ms Error  {"error.type": "oom", "exception.message": "java.lang.OutOfMemoryError: Java heap space", "exception.type": "java.lang.OutOfMemoryError", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}"}
+  2026-10-21 18:02:18.849 jvm.heap                  1600.0ms Error  {"error.type": "oom", "jvm.memory.used": "2147483648", "jvm.memory.max": "2147483648", "jvm.gc.pause": "1600", "exception.type": "java.lang.OutOfMemoryError"}
+--- logs (1) ---
+  2026-10-21 18:02:20.499 ERROR (sev 17) java.lang.OutOfMemoryError: Java heap space
+--- metriques (6) ---
+  jvm.memory.used = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.memory.limit = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.gc.pause = 1600 [ms] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.gc.action": "end of major GC"}
+  jvm.memory.used = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.memory.limit = 2147483648 [By] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.memory.type": "heap"}
+  jvm.gc.pause = 1600 [ms] {"agent.scenario": "platform_oom", "agent.profile": "infra", "error.type": "oom", "jvm.gc.action": "end of major GC"}
+--- detecteurs (ajoute --detectors pour le verdict) ---
+  [ok      ] retry_spiral     aucune spirale de retry (> 2 appels)
+  [ok      ] silent_failure   aucune promesse non tenue par l'outil
+  [ok      ] stale_source     aucune version perimee
+> runtime-diagnose · combo/cheap
+[0m$ [0mfree -m; echo "---DF---"; df -h / /tmp /home 2>/dev/null; echo "---PS-JAVA---"; ps -eo pid,rss,vsz,etime,comm,args --sort=-rss 2>/dev/null | grep -iE "java|kafka|otel" | grep -v grep | head -10; echo "---CGROUP-MEM---"; cat /sys/fs/cgroup/memory.max 2>/dev/null; cat /sys/fs/cgroup/memory.current 2>/dev/null
+total        used        free      shared  buff/cache   available
+Mem:            6546        5291         161         593        1771        1255
+Swap:              0           0           0
+---DF---
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdb         91G   12G   79G  14% /
+tmpfs           3.2G  566M  2.7G  18% /tmp
+/dev/vdb         91G   12G   79G  14% /
+---PS-JAVA---
+  21777 588276 5557164  13:37:42 java            java -Xmx640M -Xms256M -server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent -XX:MaxInlineLevel=15 -Xlog:gc*:file=/home/baptistefaisy/.local/opt/kafka/bin/../logs/kafkaServer-gc.log:time,tags:filecount=10,filesize=100M -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dkafka.logs.dir=/home/baptistefaisy/.local/opt/kafka/bin/../logs -Dlog4j2.configurationFile=/home/baptistefaisy/.local/opt/kafka/bin/../config/log4j2.yaml -cp /home/baptistefaisy/.local/opt/kafka/bin/../libs/HdrHistogram-2.2.2.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/activation-1.1.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/aopalliance-repackaged-3.0.6.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/argparse4j-0.7.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/caffeine-3.2.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/classgraph-4.8.179.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/commons-beanutils-1.11.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/commons-collections-3.2.2.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/commons-digester-2.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/commons-logging-1.3.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/commons-net-3.13.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/commons-validator-1.10.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-api-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-basic-auth-extension-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-json-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-mirror-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-mirror-client-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-runtime-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/connect-transforms-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/hash4j-0.22.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/hk2-api-3.0.6.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/hk2-locator-3.0.6.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/hk2-utils-3.0.6.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-annotations-2.21.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-core-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-databind-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-dataformat-csv-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-dataformat-yaml-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-datatype-jdk8-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-jakarta-rs-base-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-jakarta-rs-json-provider-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-module-blackbird-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jackson-module-jakarta-xmlbind-annotations-2.21.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.activation-2.0.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.activation-api-2.1.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.annotation-api-2.1.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.inject-api-2.0.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.servlet-api-6.0.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.validation-api-3.0.2.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.ws.rs-api-3.1.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jakarta.xml.bind-api-3.0.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/javassist-3.30.2-GA.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/javax.activation-api-1.2.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jaxb-api-2.3.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jersey-client-3.1.10.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jersey-common-3.1.10.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jersey-container-servlet-3.1.10.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jersey-container-servlet-core-3.1.10.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jersey-hk2-3.1.10.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jersey-server-3.1.10.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-alpn-client-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-client-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-ee10-servlet-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-ee10-servlets-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-http-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-io-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-security-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-server-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-session-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jetty-util-12.0.39.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jline-native-3.30.16.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jline-reader-3.30.16.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jline-terminal-3.30.16.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jopt-simple-5.0.4.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jose4j-0.9.6.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/jspecify-1.0.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-clients-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-coordinator-common-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-group-coordinator-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-group-coordinator-api-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-metadata-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-raft-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-server-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-server-common-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-share-coordinator-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-shell-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-storage-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-storage-api-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-streams-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-streams-examples-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-streams-scala_2.13-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-streams-test-utils-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-tools-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-tools-api-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka-transaction-coordinator-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/kafka_2.13-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/log4j-1.2-api-2.25.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/log4j-api-2.25.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/log4j-core-2.25.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/log4j-slf4j-impl-2.25.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/lz4-java-1.11.2.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/maven-artifact-3.9.16.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/metrics-core-2.2.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/opentelemetry-proto-1.3.2-alpha.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/osgi-resource-locator-1.0.3.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/pcollections-4.0.2.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/plexus-utils-3.6.1.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/protobuf-java-3.25.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/re2j-1.8.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/rocksdbjni-10.1.3.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/scala-library-2.13.18.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/scala-logging_2.13-3.9.6.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/scala-reflect-2.13.18.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/slf4j-api-1.7.36.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/snakeyaml-2.5.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/snappy-java-1.1.10.7.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/swagger-annotations-2.2.52.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/trogdor-4.4.0.jar:/home/baptistefaisy/.local/opt/kafka/bin/../libs/zstd-jni-1.5.7-17.jar kafka.Kafka /home/baptistefaisy/.local/opt/kafka/config/kafka-local.properties
+  88308 95408 6941956      00:28 opencode        /home/baptistefaisy/.opencode/bin/opencode run --agent runtime-diagnose --auto --title [oom] 2b96d53c INCIDENT dans le flux Kafka. topic        : otel.logs TraceId      : 2b96d53c08c64a19925d693db35ad3a1 severite     : ERROR error.type   : oom horodatage   : 2026-10-21 18:02:20.499 scenario     : platform_oom profil       : infra message      : java.lang.OutOfMemoryError: Java heap space attributs    : {"exception.message": "java.lang.OutOfMemoryError: Java heap space", "exception.type": "java.lang.OutOfMemoryError", "jvm.memory.used": "2147483648", "jvm.memory.max": "2147483648", "jvm.gc.pause": "1600"}  PREUVE (obligatoire avant toute conclusion) :   /home/baptistefaisy/aiven-kafka-demo/trace-dump 2b96d53c08c64a19925d693db35ad3a1 --detectors  Reponds en 4 blocs : PANNIE / CAUSE / PREUVES / ACTION, en distinguant le symptome de la cause racine. N'appelle kafka-health que si le type d'erreur l'exige.
+  88253 36160 565216       00:37 python3         python3 /home/baptistefaisy/aiven-kafka-demo/tools/kafka-incident-watch --from earliest
+  88676  3344   7480       00:03 bash            /bin/bash -c cd /home/baptistefaisy/aiven-kafka-demo/site && timeout 300 vercel deploy --prod --yes 2>&1 | tail -25
+---CGROUP-MEM---
+> runtime-diagnose · combo/cheap
+[0m$ [0mls -la /home/baptistefaisy/aiven-kafka-demo/hs_err*.log /tmp/opencode/hs_err*.log /home/baptistefaisy/hs_err*.log 2>/dev/null; find /home/baptistefaisy -maxdepth 3 -name "hs_err*" -o -maxdepth 3 -name "*.hprof" 2>/dev/null | head; echo "---OTEL/JAVA PROCS---"; ps -eo pid,rss,args --sort=-rss 2>/dev/null | grep -iE "Xmx2|2g|otel|agent" | grep -v grep | cut -c1-160 | head -8; echo "---SWAP/OOMKILL---"; dmesg 2>/dev/null | tail -5 | cut -c1-140
+---OTEL/JAVA PROCS---
+  88308 95492 /home/baptistefaisy/.opencode/bin/opencode run --agent runtime-diagnose --auto --title [oom] 2b96d53c INCIDENT dans le flux Kafka. topic        : 
+  23770  3740 /usr/bin/ssh-agent -D
+---SWAP/OOMKILL---
+[35837.448069] virtio_balloon virtio5: Out of puff! Can't get 1 pages
+[35843.432746] virtio_balloon virtio5: Out of puff! Can't get 1 pages
+[38791.864165] virtio_balloon virtio5: Out of puff! Can't get 1 pages
+[39568.864020] virtio_balloon virtio5: Out of puff! Can't get 1 pages
+[39588.972663] systemd-journald[12061]: Under memory pressure, flushing caches.
+> runtime-diagnose · combo/cheap
+```
+PANNIE
+```
+**Oui — ressource saturée : heap JVM à 100 % de sa limite.**
+`jvm.memory.used = 2 147 483 648 B` == `jvm.memory.max = 2 147 483 648 B` (2 Gio / 2 Gio, saturation exacte).
+Symptôme visible : le span `agent.run` (1 800 ms) sort en `Error` avec `success:false`, `booking_confirmed:false`, `tool_calls:1` — l'agent meurt **avant** de confirmer l'écriture. Ce n'est pas la cause, c'est la conséquence.
+Disque : **non saturé** — aucun `system.disk.*`, aucun `file.path` dans la trace ; en local `df -h` = 14 % utilisé, 79 Go libres. Piste « disque plein » écartée.
+
+```
+CAUSE
+```
+**Cause racine : épuisement du tas (heap exhaustion) du JVM applicatif, pas un GC mal réglé.**
+Deux faits vont dans ce sens :
+- `used == max` pile : le JVM a buté sur son plafond `-Xmx`, ce n'est pas un régime stationnaire haut mais un remplissage jusqu'au refus d'allocation.
+- `jvm.gc.pause = 1 600 ms` sur `jvm.gc.action = "end of major GC"` : une **grande** collection a duré 1,6 s juste avant le crash — le GC a travaillé dur sans récupérer, signature d'une pression mémoire préalable à l'OOM (fuite ou pic retenant les objets).
+
+Le mécanisme probable côté `otel.logs` : volume de logs qui grossit et tampon d'ingestion non borné (batch accumulé en mémoire avant envoi). Sur un hôte à 6,5 Go de RAM, **sans swap**, avec 1,2 Go seulement disponibles, un tas de 2 Gio ne laisse aucune marge.
+
+```
+PREUVES
+```
+| Compteur | Valeur | Lecture |
+|---|---|---|
+| `jvm.memory.used` (heap) | 2 147 483 648 B | 100 % du plafond |
+| `jvm.memory.limit` / `max` | 2 147 483 648 B | used == limit → heap saturé |
+| `jvm.gc.pause` | 1 600 ms (`end of major GC`) | grande GC longue avant crash |
+| span `jvm.heap` | 1 600 ms, statut Error | OOM observé sur la fenêtre GC |
+| `system.disk.*` / `file.path` | **absents** | disque non impliqué |
+| `df -h /` (local) | 12 G / 91 G, 14 % | 79 G libres → pas de saturation disque |
+| `free -m` (local) | 6 546 total, 5 291 used, **161 free, 0 swap** | hôte sous pression mémoire |
+| `dmesg` | `Under memory pressure, flushing caches` | pression mémoire hôte confirmée |
+| Processus 2 Gio | **absent de `ps`** | JVM déjà morte/redémarrée, aucun `hs_err*.log` ni `.hprof` capturé |
+
+Détecteurs : `retry_spiral` ok, `silent_failure` ok, `stale_source` ok → aucune cause applicative annexe ; l'incident est bien runtime/mémoire.
+
+```
+ACTION
+```
+1. **Capturer la preuve manquante** — relancer le JVM avec dump automatique (il n'y en a aucun aujourd'hui) :
+   `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/opencode/agent-oom.hprof`
+   puis `jcmd <pid> GC.class_histogram` sur l'instance vivante pour identifier le détenteur (attendu : buffer de batch de logs).
+2. **Borner la mémoire, pas l'agrandir** — plafonner le tampon d'ingestion `otel.logs` (flush par taille/temps, backpressure, drop policy) : c'est le correctif de la cause racine.
+3. **Ne PAS augmenter `-Xmx` sur cet hôte en l'état** : 1,2 Go disponibles, 0 swap, `dmesg` déjà en pression — passer à `-Xmx3g` ferait basculer le problème en OOM-killer système. Si un tas plus grand est réellement nécessaire : redimensionner l'hôte à ≥ 8 Go **d'abord**, puis `-Xmx`.
+4. **Purger/élaguer n'est pas l'action ici** : le disque est à 14 %. Ne pas confondre avec un incident volume.
+5. `kafka-health` **non appelé** : erreur de type `oom` = ressource runtime du consommateur, aucune métrique cluster (lag, ISR, disque broker) n'est en cause dans la trace.
