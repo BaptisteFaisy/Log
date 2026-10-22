@@ -39,7 +39,14 @@
       <header class="term-head">
         <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="term-title">log@vercel — ~/logs</span>
-        <span class="term-live"><i></i>live</span>
+        <span class="term-right">
+          <!-- Source des lignes : renseignee par app.js apres GET /api/tail.
+               « kafka · otel.logs » n'apparait que si le topic a vraiment ete lu. -->
+          <span id="source" class="term-source" data-source="pending" title="lecture de otel.logs en cours">
+            <i></i>kafka · …
+          </span>
+          <span class="term-live"><i></i>live</span>
+        </span>
       </header>
 
       <div id="stream" class="term-body" role="log" aria-live="polite"></div>

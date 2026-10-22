@@ -372,6 +372,31 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
   color: var(--ink-3);
 }
 
+/* Source reelle des lignes : pending (aucune preuve) | kafka (topic lu) | down.
+   Pose par app.js apres GET /api/tail — jamais en dur dans le HTML. */
+.term-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.term-source i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+
+.term-source[data-source="kafka"] { color: var(--ink); }
+.term-source[data-source="kafka"] i { background: var(--ok); }
+.term-source[data-source="down"] { color: var(--ink); }
+.term-source[data-source="down"] i { background: var(--red); }
+
 .term-live i {
   width: 6px;
   height: 6px;

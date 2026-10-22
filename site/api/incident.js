@@ -13,7 +13,7 @@
  * Jamais de stack trace ni d'identifiant dans la reponse.
  */
 const { loadCatalog, scenarioById, buildMessages, newTraceId } = require('../lib/contract.js');
-const { publish, publicReason, KafkaConfigError } = require('../lib/kafka.js');
+const { publishTo, publicReason, KafkaConfigError } = require('./_kafka.js');
 
 function json(res, code, payload) {
   res.statusCode = code;
@@ -99,7 +99,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    await publish(bySuffix, 15000);
+    await publishTo(bySuffix);
   } catch (err) {
     const configError = err instanceof KafkaConfigError;
     // le detail brut (adresse du broker...) reste dans les journaux serveur

@@ -8,7 +8,7 @@
  * Le rapport est publie dans otel-reports par le watcher, apres la fin du vrai
  * agent. Le navigateur interroge cet endpoint tant que status = pending.
  */
-const { findReport, publicReason, KafkaConfigError } = require('../lib/kafka.js');
+const { findReport, publicReason, KafkaConfigError } = require('./_kafka.js');
 
 function json(res, code, payload) {
   res.statusCode = code;
