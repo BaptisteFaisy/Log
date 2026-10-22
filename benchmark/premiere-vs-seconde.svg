@@ -46,7 +46,7 @@
 <text x="356.0" y="735" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="9.5" fill="#0a0a0a" opacity="0.55">broker + clients</text>
 <rect x="457.7" y="363.4" width="42" height="304.6" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="1.5"/>
 <rect x="513.7" y="594.2" width="42" height="73.8" fill="url(#hatch)" stroke="#0a0a0a" stroke-width="1.5"/>
-<text x="478.7" y="353.4" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="15" font-weight="700" fill="#0a0a0a">495 s</text>
+<text x="478.7" y="333.4" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="15" font-weight="700" fill="#0a0a0a">495 s</text>
 <text x="534.7" y="584.2" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="15" font-weight="700" fill="#0a0a0a">120 s</text>
 <text x="506.7" y="700" text-anchor="middle" font-family="Anton, 'Arial Narrow', Impact, sans-serif" font-size="21" fill="#0a0a0a">Complexe</text>
 <text x="506.7" y="720" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="9.5" fill="#0a0a0a" opacity="0.55">pipeline multi-services</text>
@@ -69,7 +69,7 @@
 <line x1="714" y1="668" x2="1166" y2="668" stroke="#0a0a0a" stroke-width="2"/>
 <rect x="740.3" y="662.0" width="42" height="6.0" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="1.5"/>
 <rect x="796.3" y="664.3" width="42" height="3.7" fill="#ff2e93" stroke="#0a0a0a" stroke-width="1.5"/>
-<text x="761.3" y="652.0" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="15" font-weight="700" fill="#0a0a0a">16,2 k</text>
+<text x="761.3" y="632.0" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="15" font-weight="700" fill="#0a0a0a">16,2 k</text>
 <text x="817.3" y="654.3" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="15" font-weight="700" fill="#0a0a0a">9,9 k</text>
 <text x="789.3" y="700" text-anchor="middle" font-family="Anton, 'Arial Narrow', Impact, sans-serif" font-size="21" fill="#0a0a0a">Simple</text>
 <text x="789.3" y="720" text-anchor="middle" font-family="'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace" font-size="9.5" fill="#0a0a0a" opacity="0.55">ERR_DB_POOL_EXHAUSTED</text>
