@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Log — One pitch slide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f3efe8;
+    --ink: #0a0a0a;
+    --ink-2: #55504a;
+    --line-soft: rgba(10, 10, 10, 0.09);
+    --red: #ff2e93;
+    --red-soft: #ffd8ea;
+    --ok: #00843d;
+    --panel: #ffffff;
+    --mono: "Space Mono", ui-monospace, monospace;
+    --display: "Anton", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #14110f;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    overflow: hidden;
+  }
+
+  #stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: center center;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 79px, rgba(10, 10, 10, 0.06) 79px 80px),
+      var(--paper);
+    overflow: hidden;
+  }
+
+  #stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(42% 30% at 92% -4%, rgba(255, 46, 147, 0.34), transparent 70%);
+  }
+
+  .slide {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------------- topbar ---------------- */
+
+  .topbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 40px;
+    height: 76px;
+    background: var(--panel);
+    border-bottom: 3px solid var(--ink);
+  }
+
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand img { height: 30px; width: auto; }
+  .brand-div {
+    width: 2px;
+    height: 26px;
+    background: var(--ink);
+    opacity: 0.16;
+  }
+  .brand-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .url-pill {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    padding: 9px 14px;
+    border: 2px solid var(--ink);
+    background: var(--panel);
+    text-transform: lowercase;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 11px 18px;
+    background: var(--red);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .btn svg { width: 15px; height: 15px; fill: var(--ink); }
+
+  /* ---------------- ticker ---------------- */
+
+  .ticker {
+    flex: 0 0 auto;
+    height: 34px;
+    position: relative;
+    overflow: hidden;
+    background: var(--red);
+    border-bottom: 3px solid var(--ink);
+  }
+  .ticker span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: max-content;
+    line-height: 28px;
+    font-family: var(--display);
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    animation: marq 26s linear infinite;
+  }
+  @keyframes marq { to { transform: translateX(-50%); } }
+
+  /* ---------------- main ---------------- */
+
+  .main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 34px 64px 30px;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .eyebrow .tag {
+    background: var(--ink);
+    color: #fff;
+    padding: 5px 10px;
+  }
+  .eyebrow .dim { color: var(--ink-2); }
+  .eyebrow .rule { flex: 1 1 auto; height: 2px; background: var(--ink); opacity: 0.14; }
+
+  h1 {
+    margin-top: 18px;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 92px;
+    line-height: 0.94;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+  }
+  h1 .mark {
+    background: var(--red);
+    padding: 0 12px 4px;
+    box-shadow: 5px 5px 0 var(--ink);
+    display: inline-block;
+  }
+
+  .sub {
+    margin-top: 16px;
+    max-width: 1290px;
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .sub b { color: var(--ink); font-weight: 600; }
+
+  /* ---------------- columns ---------------- */
+
+  .cols {
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+
+  .col {
+    background: var(--panel);
+    border: 3px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    padding: 18px 20px 20px;
+  }
+  .col:nth-child(2) { box-shadow: 6px 6px 0 var(--red); }
+
+  .col h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .col h2 i {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border: 2px solid var(--ink);
+    flex: 0 0 auto;
+  }
+
+  .col h3 {
+    margin-top: 12px;
+    font-family: var(--display);
+    font-size: 25px;
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  .col p {
+    margin-top: 9px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  .col ul { list-style: none; margin-top: 10px; display: grid; gap: 7px; }
+  .col li {
+    position: relative;
+    padding-left: 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+  .col li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 6px;
+    height: 6px;
+    background: var(--ink);
+  }
+  .col li b { color: var(--ink); font-weight: 600; }
+
+  /* ---------------- evidence ---------------- */
+
+  .evidence {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 18px;
+  }
+
+  .panel {
+    border: 3px solid var(--ink);
+    background: var(--panel);
+    padding: 16px 18px 14px;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 9px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .panel-head span:first-child {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .panel-head span:last-child {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  .m-row {
+    display: grid;
+    grid-template-columns: 62px 1fr 22px 1fr 66px;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0 8px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .m-row:last-child { border-bottom: none; padding-bottom: 2px; }
+  .m-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .m-val {
+    font-family: var(--display);
+    font-size: 27px;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+  .m-val small {
+    display: block;
+    margin-top: 3px;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .m-val.cold { color: #7d7570; }
+  .m-arrow {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    text-align: center;
+  }
+  .m-delta {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    padding: 6px 0;
+    background: var(--red);
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .pipeline {
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .pipeline .panel-head { border-bottom-color: rgba(255, 255, 255, 0.22); }
+  .pipeline .panel-head span:last-child { color: var(--red); font-weight: 700; }
+
+  .flow {
+    margin-top: 13px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+  .node {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 6px 8px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .node.hot { border-color: var(--red); background: var(--red); color: var(--ink); font-weight: 700; }
+  .node.store { border-color: var(--red); color: var(--red); }
+  .flow .arw { color: rgba(255, 255, 255, 0.4); }
+
+  .pipeline p {
+    margin-top: auto;
+    padding-top: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  /* ---------------- footer ---------------- */
+
+  .foot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .foot .left { display: flex; align-items: center; gap: 10px; }
+  .foot .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--red);
+    border: 2px solid var(--ink);
+  }
+  .foot .url { font-weight: 700; }
+  .foot .sep { opacity: 0.35; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div class="slide">
+      <header class="topbar">
+        <div class="brand">
+          <img src="logo.png" alt="Log" />
+          <span class="brand-div"></span>
+          <span class="brand-label">Error console</span>
+        </div>
+        <div class="topbar-right">
+          <span class="url-pill">log-errors.vercel.app</span>
+          <span class="btn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13l0-8Z"/></svg>
+            Trigger an error log
+          </span>
+        </div>
+      </header>
+
+      <div class="ticker" aria-hidden="true">
+        <span>LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · LOGS · ERRORS · AGENTS · FIXES · </span>
+      </div>
+
+      <main class="main">
+        <div class="eyebrow">
+          <span class="tag">01 / One slide</span>
+          <span class="dim">Future Founders · Data-Centric Agents</span>
+          <span class="rule"></span>
+          <span class="dim">Cold → warm</span>
+        </div>
+
+        <h1>Your logs already know what broke.<br />Now they <span class="mark">remember</span> the fix.</h1>
+
+        <p class="sub">
+          Log watches your production error stream, spawns an agent per new error fingerprint, and writes the
+          resolution into Postgres. Next time that error fires, the agent starts from memory —
+          <b>same bug, a fraction of the cost.</b>
+        </p>
+
+        <section class="cols">
+          <div class="col">
+            <h2><i></i>Who it's for</h2>
+            <h3>Small platform teams carrying production alone</h3>
+            <p>
+              SRE and platform engineers at seed-to-Series-B startups — 5 to 50 engineers, no observability
+              team, thousands of error lines a day and the same twenty on rotation.
+            </p>
+          </div>
+
+          <div class="col">
+            <h2><i></i>Why now</h2>
+            <ul>
+              <li><b>Agents can act.</b> Read the repo, reproduce, run tests, open a patch — not just summarise.</li>
+              <li><b>Memory is a managed primitive.</b> Aiven Kafka + Postgres make per-error recall cheap.</li>
+              <li><b>Cost per fix collapsed.</b> Always-on triage now beats one on-call hour.</li>
+            </ul>
+          </div>
+
+          <div class="col">
+            <h2><i></i>First users</h2>
+            <ul>
+              <li><b>Open-source maintainers</b> already piping CI and runtime logs — free for public repos.</li>
+              <li><b>10 design partners</b> from the Aiven and Future Founders networks, onboarded by hand.</li>
+              <li><b>Show HN + r/SRE</b> with one recorded before/after run, then an install PR.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="evidence">
+          <div class="panel">
+            <div class="panel-head">
+              <span>Evidence · same error, 4 occurrences</span>
+              <span>recorded runs</span>
+            </div>
+            <div class="m-row">
+              <span class="m-label">Tokens</span>
+              <span class="m-val cold">24.4k<small>cold · no memo</small></span>
+              <span class="m-arrow">→</span>
+              <span class="m-val">3.9k<small>warm · memo hit</small></span>
+              <span class="m-delta">−84%</span>
+            </div>
+            <div class="m-row">
+              <span class="m-label">Time</span>
+              <span class="m-val cold">4m 12s<small>cold · no memo</small></span>
+              <span class="m-arrow">→</span>
+              <span class="m-val">51s<small>warm · memo hit</small></span>
+              <span class="m-delta">−80%</span>
+            </div>
+          </div>
+
+          <div class="panel pipeline">
+            <div class="panel-head">
+              <span>Data layer · what makes it work</span>
+              <span>Aiven</span>
+            </div>
+            <div class="flow">
+              <span class="node">Kafka · error logs</span>
+              <span class="arw">→</span>
+              <span class="node hot">fingerprint</span>
+              <span class="arw">→</span>
+              <span class="node">agent run</span>
+              <span class="arw">→</span>
+              <span class="node store">Postgres · resolution</span>
+              <span class="arw">→</span>
+              <span class="node">console</span>
+            </div>
+            <p>One agent per fingerprint, one row per run. Stale memories are detected and re-earned, never trusted blindly.</p>
+          </div>
+        </section>
+
+        <footer class="foot">
+          <span class="left">
+            <span class="dot"></span>
+            <span>Demo runs are recorded<span class="sep"> / </span>not live traffic</span>
+          </span>
+          <span><span class="url">Gaïa Samama-Giudicelli</span><span class="sep"> · </span>2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var stage = document.getElementById("stage");
+      function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = "translate(-50%, -50%) scale(" + s + ")";
+      }
+      fit();
+      window.addEventListener("resize", fit);
+    })();
+  </script>
+</body>
+</html>
