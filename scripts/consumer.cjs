@@ -4,6 +4,7 @@
 const { Kafka } = require("kafkajs");
 const { getPool } = require("../lib/db.cjs");
 const { kafkaConfig, topic } = require("../lib/kafka.cjs");
+const { normalize } = require("../lib/log.cjs");
 
 const TOPIC = topic();
 const GROUP = process.env.KAFKA_GROUP || "logsite-consumer";
@@ -24,13 +25,12 @@ function parse(raw) {
   }
 }
 
-async function insertLog(pool, message, payload) {
-  const id = typeof payload.id === "string" && payload.id.trim()
-    ? payload.id.trim()
-    : `${message.topic}:${message.partition}:${message.offset}`;
+async function insertLog(pool, message, raw) {
+  const id = `${message.topic}:${message.partition}:${message.offset}`;
+  const payload = normalize(raw);
 
-  const occurredAt = payload.occurred_at && !Number.isNaN(Date.parse(payload.occurred_at))
-    ? new Date(payload.occurred_at).toISOString()
+  const occurredAt = raw && raw.occurred_at && !Number.isNaN(Date.parse(raw.occurred_at))
+    ? new Date(raw.occurred_at).toISOString()
     : new Date(Number(message.timestamp) || Date.now()).toISOString();
 
   const { rows } = await pool.query(
@@ -45,21 +45,12 @@ async function insertLog(pool, message, payload) {
       message.partition,
       message.offset,
       message.key == null ? null : String(message.key),
-      toText(payload.code, 80) || "ERR_UNKNOWN",
-      ["dbg", "inf", "wrn", "ok", "err"].includes(payload.severity) ? payload.severity : "err",
-      toText(payload.message, 2000) || "(message vide)",
-      JSON.stringify(payload),
+      payload.code,
+      payload.severity,
+      payload.message,
+      JSON.stringify(payload.payload),
       occurredAt,
     ],
-  );
-
-  await pool.query(
-    `insert into kafka_cursors (topic, partition, next_offset)
-     values ($1,$2,$3)
-     on conflict (topic, partition) do update
-       set next_offset = greatest(kafka_cursors.next_offset, excluded.next_offset),
-           updated_at = now()`,
-    [message.topic, message.partition, Number(message.offset) + 1],
   );
 
   return rows[0] || null;

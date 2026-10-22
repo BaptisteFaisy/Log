@@ -36,16 +36,26 @@ const config = adminUrl
       ssl,
     };
 
-const client = new pg.Client(config);
 const sql = readFileSync(join(root, "db", "schema.sql"), "utf8");
 
-try {
+async function apply(clientConfig) {
+  const client = new pg.Client(clientConfig);
   await client.connect();
-  await client.query(sql);
-  const tables = await client.query(
-    "select table_name from information_schema.tables where table_schema='public' order by 1",
-  );
-  console.log("schema ok:", tables.rows.map((row) => row.table_name).join(", "));
-} finally {
-  await client.end();
+  try {
+    await client.query(sql);
+    const tables = await client.query(
+      "select table_name from information_schema.tables where table_schema='public' order by 1",
+    );
+    console.log("schema ok:", tables.rows.map((row) => row.table_name).join(", "));
+  } finally {
+    await client.end();
+  }
+}
+
+try {
+  await apply(config);
+} catch (error) {
+  if (error.code !== "28P01" || !process.env.PGUSER) throw error;
+  console.warn("role admin refuse (mot de passe) : reprise avec", process.env.PGUSER);
+  await apply({ ...config, user: process.env.PGUSER, password: process.env.PGPASSWORD });
 }

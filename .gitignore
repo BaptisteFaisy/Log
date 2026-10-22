@@ -1,9 +1,39 @@
+# =====================================================================
+# BaptisteFaisy/Log — journaux du poste + site Log
+# ---------------------------------------------------------------------
+# Deny-list de securite : aucun secret ne doit jamais etre versionne.
+# =====================================================================
+
+# jetons et mots de passe
+.aiven_token
+*.aiven_token
+token
+*.token
+remote-password*.txt
+*.pem
+*.key
+id_ed25519*
+id_rsa*
+known_hosts
+
+# configuration contenant des secrets
+.env
+.env.*
+.env*
+!.env.example
+creds.env
+secrets/
+
+# journal du sync lui-meme (ecrit par bin/sync-logs.sh -> ~/logs/)
+log-sync.log
+
+# divers
+*.pyc
+__pycache__/
+.DS_Store
+
+# site Log
 .vercel
 previews-20/
 node_modules/
-.env
-.env.*
-!.env.example
 .certs/
-docs/error-memos/*.md
-docs/error-memos/*.json

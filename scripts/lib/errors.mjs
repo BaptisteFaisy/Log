@@ -1,74 +1,40 @@
-export const ERROR_TYPES = [
-  {
-    code: "ERR_DB_POOL_EXHAUSTED",
-    name: "Database connection pool exhausted",
-    service: "checkout-api",
-    level: "ERROR",
-    message:
-      "HikariPool-1 - Connection is not available, request timed out after 30000ms (total=20, active=20, idle=0, waiting=17)",
-    stack: [
-      "java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30000ms",
-      "    at com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:696)",
-      "    at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:181)",
-      "    at com.acme.checkout.OrderRepository.find(OrderRepository.java:88)",
-      "    at com.acme.checkout.OrderService.checkout(OrderService.java:42)",
-    ],
-  },
-  {
-    code: "ERR_PG_TIMEOUT_5432",
-    name: "Connection timeout on port 5432",
-    service: "orders-api",
-    level: "ERROR",
-    message: 'connection to server at "db.internal" (10.0.0.12), port 5432 failed: timeout expired',
-    stack: [
-      "org.postgresql.util.PSQLException: connection to server at \"db.internal\" (10.0.0.12), port 5432 failed: timeout expired",
-      "    at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:315)",
-      "    at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:117)",
-      "    at com.acme.orders.Db.connect(Db.java:31)",
-    ],
-  },
-  {
-    code: "ERR_KAFKA_UNREACHABLE",
-    name: "Kafka Broker Unreachable",
-    service: "event-worker",
-    level: "ERROR",
-    message:
-      "Kafka broker unreachable: Connection to node -1 (kafka:9092) could not be established. Broker may not be available.",
-    stack: [
-      "org.apache.kafka.common.errors.TimeoutException: Topic orders.created not present in metadata after 60000 ms.",
-      "    at org.apache.kafka.clients.producer.KafkaProducer.doSend(KafkaProducer.java:1000)",
-      "    at org.apache.kafka.clients.producer.KafkaProducer.send(KafkaProducer.java:936)",
-      "    at com.acme.events.OrderPublisher.publish(OrderPublisher.java:57)",
-    ],
-  },
-  {
-    code: "ERR_OOM_HEAP",
-    name: "OutOfMemoryError (OOM) / Java heap space saturated",
-    service: "reporting-worker",
-    level: "FATAL",
-    message: "java.lang.OutOfMemoryError: Java heap space",
-    stack: [
-      "java.lang.OutOfMemoryError: Java heap space",
-      "    at java.base/java.util.Arrays.copyOf(Arrays.java:3537)",
-      "    at java.base/java.util.ArrayList.grow(ArrayList.java:238)",
-      "    at com.acme.reporting.CsvExporter.export(CsvExporter.java:74)",
-    ],
-  },
-  {
-    code: "ERR_DISK_FULL",
-    name: "Disk Full / No space left on device",
-    service: "postgres",
-    level: "ERROR",
-    message: "write /var/lib/postgresql/data/base/pgsql_tmp/pgsql_tmp1421.0: No space left on device",
-    stack: [
-      "org.postgresql.util.PSQLException: ERROR: could not write to file \"base/pgsql_tmp/pgsql_tmp1421.0\": No space left on device",
-      "    at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2725)",
-      "    at com.acme.reports.MaterializedView.refresh(MaterializedView.java:63)",
-    ],
-  },
+import { readFileSync } from "node:fs";
+import map from "../../lib/errors-map.cjs";
+
+const catalog = JSON.parse(readFileSync(new URL("../../lib/catalog.json", import.meta.url), "utf8"));
+
+/* Les cinq pannes suivies. Le libellé (name) est la liste de référence du
+   projet ; le message et la stack viennent du catalogue OTel de
+   BaptisteFaisy/Log (lib/catalog.json) : c'est lui qui fait foi pour le
+   fingerprint des vrais logs Kafka. */
+const TYPES = [
+  { code: "ERR_DB_POOL_EXHAUSTED", errorType: "db_pool_exhausted", name: "Database connection pool exhausted" },
+  { code: "ERR_PG_TIMEOUT_5432", errorType: "db_connection_timeout", name: "Connection timeout on port 5432" },
+  { code: "ERR_KAFKA_UNREACHABLE", errorType: "kafka_broker_unreachable", name: "Kafka Broker Unreachable" },
+  { code: "ERR_OOM_HEAP", errorType: "oom", name: "OutOfMemoryError (OOM) / Java heap space saturated" },
+  { code: "ERR_DISK_FULL", errorType: "disk_full", name: "Disk Full / No space left on device" },
 ];
 
+const byErrorType = new Map(catalog.scenarios.map((scenario) => [scenario.error_type, scenario]));
+
+export const ERROR_TYPES = TYPES.map((type) => {
+  const scenario = byErrorType.get(type.errorType);
+  if (!scenario) throw new Error(`scénario absent de lib/catalog.json : ${type.errorType}`);
+  return {
+    code: type.code,
+    errorType: type.errorType,
+    name: type.name,
+    label: scenario.label,
+    scenario: scenario.id,
+    service: catalog.service.name,
+    level: scenario.severity,
+    message: scenario.log_body,
+    stack: scenario.exception_message || "",
+  };
+});
+
 export const ERROR_BY_CODE = new Map(ERROR_TYPES.map((entry) => [entry.code, entry]));
+export const ERROR_BY_TYPE = new Map(ERROR_TYPES.map((entry) => [entry.errorType, entry]));
 
 export function normalizeMessage(message) {
   return String(message || "")
@@ -111,15 +77,22 @@ export function fingerprint(code, message, stack) {
   return hash(`${code}|${normalizeMessage(message)}|${firstFrame(stack)}`);
 }
 
-export function entryFor({ code, name, message }) {
+export function entryFor({ code, name, message, errorType } = {}) {
+  if (errorType && ERROR_BY_TYPE.has(errorType)) return ERROR_BY_TYPE.get(errorType);
   if (code && ERROR_BY_CODE.has(code)) return ERROR_BY_CODE.get(code);
+
+  const derived = code ? map.codeFor(code) : null;
+  if (derived) return ERROR_BY_TYPE.get(derived);
+
   const needle = String(name || message || "").toLowerCase();
+  if (!needle) return null;
+
   return (
     ERROR_TYPES.find((entry) => entry.name.toLowerCase() === needle) ||
     ERROR_TYPES.find((entry) => entry.code.toLowerCase() === needle) ||
+    ERROR_TYPES.find((entry) => entry.errorType === needle) ||
+    ERROR_TYPES.find((entry) => needle.includes(entry.message.toLowerCase())) ||
     ERROR_TYPES.find((entry) => needle.includes(entry.name.toLowerCase())) ||
-    ERROR_TYPES.find((entry) => needle.includes(entry.message.toLowerCase().slice(0, 40))) ||
-    ERROR_TYPES.find((entry) => entry.name.toLowerCase().includes(needle) && needle.length > 3) ||
     null
   );
 }
@@ -129,5 +102,6 @@ export function logLine(entry, ts = new Date().toISOString()) {
 }
 
 export function logLines(entry, ts = new Date().toISOString()) {
-  return [logLine(entry, ts), ...entry.stack.map((line) => `    ${line}`)];
+  const stack = entry.stack ? entry.stack.split("\n").map((line) => `    ${line}`) : [];
+  return [logLine(entry, ts), ...stack];
 }

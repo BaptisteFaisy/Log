@@ -34,8 +34,8 @@ const state = {
 
 const pad = (n, size = 2) => String(n).padStart(size, "0");
 
-function stamp() {
-  const d = new Date();
+function stamp(iso) {
+  const d = iso ? new Date(iso) : new Date();
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
 }
 
@@ -66,13 +66,13 @@ function refreshCount() {
 
 const LABELS = { dbg: "dbg", inf: "inf", wrn: "wrn", ok: "ok", err: "err" };
 
-function addRow(level, text) {
+function addRow(level, text, iso) {
   const row = document.createElement("div");
   row.className = "row";
   row.dataset.level = level;
 
   const time = document.createElement("time");
-  time.textContent = stamp();
+  time.textContent = stamp(iso);
 
   const lvl = document.createElement("span");
   lvl.className = "lvl";
@@ -181,11 +181,76 @@ function createAgent(code, trace, error) {
   logText.textContent = `${code} · ${error.message || String(error)}`;
   log.append(logTag, logText);
 
-  card.append(top, bars, log);
+  const diag = diagnosticFor(code, error);
+
+  const actions = document.createElement("div");
+  actions.className = "agent-actions";
+  actions.hidden = true;
+
+  const diagBtn = document.createElement("button");
+  diagBtn.type = "button";
+  diagBtn.className = "agent-act agent-act-diag";
+  diagBtn.textContent = "diagnostic";
+
+  const yesBtn = document.createElement("button");
+  yesBtn.type = "button";
+  yesBtn.className = "agent-act agent-act-yes";
+  yesBtn.textContent = "OUI";
+
+  const noBtn = document.createElement("button");
+  noBtn.type = "button";
+  noBtn.className = "agent-act agent-act-no";
+  noBtn.textContent = "NON";
+
+  const decisionEl = document.createElement("span");
+  decisionEl.className = "agent-decision";
+  decisionEl.hidden = true;
+
+  actions.append(diagBtn, yesBtn, noBtn, decisionEl);
+
+  card.append(top, bars, log, actions);
   agentList.prepend(card);
 
-  const entry = { node: card, state: "run", timers: [], run, modeEl, code, label };
+  const entry = {
+    node: card,
+    state: "run",
+    timers: [],
+    run,
+    modeEl,
+    code,
+    label,
+    trace,
+    diag,
+    decision: null,
+  };
   state.agents.unshift(entry);
+
+  const decide = (decision) => {
+    if (entry.decision) return;
+    entry.decision = decision;
+    const accepted = decision === "accept";
+    card.dataset.decision = accepted ? "accepted" : "rejected";
+    diagBtn.disabled = true;
+    yesBtn.disabled = true;
+    noBtn.disabled = true;
+    decisionEl.hidden = false;
+    decisionEl.dataset.decision = card.dataset.decision;
+    decisionEl.textContent = accepted ? "patch accepté" : "patch refusé";
+    addRow(accepted ? "ok" : "wrn", `patch ${accepted ? "accepté" : "refusé"} · ${code} · ${trace}`);
+    setStatus(accepted ? "patch accepté" : "patch refusé");
+    document.dispatchEvent(
+      new CustomEvent("log:agent-decision", {
+        detail: { code, trace, runId: run.run_id, decision, patch: diag.patch },
+      }),
+    );
+    closeDiagnostic();
+  };
+
+  entry.decide = decide;
+
+  diagBtn.addEventListener("click", () => openDiagnostic(entry));
+  yesBtn.addEventListener("click", () => decide("accept"));
+  noBtn.addEventListener("click", () => decide("reject"));
 
   while (state.agents.length > MAX_AGENTS) {
     const removed = state.agents.pop();
@@ -220,6 +285,11 @@ function createAgent(code, trace, error) {
     metrics.step(run.run_id, STEP_NAMES[AGENT_STEPS[step]]);
     segments[step].dataset.on = "true";
     step += 1;
+
+    if (step === 1) {
+      actions.hidden = false;
+      addRow("inf", `diagnostic ready · ${code} · ${trace}`);
+    }
 
     if (FAIL && step === 3) {
       fail();
@@ -360,108 +430,399 @@ function addErrorCard(error, code) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Real errors                                                          */
-/* ------------------------------------------------------------------ */
-
-/* The five error types tracked by the agent. Keep aligned with
-   scripts/lib/errors.mjs (same code/message/stack -> same fingerprint). */
-const SCENARIOS = [
-  {
-    code: "ERR_DB_POOL_EXHAUSTED",
-    name: "Database connection pool exhausted",
-    service: "checkout-api",
-    message:
-      "HikariPool-1 - Connection is not available, request timed out after 30000ms (total=20, active=20, idle=0, waiting=17)",
-    stack: [
-      "java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30000ms",
-      "    at com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:696)",
-      "    at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:181)",
-      "    at com.acme.checkout.OrderRepository.find(OrderRepository.java:88)",
-      "    at com.acme.checkout.OrderService.checkout(OrderService.java:42)",
-    ].join("\n"),
-  },
-  {
-    code: "ERR_PG_TIMEOUT_5432",
-    name: "Connection timeout on port 5432",
-    service: "orders-api",
-    message: 'connection to server at "db.internal" (10.0.0.12), port 5432 failed: timeout expired',
-    stack: [
-      'org.postgresql.util.PSQLException: connection to server at "db.internal" (10.0.0.12), port 5432 failed: timeout expired',
-      "    at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:315)",
-      "    at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:117)",
-      "    at com.acme.orders.Db.connect(Db.java:31)",
-    ].join("\n"),
-  },
-  {
-    code: "ERR_KAFKA_UNREACHABLE",
-    name: "Kafka Broker Unreachable",
-    service: "event-worker",
-    message:
-      "Kafka broker unreachable: Connection to node -1 (kafka:9092) could not be established. Broker may not be available.",
-    stack: [
-      "org.apache.kafka.common.errors.TimeoutException: Topic orders.created not present in metadata after 60000 ms.",
-      "    at org.apache.kafka.clients.producer.KafkaProducer.doSend(KafkaProducer.java:1000)",
-      "    at org.apache.kafka.clients.producer.KafkaProducer.send(KafkaProducer.java:936)",
-      "    at com.acme.events.OrderPublisher.publish(OrderPublisher.java:57)",
-    ].join("\n"),
-  },
-  {
-    code: "ERR_OOM_HEAP",
-    name: "OutOfMemoryError (OOM) / Java heap space saturated",
-    service: "reporting-worker",
-    message: "java.lang.OutOfMemoryError: Java heap space",
-    stack: [
-      "java.lang.OutOfMemoryError: Java heap space",
-      "    at java.base/java.util.Arrays.copyOf(Arrays.java:3537)",
-      "    at java.base/java.util.ArrayList.grow(ArrayList.java:238)",
-      "    at com.acme.reporting.CsvExporter.export(CsvExporter.java:74)",
-    ].join("\n"),
-  },
-  {
-    code: "ERR_DISK_FULL",
-    name: "Disk Full / No space left on device",
-    service: "postgres",
-    message: "write /var/lib/postgresql/data/base/pgsql_tmp/pgsql_tmp1421.0: No space left on device",
-    stack: [
-      'org.postgresql.util.PSQLException: ERROR: could not write to file "base/pgsql_tmp/pgsql_tmp1421.0": No space left on device',
-      "    at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2725)",
-      "    at com.acme.reports.MaterializedView.refresh(MaterializedView.java:63)",
-    ].join("\n"),
-  },
+/* Tracked errors: single source = lib/catalog.json (BaptisteFaisy/Log).
+   The site only names the error_type; the API builds the message and stack. */
+const ERROR_TYPES = [
+  "db_pool_exhausted",
+  "db_connection_timeout",
+  "kafka_broker_unreachable",
+  "oom",
+  "disk_full",
 ];
 
-function fireError() {
-  const scenario = PINNED
-    ? SCENARIOS.find((s) => s.code === PINNED) || SCENARIOS[0]
-    : DEMO_WARM
-      ? SCENARIOS[0]
-      : SCENARIOS[state.scenario % SCENARIOS.length];
-  state.scenario += 1;
+const TYPE_BY_CODE = {
+  ERR_DB_POOL_EXHAUSTED: "db_pool_exhausted",
+  ERR_PG_TIMEOUT_5432: "db_connection_timeout",
+  ERR_KAFKA_UNREACHABLE: "kafka_broker_unreachable",
+  ERR_OOM_HEAP: "oom",
+  ERR_DISK_FULL: "disk_full",
+};
 
-  addRow("err", `ERROR · ${scenario.name} · ${scenario.code} · ${scenario.service}`);
+const DIAGNOSTICS = {
+  ERR_DB_POOL_EXHAUSTED: {
+    confidence: 0.92,
+    cause:
+      "Le pool Hikari est saturé : 20/20 connexions actives, 17 requêtes en attente depuis plus de 30 s. OrderRepository.find ouvre une connexion sans la fermer quand la requête échoue, d'où la fuite progressive.",
+    evidence: [
+      "hikari · total=20 active=20 idle=0 waiting=17",
+      "OrderRepository.java:88 · getConnection() hors try-with-resources",
+      "checkout p99 · 30 000 ms (timeout du pool)",
+    ],
+    patch: {
+      title: "order-repository · try-with-resources + pool 20 → 40",
+      lines: [
+        "- Connection c = dataSource.getConnection();",
+        "+ try (Connection c = dataSource.getConnection();",
+        "+      PreparedStatement ps = c.prepareStatement(SQL)) {",
+        "hikari.maximum-pool-size: 40",
+        "hikari.connection-timeout: 10000",
+      ],
+    },
+  },
+  ERR_PG_TIMEOUT_5432: {
+    confidence: 0.88,
+    cause:
+      "Le port 5432 ne répond plus depuis orders-api : les paquets SYN partent sans réponse jusqu'au timeout. La règle entrante du security group a disparu après le dernier apply Terraform.",
+    evidence: [
+      "orders-api → 10.0.0.12:5432 · timeout après 30 s",
+      "security group · aucune règle 5432/tcp depuis le subnet applicatif",
+      "dernier apply Terraform · 11:42, règle absente du plan",
+    ],
+    patch: {
+      title: "security-group · réouvrir 5432/tcp + healthcheck",
+      lines: [
+        "+ ingress 5432/tcp from 10.0.0.0/16",
+        "+ healthcheck: pg_isready -h db.internal -p 5432",
+        "+ retry backoff 3 × 500 ms sur la connexion",
+        "terraform plan · vérifier l'absence de dérive",
+      ],
+    },
+  },
+  ERR_KAFKA_UNREACHABLE: {
+    confidence: 0.9,
+    cause:
+      "Aucun broker joignable : le DNS résout kafka vers 10.0.0.31, mais la connexion sur 9092 est refusée. advertised.listeners annonce localhost, donc le producer reçoit une adresse inutilisable.",
+    evidence: [
+      "producer → kafka:9092 · connexion refusée",
+      "advertised.listeners=PLAINTEXT://localhost:9092",
+      "metadata indisponible après 60 000 ms · topic orders.created",
+    ],
+    patch: {
+      title: "broker kafka-1687d005 · advertised.listeners + restart",
+      lines: [
+        "- advertised.listeners=PLAINTEXT://localhost:9092",
+        "+ advertised.listeners=PLAINTEXT://kafka-1687d005:9092",
+        "+ restart broker · vérifier le listener 9092",
+        "+ test producer ack=all sur otel.logs",
+      ],
+    },
+  },
+  ERR_OOM_HEAP: {
+    confidence: 0.86,
+    cause:
+      "Le heap est saturé : CsvExporter.export charge le rapport complet en mémoire avant écriture (ArrayList de 1,2 M lignes) alors que la JVM est limitée à 512 Mo.",
+    evidence: [
+      "java.lang.OutOfMemoryError: Java heap space",
+      "CsvExporter.java:74 · Arrays.copyOf pendant la croissance de la liste",
+      "heap 512 Mo · occupation 99 % avant le crash",
+    ],
+    patch: {
+      title: "csv-exporter · écriture en flux par lots",
+      lines: [
+        "- List<Row> rows = repository.findAll();",
+        "+ repository.streamAll().forEach(this::writeRow);",
+        "+ flush tous les 5 000 lignes",
+        "-XX:MaxRAMPercentage=70",
+        "alerte heap > 85 %",
+      ],
+    },
+  },
+  ERR_DISK_FULL: {
+    confidence: 0.94,
+    cause:
+      "Le volume de données est plein : 38 Go de WAL non archivés car l'archive_command échoue depuis 6 h, ce qui bloque aussi les checkpoints.",
+    evidence: [
+      "No space left on device · /var/lib/app/telemetry-buffer",
+      "pg_wal · 38 Go non archivés",
+      "archive_command en échec depuis 6 h",
+    ],
+    patch: {
+      title: "postgres · purger pg_wal + réparer l'archivage",
+      lines: [
+        "+ archiver les WAL en attente puis purger pg_wal",
+        "+ réparer archive_command (cible injoignable)",
+        "+ alerte disque > 80 %",
+        "+ vérifier autovacuum et la rétention des logs",
+      ],
+    },
+  },
+};
+
+function diagnosticFor(code, error) {
+  if (DIAGNOSTICS[code]) return DIAGNOSTICS[code];
+  return {
+    confidence: 0.55,
+    cause: `Signature non répertoriée (${code}). L'agent a isolé l'événement, mais aucune méthode de résolution vérifiée n'est en mémoire pour ce fingerprint.`,
+    evidence: [
+      error && error.message ? error.message : "message indisponible",
+      "aucune résolution enregistrée dans error_resolutions",
+    ],
+    patch: { title: "diagnostic seul · aucun patch automatique", lines: ["# intervention humaine requise"] },
+  };
+}
+
+let diagModal = null;
+let diagReturnFocus = null;
+
+function ensureDiagnosticModal() {
+  if (diagModal) return diagModal;
+
+  const overlay = document.createElement("div");
+  overlay.className = "diag-overlay";
+  overlay.hidden = true;
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "diagTitle");
+
+  const panel = document.createElement("div");
+  panel.className = "diag-panel";
+
+  const head = document.createElement("header");
+  head.className = "diag-head";
+
+  const titles = document.createElement("div");
+  titles.className = "diag-titles";
+
+  const kicker = document.createElement("span");
+  kicker.className = "diag-kicker";
+  kicker.textContent = "agent diagnostic";
+
+  const title = document.createElement("h2");
+  title.className = "diag-title";
+  title.id = "diagTitle";
+
+  titles.append(kicker, title);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "diag-close";
+  closeBtn.setAttribute("aria-label", "fermer le diagnostic");
+  closeBtn.textContent = "×";
+
+  head.append(titles, closeBtn);
+
+  const body = document.createElement("div");
+  body.className = "diag-body";
+
+  const meta = document.createElement("dl");
+  meta.className = "diag-meta";
+
+  const causeBlock = document.createElement("section");
+  causeBlock.className = "diag-block";
+  const causeTitle = document.createElement("h3");
+  causeTitle.textContent = "cause racine";
+  const cause = document.createElement("p");
+  cause.className = "diag-cause";
+  causeBlock.append(causeTitle, cause);
+
+  const proofBlock = document.createElement("section");
+  proofBlock.className = "diag-block";
+  const proofTitle = document.createElement("h3");
+  proofTitle.textContent = "preuves";
+  const proofs = document.createElement("ul");
+  proofs.className = "diag-proofs";
+  proofBlock.append(proofTitle, proofs);
+
+  const patchBlock = document.createElement("section");
+  patchBlock.className = "diag-block";
+  const patchTitle = document.createElement("h3");
+  patchTitle.textContent = "patch proposé";
+  const patchName = document.createElement("p");
+  patchName.className = "diag-patch-name";
+  const patchCode = document.createElement("pre");
+  patchCode.className = "diag-patch";
+  patchBlock.append(patchTitle, patchName, patchCode);
+
+  body.append(meta, causeBlock, proofBlock, patchBlock);
+
+  const foot = document.createElement("footer");
+  foot.className = "diag-foot";
+
+  const hint = document.createElement("span");
+  hint.className = "diag-hint";
+  hint.textContent = "appliquer le patch proposé ?";
+
+  const footActions = document.createElement("div");
+  footActions.className = "diag-foot-actions";
+
+  const yes = document.createElement("button");
+  yes.type = "button";
+  yes.className = "diag-btn diag-btn-yes";
+  yes.textContent = "OUI";
+
+  const no = document.createElement("button");
+  no.type = "button";
+  no.className = "diag-btn diag-btn-no";
+  no.textContent = "NON";
+
+  footActions.append(yes, no);
+  foot.append(hint, footActions);
+
+  panel.append(head, body, foot);
+  overlay.append(panel);
+  document.body.append(overlay);
+
+  closeBtn.addEventListener("click", closeDiagnostic);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeDiagnostic();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && diagModal && !diagModal.overlay.hidden) closeDiagnostic();
+  });
+
+  diagModal = { overlay, title, meta, cause, proofs, patchName, patchCode, yes, no, closeBtn, current: null };
+  return diagModal;
+}
+
+function openDiagnostic(entry) {
+  const modal = ensureDiagnosticModal();
+  modal.current = entry;
+  diagReturnFocus = document.activeElement;
+
+  modal.title.textContent = entry.label.replace(/^agent\//, "");
+
+  const rows = [
+    ["agent", entry.label],
+    ["code", entry.code],
+    ["trace", entry.trace],
+    ["mode", entry.run.mode],
+    ["confiance", `${Math.round(entry.diag.confidence * 100)} %`],
+  ];
+
+  modal.meta.replaceChildren(
+    ...rows.flatMap(([key, value]) => {
+      const dt = document.createElement("dt");
+      dt.textContent = key;
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      return [dt, dd];
+    }),
+  );
+
+  modal.cause.textContent = entry.diag.cause;
+
+  modal.proofs.replaceChildren(
+    ...entry.diag.evidence.map((line) => {
+      const li = document.createElement("li");
+      li.textContent = line;
+      return li;
+    }),
+  );
+
+  modal.patchName.textContent = entry.diag.patch.title;
+  modal.patchCode.textContent = entry.diag.patch.lines.join("\n");
+
+  modal.yes.disabled = Boolean(entry.decision);
+  modal.no.disabled = Boolean(entry.decision);
+  modal.yes.onclick = () => entry.decide("accept");
+  modal.no.onclick = () => entry.decide("reject");
+
+  modal.overlay.hidden = false;
+  document.body.classList.add("diag-open");
+  modal.yes.focus();
+}
+
+function closeDiagnostic() {
+  if (!diagModal || diagModal.overlay.hidden) return;
+  diagModal.overlay.hidden = true;
+  diagModal.current = null;
+  document.body.classList.remove("diag-open");
+  if (diagReturnFocus && typeof diagReturnFocus.focus === "function") diagReturnFocus.focus();
+  diagReturnFocus = null;
+}
+
+function nextScenario() {
+  if (PINNED) return TYPE_BY_CODE[PINNED] || PINNED;
+  if (DEMO_WARM) return ERROR_TYPES[0];
+  return ERROR_TYPES[state.scenario % ERROR_TYPES.length];
+}
+
+/* ------------------------------------------------------------------ */
+/* Kafka -> PostgreSQL -> site                                         */
+/* ------------------------------------------------------------------ */
+
+
+const API = "/api";
+const POLL_MS = 2000;
+const MAX_BATCH = 200;
+const INITIAL_ROWS = 20;
+
+let cursor = 0;
+let firstPoll = true;
+const seen = new Set();
+
+async function fireError() {
+  if (fireBtn.disabled) return;
+  fireBtn.disabled = true;
+
+  const errorType = nextScenario();
+  state.scenario += 1;
+  setStatus("publishing to kafka");
 
   try {
-    const error = new Error(scenario.message);
-    error.name = scenario.name;
-    error.stack = scenario.stack;
-    throw error;
+    const response = await fetch(`${API}/logs`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ error_type: errorType, severity: "err" }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    setStatus("published to kafka");
+    setTimeout(pollLogs, 300);
   } catch (error) {
-    addErrorCard(error, scenario.code);
-    console.error(`[${scenario.code}]`, error);
+    setStatus(`publish failed: ${error.message}`);
+  } finally {
+    fireBtn.disabled = false;
   }
 }
 
-window.addEventListener("error", (event) => {
-  const error = event.error instanceof Error ? event.error : new Error(event.message || "Unknown error");
-  addErrorCard(error, "ERR_UNCAUGHT");
-});
+function errorFromLog(log) {
+  const payload = log.payload || {};
+  const error = new Error(log.message);
+  error.name = payload.name || log.code;
+  error.stack = payload.stack || "";
+  return error;
+}
 
-window.addEventListener("unhandledrejection", (event) => {
-  const reason = event.reason;
-  const error = reason instanceof Error ? reason : new Error(String(reason));
-  addErrorCard(error, "ERR_UNHANDLED_REJECTION");
-});
+function showLog(log, live) {
+  const service = log.payload && log.payload.service ? `${log.payload.service} · ` : "";
+  addRow(log.severity, `${service}${log.code} · ${log.message}`, log.occurred_at);
+  if (live && log.severity === "err") addErrorCard(errorFromLog(log), log.code);
+}
 
+async function pollLogs() {
+  const query = firstPoll
+    ? `tail=1&limit=${INITIAL_ROWS}`
+    : `after=${cursor}&limit=${MAX_BATCH}`;
+
+  try {
+    const response = await fetch(`${API}/logs?${query}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+
+    if (firstPoll) {
+      data.logs.forEach((log) => {
+        seen.add(log.id);
+        showLog(log, false);
+      });
+      cursor = data.cursor || 0;
+      firstPoll = false;
+      addRow("ok", `connected - ${data.total} log(s) - topic ${data.topic}`, new Date().toISOString());
+    } else {
+      data.logs.forEach((log) => {
+        if (seen.has(log.id)) return;
+        seen.add(log.id);
+        showLog(log, true);
+      });
+      if (data.cursor > cursor) cursor = data.cursor;
+    }
+
+    setStatus("kafka -> postgres -> site");
+  } catch (error) {
+    setStatus(`api offline: ${error.message}`);
+  }
+  setTimeout(pollLogs, POLL_MS);
+}
 fireBtn.addEventListener("click", fireError);
 
 document.addEventListener("keydown", (event) => {
@@ -472,50 +833,24 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* ------------------------------------------------------------------ */
-/* Flux continu                                                        */
+/* Boot                                                                */
 /* ------------------------------------------------------------------ */
 
-const ROUTES = ["/api/health", "/api/session", "/api/logs", "/api/metrics", "/api/checkout", "/api/profile", "/api/events"];
-const REGIONS = ["cdg1", "fra1", "iad1"];
-const KEYS = ["sess:8f21", "user:gaia", "logs:page:1", "cfg:edge"];
+(async () => {
+  await (metrics && metrics.hydrate ? metrics.hydrate().catch(() => false) : false);
+  updateAgentsMeta();
+  addRow("inf", "session attached · tail -f kafka/otel.logs");
+  pollLogs();
 
-const rnd = (min, max) => Math.round(min + Math.random() * (max - min));
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
-
-const FEED = [
-  () => ["inf", `GET ${pick(ROUTES)} 200 · ${rnd(8, 140)} ms`],
-  () => ["dbg", `cache ${pick(["hit", "miss", "revalidate"])} · key=${pick(KEYS)}`],
-  () => ["ok", `worker ready · region=${pick(REGIONS)} · pid=${rnd(1000, 9999)}`],
-  () => ["inf", `POST ${pick(ROUTES)} 201 · ${rnd(20, 260)} ms · ${rnd(2, 40)} kb`],
-  () => ["dbg", `queue consume · batch=${rnd(1, 12)} · lag=${rnd(0, 90)} ms`],
-  () => ["inf", `deploy ready · dpl_${randomId(9)}`],
-  () => ["wrn", `slow query · ${pick(["orders", "sessions", "events"])} ${rnd(420, 1800)} ms (threshold 400 ms)`],
-  () => ["dbg", `trace ${randomId(16)} · sampled=0.${rnd(1, 9)}`],
-  () => ["inf", `WS /socket connected · clients=${rnd(1, 240)}`],
-];
-
-function feed() {
-  const [level, text] = pick(FEED)();
-  addRow(level, text);
-  setTimeout(feed, Math.random() > 0.9 ? rnd(120, 380) : rnd(650, 1900));
-}
-
-addRow("inf", "session attached · tail -f /var/log/app.log");
-addRow("ok", "error and unhandledrejection handlers active");
-updateAgentsMeta();
-setTimeout(feed, 500);
-
-if (params.get("demo") === "error" || params.get("demo") === "agent") {
-  setTimeout(fireError, 600);
-}
-
-if (DEMO_WARM) {
-  const repeat = 3;
-  for (let i = 0; i < repeat; i += 1) {
-    setTimeout(fireError, 500 + i * 2600);
+  if (params.get("demo") === "error" || params.get("demo") === "agent") {
+    setTimeout(fireError, 800);
   }
-}
 
-setInterval(() => {
-  clockEl.textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
-}, 1000);
+  if (DEMO_WARM) {
+    for (let i = 0; i < 3; i += 1) setTimeout(fireError, 800 + i * 2600);
+  }
+
+  setInterval(() => {
+    clockEl.textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
+  }, 1000);
+})();

@@ -111,12 +111,15 @@
       .finally(() => clearTimeout(timer));
   }
 
+  let hydration = null;
+
   function hydrate() {
+    if (hydration) return hydration;
     const base = typeof window.LOG_METRICS_API === "string" ? window.LOG_METRICS_API.trim() : "";
     api.base = base.replace(/\/$/, "");
     api.online = Boolean(api.base) && window.location.protocol !== "file:";
     if (!api.online) return Promise.resolve(false);
-    return request("/metrics").then((data) => {
+    hydration = request("/metrics").then((data) => {
       if (!data) {
         api.online = false;
         notify();
@@ -139,14 +142,11 @@
       notify();
       return true;
     });
+    return hydration;
   }
 
   function persistRun(run) {
     request("/runs", { method: "POST", body: JSON.stringify(run) });
-  }
-
-  function persistMemo(memo) {
-    request("/memos", { method: "POST", body: JSON.stringify(memo) });
   }
 
   /* ---------------------------------------------------------------- */
@@ -220,30 +220,6 @@
     run.duration_ms = Math.round(t - live.t0);
     run.agent_ms = run.steps.reduce((sum, s) => sum + s.duration_ms, 0);
     run.tokens_total = run.tokens.input + run.tokens.output;
-
-    if (status === "resolved" && !run.memo.hit) {
-      const memo = {
-        fingerprint: run.fingerprint,
-        code: run.code,
-        path: `db://error_resolutions/${run.fingerprint}`,
-        cause: `erreur ${run.code} reproduite et corrigée`,
-        fix: `correctif appliqué par ${run.agent || "agent"}`,
-        files: [],
-        verification: "tests 12/12",
-        tokens_used: run.tokens_total,
-        duration_ms: run.duration_ms,
-        agent: run.agent,
-        runs: 1,
-        updated_at: run.ended_at,
-      };
-      state.memos[run.fingerprint] = memo;
-      persistMemo(memo);
-    } else if (status === "resolved" && state.memos[run.fingerprint]) {
-      const memo = state.memos[run.fingerprint];
-      memo.runs = (memo.runs || 0) + 1;
-      memo.updated_at = run.ended_at;
-      persistMemo(memo);
-    }
 
     active.delete(runId);
     state.runs.push(run);

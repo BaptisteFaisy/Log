@@ -24,9 +24,9 @@ test("normalisation : ids, nombres, chemins et timestamps retirés", () => {
 
 test("fingerprint stable et sensible au code", () => {
   const entry = ERROR_TYPES[0];
-  const one = fingerprint(entry.code, entry.message, entry.stack.join("\n"));
-  const two = fingerprint(entry.code, entry.message, entry.stack.join("\n"));
-  const other = fingerprint("ERR_OTHER", entry.message, entry.stack.join("\n"));
+  const one = fingerprint(entry.code, entry.message, entry.stack);
+  const two = fingerprint(entry.code, entry.message, entry.stack);
+  const other = fingerprint("ERR_OTHER", entry.message, entry.stack);
   assert.equal(one, two);
   assert.notEqual(one, other);
   assert.match(one, /^[0-9a-f]{14}$/);

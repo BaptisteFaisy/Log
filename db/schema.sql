@@ -1,6 +1,9 @@
--- SchÃ©ma Â« historique Â» (base PostgreSQL Aiven : pg-memoire/historique)
--- Source de vÃ©ritÃ© : les logs affichÃ©s sur le site viennent de `logs`,
--- alimentÃ©e par le topic Kafka `otel.logs`.
+-- Schema « historique » (base PostgreSQL Aiven : pg-memoire/historique).
+-- Idempotent : peut etre rejoue sans perdre les donnees.
+-- Source de verite : PostgreSQL. Les logs affiches sur le site viennent de
+-- `logs`, alimentee par le topic Kafka `otel.logs` (scripts/consumer.cjs).
+
+create extension if not exists pg_trgm;
 
 create table if not exists logs (
   seq            bigserial primary key,
@@ -22,6 +25,7 @@ create index if not exists logs_seq_idx on logs (seq);
 create index if not exists logs_code_idx on logs (code);
 create index if not exists logs_received_idx on logs (received_at desc);
 
+-- Historique des runs des agents (cold = 1re resolution, warm = memo reutilise).
 create table if not exists agent_runs (
   run_id        text        primary key,
   fingerprint   text        not null,
@@ -45,7 +49,8 @@ create table if not exists agent_runs (
 create index if not exists agent_runs_fingerprint_idx on agent_runs (fingerprint, started_at);
 create index if not exists agent_runs_started_idx on agent_runs (started_at desc);
 
--- MÃ©thode de rÃ©solution (ex-`.md`) : une ligne par fingerprint d'erreur.
+-- Methode de resolution : une ligne par fingerprint d'erreur (la base est la
+-- source de verite ; les .md de docs/error-memos sont un export lisible).
 create table if not exists error_resolutions (
   fingerprint   text        primary key,
   code          text        not null,
@@ -63,17 +68,6 @@ create table if not exists error_resolutions (
 create index if not exists error_resolutions_code_idx on error_resolutions (code);
 create index if not exists error_resolutions_updated_idx on error_resolutions (updated_at desc);
 
--- Curseur de consommation Kafka : garantit une reprise sans doublon
--- et une correspondance stricte offset Kafka â†” ligne affichÃ©e.
-create table if not exists kafka_cursors (
-  topic       text        not null,
-  partition   integer     not null,
-  next_offset bigint      not null default 0,
-  updated_at  timestamptz not null default now(),
-  primary key (topic, partition)
-);
-
--- Recherche de probleme similaire (trigrammes).
+-- Recherche de probleme similaire (reformulation, faute de frappe).
 create index if not exists error_resolutions_fix_trgm_idx on error_resolutions using gin (fix gin_trgm_ops);
 create index if not exists error_resolutions_cause_trgm_idx on error_resolutions using gin (cause gin_trgm_ops);
-
