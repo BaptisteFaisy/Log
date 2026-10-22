@@ -1407,6 +1407,26 @@ body::before {
 .btn:focus-visible { box-shadow: 4px 4px 0 var(--line), 0 0 0 3px rgba(10, 10, 10, 0.18); }
 .btn-sm { padding: 7px 11px; font-size: 10.5px; box-shadow: 3px 3px 0 var(--line); }
 
+/* Etat du bouton Kafka : « check » = verification en cours (neutre),
+   « done » = le broker a repondu (vert), « down » = injoignable (rouge).
+   Aucun de ces etats n'est pose en dur dans index.html : app.js ne les
+   applique qu'apres une reponse reelle de GET /api/logs. */
+.btn[data-state="check"] {
+  background: var(--panel);
+  color: var(--ink-2);
+  border-color: var(--line);
+  cursor: progress;
+}
+.btn[data-state="check"]:hover { transform: none; box-shadow: 4px 4px 0 var(--line); }
+.btn[data-state="check"][disabled] { opacity: 1; }
+
+.btn[data-state="down"] {
+  background: var(--red-soft);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.btn[data-state="down"]:hover { background: var(--red-soft); transform: none; box-shadow: 4px 4px 0 var(--line); }
+
 .btn[data-state="done"] {
   background: #5ffa74;
   color: #0a0a0a;
