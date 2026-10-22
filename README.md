@@ -564,7 +564,7 @@ Le catalogue est `site/scenarios/catalog.json` (copie de
 `aiven-kafka-demo/scenarios/`), lu par `site/lib/contract.js` : la console et
 `tools/seed` produisent donc **exactement** le même message.
 
-**Deux règles à ne pas régresser :**
+**Trois règles à ne pas régresser :**
 
 1. **La simulation ne verrouille rien.** La carte d'agent s'anime tout de suite
    (comportement voulu, `startSimulation`), mais tant que l'incident a été
@@ -578,6 +578,16 @@ Le catalogue est `site/scenarios/catalog.json` (copie de
    de publier ; `addErrorCard`/`createAgent` revérifient (même trace ou même
    empreinte) pour les erreurs JS du site. Côté machine, le watcher applique la
    même règle (§4.3, `running_messages`).
+3. **Au chargement, une carte n'est reprise que si elle existe vraiment.**
+   `restoreAgents()` relit les traces de `otel.logs`, mais ne crée une carte que
+   si `GET /api/report` renvoie un rapport (l'agent a réellement tourné) **ou**
+   si la trace vient de la mémoire locale du navigateur (`rememberTrace`, donc
+   publiée par cette page) **et** date de moins de 20 min (`RESTORE_MS`). Sans ce
+   filtre, chaque ligne d'erreur du topic (y compris des lignes de test)
+   devenait une carte « agent en cours » qui tournait à vide pendant 15 min —
+   trois cartes fantômes à chaque chargement, constaté le 2026-10-22. Corollaire :
+   ne jamais réécrire `saveKnownTraces(merged)`, sinon le tail pollue la mémoire
+   locale et rend le filtre inopérant.
 
 **Trois pièges, tous rencontrés :**
 
