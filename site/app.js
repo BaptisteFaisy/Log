@@ -197,67 +197,9 @@ function createAgent(code, trace, error, real) {
   updateAgentsMeta();
   addRow("inf", `${label} created · ${code} · ${trace} · ${run.mode}`);
 
-  if (real) {
-    watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId: real.trace_id });
-    return;
-  }
-
-  let step = 0;
-
-  const nextDelay = () =>
-    (run.mode === "warm" ? 320 + Math.random() * 260 : 900 + Math.random() * 700) * SPEED;
-
-  const fail = () => {
-    entry.state = "done";
-    card.dataset.state = "done";
-    card.dataset.outcome = "failed";
-    stateEl.textContent = "failed";
-    logTag.textContent = "err";
-    logText.textContent = `patch rejected · tests 6/12 · ${code}`;
-    addRow("err", `patch rejected · ${code} · tests 6/12`);
-    setStatus("resolution failed");
-    metrics.addTokens(run.run_id, { ...simulatedTokens(run.fingerprint, run.mode), estimated: true });
-    metrics.endRun(run.run_id, { status: "failed" });
-    updateAgentsMeta();
-  };
-
-  const advance = () => {
-    metrics.step(run.run_id, STEP_NAMES[AGENT_STEPS[step]]);
-    segments[step].dataset.on = "true";
-    step += 1;
-
-    if (FAIL && step === 3) {
-      fail();
-      return;
-    }
-
-    if (step >= AGENT_STEPS.length) {
-      entry.timers.push(setTimeout(finish, 300 * SPEED));
-      return;
-    }
-
-    segments[step].dataset.on = "run";
-    stateEl.textContent = AGENT_STEPS[step];
-    entry.timers.push(setTimeout(advance, nextDelay()));
-  };
-
-  const finish = () => {
-    entry.state = "done";
-    card.dataset.state = "done";
-    stateEl.textContent = "ready";
-    logTag.textContent = "ok";
-    logText.textContent = `patch applied · tests 12/12 · ${code}`;
-    addRow("ok", `patch applied · ${code} · tests 12/12`);
-    setStatus("fix ready");
-
-    const tokens = simulatedTokens(run.fingerprint, run.mode);
-    metrics.addTokens(run.run_id, { ...tokens, estimated: true });
-    metrics.endRun(run.run_id, { status: "resolved" });
-    updateAgentsMeta();
-  };
-
-  entry.timers.push(setTimeout(advance, (run.mode === "warm" ? 320 : 900) * SPEED));
-  setStatus("agent running");
+  // Le seul mode d'execution est le vrai : suivi du rapport publie par le
+  // watcher de la machine. Aucune animation ne simule un agent (AGENTS.md).
+  watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId: real.trace_id });
 }
 
 /* ------------------------------------------------------------------ */
@@ -394,8 +336,8 @@ function simulatedTokens(fingerprint, mode) {
 /* Erreur                                                              */
 /* ------------------------------------------------------------------ */
 
-function addErrorCard(error, code) {
-  const trace = randomId();
+function addErrorCard(error, code, real) {
+  const trace = real && real.trace_id ? real.trace_id : randomId();
   state.errors += 1;
 
   const card = document.createElement("article");
@@ -478,7 +420,15 @@ function addErrorCard(error, code) {
     return;
   }
 
-  setTimeout(() => createAgent(code, trace, error), 380);
+  // Seul un incident reellement publie dans Kafka peut lancer un agent : le
+  // front n'a pas de flux d'agent factice (AGENTS.md).
+  if (!real || !real.trace_id) {
+    addRow("inf", `pas de publication Kafka pour ${code} · aucun agent lance`);
+    updateAgentsMeta();
+    return;
+  }
+
+  setTimeout(() => createAgent(code, trace, error, real), 380);
 }
 
 /* ------------------------------------------------------------------ */
@@ -557,7 +507,13 @@ const SCENARIOS = [
   },
 ];
 
-function fireError() {
+/**
+ * Declenche un VRAI incident : POST /api/incident publie le message du catalogue
+ * dans otel.logs / otel.traces (cle = TraceId). Le watcher de la machine le
+ * consomme, lance le vrai agent OpenCode, et publie son rapport dans
+ * otel-reports — que la carte d'agent suit via /api/report.
+ */
+async function fireError() {
   const scenario = PINNED
     ? SCENARIOS.find((s) => s.code === PINNED) || SCENARIOS[0]
     : DEMO_WARM
@@ -567,19 +523,50 @@ function fireError() {
 
   addRow("err", `ERROR · ${scenario.name} · ${scenario.code} · ${scenario.service}`);
 
-  try {
-    const error = new Error(scenario.message);
-    error.name = scenario.name;
-    error.stack = scenario.stack;
-    throw error;
-  } catch (error) {
-    addErrorCard(error, scenario.code);
-    console.error(`[${scenario.code}]`, error);
+  const error = new Error(scenario.message);
+  error.name = scenario.name;
+  error.stack = scenario.stack;
+
+  // Un seul agent par message : on verifie AVANT de publier, pour ne pas envoyer
+  // un doublon dans Kafka quand un agent traite deja ce message.
+  const fp = metrics.fingerprint(scenario.code, error.message, error.stack);
+  if (state.agents.some((a) => a.state !== "done" && a.fingerprint === fp)) {
+    addRow("inf", `agent deja en cours sur ce message · ${scenario.code} · pas de publication`);
+    addErrorCard(error, scenario.code, null);
+    return;
   }
+
+  addRow("inf", `POST /api/incident · scenario=${scenario.scenario}`);
+  let real = null;
+  try {
+    const response = await fetch("/api/incident", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ scenario: scenario.scenario }),
+      cache: "no-store",
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.ok && data.trace_id) {
+      real = { trace_id: data.trace_id, scenario: scenario.scenario };
+      addRow("ok", `incident publie · trace ${data.trace_id} · ${data.error_type} · ${data.messages} messages`);
+      setStatus("incident publie");
+    } else {
+      addRow("err", `publication refusee · ${data.error || `http ${response.status}`}${data.hint ? ` · ${data.hint}` : ""}`);
+      setStatus("publication refusee");
+    }
+  } catch (err) {
+    addRow("err", `publication impossible · ${err.message}`);
+    setStatus("publication impossible");
+  }
+
+  addErrorCard(error, scenario.code, real);
+  console.error(`[${scenario.code}]`, error);
 }
 
 window.addEventListener("error", (event) => {
   const error = event.error instanceof Error ? event.error : new Error(event.message || "Unknown error");
+  // Erreur JS du site lui-meme : on l'affiche, on ne publie rien dans Kafka et
+  // on ne lance aucun agent (pas de flux factice cote front).
   addErrorCard(error, "ERR_UNCAUGHT");
 });
 
