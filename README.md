@@ -376,7 +376,7 @@ suivant.
 
 Tous produits dans `~/logs/`, copiés ici. **Format et producteur** :
 
-### `kafka-health.log` — 340 Ko, ~10 400 lignes
+### `kafka-health.log` — ~340 Ko, ~10 400 lignes *(croît d'une sonde/minute)*
 
 Producteur : `kafka-health.timer` → `bin/kafka-health --deep --json`.
 
@@ -470,7 +470,7 @@ recréation de `pg-memoire` / `valkey-memoire`, plans, `service_uri_params`,
 migration v1→v2 (11→6 colonnes, 8→6 fonctions), `DATABASE_URL`, tests
 (`occurrences=2`, `format_ok`), push GitHub.
 
-### `incidents/` — 33 fichiers (5 `.prompt`, 28 `.log`)
+### `incidents/` — 33 fichiers au moment de la rédaction (5 `.prompt`, 28 `.log`)
 
 Deux familles :
 
