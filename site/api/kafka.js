@@ -1,8 +1,8 @@
 // Vercel Function : integration reelle du site au cluster Kafka Aiven.
 //
 // GET  /api/kafka  -> etat de l'integration (configure, joignable, topic present)
-// POST /api/kafka  -> publie un message de verification dans le topic et renvoie
-//                     le topic, la partition et l'offset reellement ecrits.
+// POST /api/kafka  -> cree le topic s'il manque, publie un message de verification
+//                     et renvoie le topic, la partition et l'offset reellement ecrits.
 //
 // Variables d'environnement (Vercel > Settings > Environment Variables, jamais dans le depot) :
 //   KAFKA_BROKERS    liste des brokers, separes par des virgules
@@ -79,11 +79,42 @@ async function status() {
   }
 }
 
+async function ensureTopic(kafka) {
+  const admin = kafka.admin({ retry: { retries: 2 } });
+  try {
+    await admin.connect();
+    const topics = await admin.listTopics();
+    if (topics.includes(TOPIC)) {
+      const metadata = await admin.fetchTopicMetadata({ topics: [TOPIC] });
+      const partitions = (metadata.topics[0] && metadata.topics[0].partitions.length) || 0;
+      return { created: false, partitions };
+    }
+    await admin.createTopics({
+      waitForLeaders: true,
+      timeout: TIMEOUT_MS,
+      topics: [{ topic: TOPIC, numPartitions: 1, replicationFactor: 1 }],
+    });
+    return { created: true, partitions: 1 };
+  } finally {
+    await admin.disconnect().catch(() => {});
+  }
+}
+
 async function integrate() {
   const config = kafkaConfig();
   if (!config) throw new Error("not_configured");
 
   const kafka = new Kafka(config);
+  let created = false;
+  try {
+    // Le topic peut manquer : on le cree. Si l'ACL Aiven interdit l'admin,
+    // on tente quand meme la publication (le topic existe peut-etre deja).
+    const ensured = await ensureTopic(kafka);
+    created = ensured.created;
+  } catch (error) {
+    console.error(`kafka/ensure-topic : ${error && error.message}`);
+  }
+
   const producer = kafka.producer({ allowAutoTopicCreation: false, idempotent: true, maxInFlightRequests: 1 });
   try {
     await producer.connect();
@@ -104,6 +135,7 @@ async function integrate() {
     });
     return {
       integrated: true,
+      created,
       topic: result.topicName || TOPIC,
       partition: result.partition,
       offset: String(result.baseOffset),

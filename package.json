@@ -1,0 +1,32 @@
+{
+  "name": "log",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "logs": "node scripts/generate-logs.mjs",
+    "consumer": "node scripts/consumer.cjs",
+    "memory": "node scripts/agent-memory.mjs",
+    "db:schema": "node scripts/apply-schema.mjs",
+    "api:test": "node scripts/test-api.cjs",
+    "test": "node --test scripts/*.test.mjs",
+    "consumer:reports": "node scripts/consumer-reports.cjs",
+    "db:status": "node scripts/db-status.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GaiaSG94/Log.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/GaiaSG94/Log/issues"
+  },
+  "homepage": "https://github.com/GaiaSG94/Log#readme",
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "pg": "^8.23.1"
+  }
+}

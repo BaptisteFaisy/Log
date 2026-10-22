@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log — Error console</title>
+  <meta name="description" content="Trigger an error log and watch an agent resolve it." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+</head>
+<body data-bg="halo">
+  <div class="bg-stage" aria-hidden="true">
+    <canvas id="warp" data-warp></canvas>
+    <div class="veil"></div>
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Log">
+      <img class="brand-logo" src="logo.png" alt="Log" />
+    </a>
+
+    <div class="topbar-actions">
+      <a class="btn btn-ghost obs-link" href="#observabilite">Observability</a>
+      <button id="fire" class="btn btn-primary" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13l0-8Z"/></svg>
+        Trigger an error log
+      </button>
+    </div>
+  </header>
+
+  <div class="fx-scan" aria-hidden="true"></div>
+
+  <main class="workspace">
+    <section class="terminal" aria-label="Log terminal">
+      <header class="term-head">
+        <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="term-title">log@vercel — ~/logs</span>
+        <span class="term-live"><i></i>live</span>
+      </header>
+
+      <div id="stream" class="term-body" role="log" aria-live="polite"></div>
+
+      <footer class="term-foot">
+        <span id="count">0 line</span>
+        <span class="sep">·</span>
+        <span id="status">waiting</span>
+        <span class="foot-right">
+          <span>UTF-8</span>
+          <span class="sep">·</span>
+          <span id="clock">--:--:--</span>
+        </span>
+      </footer>
+    </section>
+
+    <aside class="agents" aria-label="Fix agents">
+      <header class="agents-head">
+        <div class="agents-titles">
+          <strong>agents</strong>
+          <span>error monitoring</span>
+        </div>
+        <span id="agentCount" class="agents-count">0 active</span>
+      </header>
+
+      <div id="agentList" class="agents-body">
+        <div id="agentsEmpty" class="agents-empty">
+          <span class="agents-empty-orb" aria-hidden="true"></span>
+          <p>no agents</p>
+          <span>waiting for an incident</span>
+        </div>
+      </div>
+
+      <footer class="agents-foot">
+        <span class="dotline" aria-hidden="true"></span>
+        <span id="agentFoot">watching · 0 errors</span>
+      </footer>
+    </aside>
+  </main>
+
+  <section id="observabilite" class="observability" aria-labelledby="obsTitle">
+    <header class="obs-head">
+      <div class="obs-titles">
+        <h2 id="obsTitle">Observability</h2>
+        <p>
+          before = first resolution (no memo) · after = recurrence using the resolution method
+          stored in the database
+        </p>
+      </div>
+      <div class="obs-actions">
+        <span id="obsSource" class="obs-source">source · localStorage</span>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="json">Export JSON</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="csv">Export CSV</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="memos">Clear memos</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-action="reset">Reset</button>
+      </div>
+    </header>
+
+    <div id="obsKpis" class="obs-kpis" aria-live="polite"></div>
+
+    <div class="obs-table-wrap">
+      <table id="obsTable" class="obs-table">
+        <caption>
+          Per-error metrics — resolution time and tokens before / after memoization.
+          Click a row to expand the step details.
+        </caption>
+        <thead></thead>
+        <tbody id="obsTableBody"></tbody>
+      </table>
+    </div>
+
+    <p class="obs-legend">
+      <span class="obs-badge" data-mode="cold">cold</span> before = first resolution, no
+      memo · <span class="obs-badge" data-mode="warm">warm · memo</span> after = recurrence using the
+      resolution method read from the database ·
+      <span class="obs-badge" data-mode="warm_degraded">warm degraded</span> recurrence with no
+      usable memo (excluded from warm averages)
+    </p>
+  </section>
+
+  <script src="bg.js"></script>
+  <script>
+    /* API d'ingestion (Vercel Functions + PostgreSQL Aiven, cf. api/).
+       Vide = 100 % local (localStorage). Mettre "/api" pour brancher la base. */
+    window.LOG_METRICS_API = "/api";
+  </script>
+  <script src="metrics.js"></script>
+  <script src="app.js"></script>
+  <script src="observability.js"></script>
+</body>
+</html>

@@ -9,8 +9,9 @@ Ce dépôt a **trois rôles** :
 3. **Traçabilité** de la chaîne d'incidents Kafka, de la panne simulée jusqu'au
    rapport d'agent.
 
-Rien ici n'est exécutable : ce dépôt est un miroir. Les scripts vivent dans
-`~/bin/` et `~/aiven-kafka-demo/`.
+Pour les journaux, ce dépôt reste un miroir : les scripts de collecte vivent dans
+`~/bin/` et `~/aiven-kafka-demo/`. Le site `log-lac-five.vercel.app` fait
+exception : sa source est `site/` (voir plus bas).
 
 ---
 

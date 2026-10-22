@@ -31,3 +31,13 @@ log-sync.log
 *.pyc
 __pycache__/
 .DS_Store
+
+# memoires: la source de verite est PostgreSQL, pas un fichier
+docs/error-memos/*.md
+docs/error-memos/*.json
+
+# site Log (Vercel)
+.vercel
+node_modules/
+previews-20/
+.certs/
