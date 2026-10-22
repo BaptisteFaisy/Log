@@ -78,3 +78,28 @@
   - 4 commandes verifiees apres reecriture : trouver / get / set / ajouter / exporter (5/5 OK)
   - export d'une entree enrichie = 4 lignes (nom + resolution + separateur horodate + resolution)
   - README du repo Log mis a jour et pousse (commit 9d1c19c)
+
+2026-10-22T13:55:00+02:00 [agent-opencode] Guides « prochain agent » : reecriture en vraies traces
+  - demande : les guides de https://log-lac-five.vercel.app (Observability > Historique, colonne
+    « Guide (prochain agent) ») doivent etre de vraies traces de ce qui a ete fait, pas un resume
+  - contenu reecrit en base (bases historique, service Aiven pg-memoire) :
+      5 lignes de historique.historique -> resolution = trace numerotee (commandes avn/psql lancees,
+        ce qui a ete observe, cause, correctif applique, verification, piege)
+      7 lignes de historique.error_resolutions -> cause = trace du diagnostic (debug-bundle,
+        trace-dump --detectors, kafka-health --deep, pg-diag), fix = correctif + « a ne pas faire »,
+        files = chemins reels, verification = commandes de controle
+  - sources des traces (aucune invention) : ~/logs/incidents/*.log (runs db-diagnose, runtime-diagnose,
+    kafka-diagnose), ~/logs/historique-pg.log, etat reel de styles.css / de la base verifie le jour meme
+  - les 5 entrees de demo (ERR_DISK_FULL, ERR_OOM_HEAP, ERR_KAFKA_UNREACHABLE, ERR_PG_TIMEOUT_5432,
+    ERR_DB_POOL_EXHAUSTED) pointaient vers des chemins inexistants (infra/postgres/postgresql.conf) :
+    remplacees par les traces reelles des agents de cette machine
+  - blocage trouve : /api/pg-memoire tronquait chaque cellule a 320 caracteres -> un guide etait coupe
+    en pleine phrase. Plafond porte a 8000 (CELL_CHARS + left() SQL) dans api/pg-memoire.js
+  - deploiement : source de la prod 13:46 (dpl_HS8eqLkhezhvJH2NgWjamjoL2JHu) reprise telle quelle,
+    seule la modification du plafond ajoutee -> preview log-dax9tn59x (verifiee) puis prod
+  - verif prod : 5/5 guides historique complets (925-1135 car., aucun « ... »), 7/7 memos complets,
+    /api/pg-memoire 200 (78 Ko), / 200, /api/dump 200
+  - sauvegardes : /tmp/opencode/guides-backup/guides-20261022-134221.json (etat avant),
+    ~/logs/guides-pg-memoire.md (instantane des nouveaux guides, scan de secrets : PROPRE)
+  - copies locales alignees : ~/log-site-vercel/api/pg-memoire.js et ~/Log/site/api/pg-memoire.js (8000)
+  - aucun secret ecrit, aucune autre table touchee, aucun agent interrompu

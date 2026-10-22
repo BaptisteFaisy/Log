@@ -111,9 +111,9 @@ function agentSlug(code) {
   return code.toLowerCase().replace(/^err_/, "").replace(/_/g, "-");
 }
 
-function createAgent(code, trace, error) {
+function createAgent(code, trace, error, real) {
   const slug = agentSlug(code);
-  const label = `agent/fix-${slug}`;
+  const label = real && real.agent ? real.agent : `agent/fix-${slug}`;
   const run = metrics.startRun({
     code,
     message: error ? error.message : "",
@@ -197,6 +197,11 @@ function createAgent(code, trace, error) {
   updateAgentsMeta();
   addRow("inf", `${label} created · ${code} · ${trace} · ${run.mode}`);
 
+  if (real) {
+    watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId: real.trace_id });
+    return;
+  }
+
   let step = 0;
 
   const nextDelay = () =>
@@ -253,6 +258,113 @@ function createAgent(code, trace, error) {
 
   entry.timers.push(setTimeout(advance, (run.mode === "warm" ? 320 : 900) * SPEED));
   setStatus("agent running");
+}
+
+/* ------------------------------------------------------------------ */
+/* Vrai agent : suivi du rapport publie par le watcher                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Interroge GET /api/report?trace_id=... jusqu'a ce que le vrai agent ait fini.
+ * Le watcher de la machine publie son rapport dans otel-reports : c'est lui qui
+ * fait foi, pas une animation. Au-dela de POLL_MAX_MS, on cesse d'attendre et
+ * on le dit (l'agent peut etre long : son delai maximal est de 45 min).
+ */
+const POLL_EVERY_MS = 5000;
+const POLL_MAX_MS = 15 * 60 * 1000;
+
+function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId }) {
+  const startedAt = Date.now();
+  let attempts = 0;
+
+  const elapsed = () => {
+    const s = Math.round((Date.now() - startedAt) / 1000);
+    return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}`;
+  };
+
+  const setPhase = (index, label) => {
+    segments.forEach((seg, i) => {
+      seg.dataset.on = i < index ? "true" : i === index ? "run" : "false";
+    });
+    stateEl.textContent = label;
+  };
+
+  const done = (outcome, tag, text, status, terminalLevel) => {
+    entry.state = "done";
+    card.dataset.state = "done";
+    card.dataset.outcome = outcome;
+    logTag.textContent = tag;
+    logText.textContent = text;
+    addRow(terminalLevel, text);
+    setStatus(status);
+    metrics.endRun(run.run_id, { status: outcome === "failed" ? "failed" : "resolved" });
+    updateAgentsMeta();
+  };
+
+  setPhase(0, `queue · ${traceId.slice(0, 8)}`);
+  addRow("inf", `trace ${traceId} · attente du watcher (kafka otel.logs → agent local)`);
+
+  const poll = async () => {
+    attempts += 1;
+    try {
+      const response = await fetch(`/api/report?trace_id=${encodeURIComponent(traceId)}`, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+
+      if (response.status === 404) {
+        // pas encore de rapport : l'agent tourne (ou va demarrer)
+        setPhase(1, `running · ${elapsed()}`);
+        if (Date.now() - startedAt > POLL_MAX_MS) {
+          done(
+            "failed", "err",
+            `agent toujours en cours apres ${elapsed()} · suivi arrete · ${code}`,
+            "agent still running", "wrn",
+          );
+          return;
+        }
+        entry.timers.push(setTimeout(poll, POLL_EVERY_MS));
+        return;
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        done(
+          "failed", "err",
+          `rapport illisible · ${data.error || response.status} · ${code}`,
+          "report unavailable", "err",
+        );
+        return;
+      }
+
+      // rapport recu : c'est la sortie reelle de l'agent
+      const report = String(data.report || "").trim();
+      setPhase(3, "ready");
+      card.dataset.outcome = data.exit_code === 0 ? "resolved" : "failed";
+      logTag.textContent = data.exit_code === 0 ? "ok" : "err";
+      logText.textContent = report
+        ? report.split("\n")[0].slice(0, 160)
+        : `${data.agent || "agent"} a termine sans texte de rapport · ${code}`;
+
+      const pre = document.createElement("pre");
+      pre.className = "card-stack";
+      pre.textContent = report || "(rapport vide)";
+      card.append(pre);
+
+      addRow("ok", `rapport recu · ${data.agent || "agent"} · ${code} · trace ${traceId}`);
+      if (data.session_id) addRow("inf", `session opencode ${data.session_id}`);
+      entry.state = "done";
+      card.dataset.state = "done";
+      setStatus("rapport recu");
+      metrics.endRun(run.run_id, { status: data.exit_code === 0 ? "resolved" : "failed" });
+      updateAgentsMeta();
+    } catch (err) {
+      done("failed", "err", `suivi interrompu · ${err.message} · ${code}`, "report unavailable", "err");
+    }
+  };
+
+  entry.timers.push(setTimeout(poll, 2500));
 }
 
 /* ------------------------------------------------------------------ */
@@ -378,6 +490,7 @@ function addErrorCard(error, code) {
 const SCENARIOS = [
   {
     code: "ERR_DB_POOL_EXHAUSTED",
+    scenario: "platform_db_pool_exhausted",
     name: "Database connection pool exhausted",
     service: "checkout-api",
     message:
@@ -392,6 +505,7 @@ const SCENARIOS = [
   },
   {
     code: "ERR_PG_TIMEOUT_5432",
+    scenario: "platform_db_connection_timeout",
     name: "Connection timeout on port 5432",
     service: "orders-api",
     message: 'connection to server at "db.internal" (10.0.0.12), port 5432 failed: timeout expired',
@@ -404,6 +518,7 @@ const SCENARIOS = [
   },
   {
     code: "ERR_KAFKA_UNREACHABLE",
+    scenario: "platform_kafka_broker_unreachable",
     name: "Kafka Broker Unreachable",
     service: "event-worker",
     message:
@@ -417,6 +532,7 @@ const SCENARIOS = [
   },
   {
     code: "ERR_OOM_HEAP",
+    scenario: "platform_oom",
     name: "OutOfMemoryError (OOM) / Java heap space saturated",
     service: "reporting-worker",
     message: "java.lang.OutOfMemoryError: Java heap space",
@@ -429,6 +545,7 @@ const SCENARIOS = [
   },
   {
     code: "ERR_DISK_FULL",
+    scenario: "platform_disk_full",
     name: "Disk Full / No space left on device",
     service: "postgres",
     message: "write /var/lib/postgresql/data/base/pgsql_tmp/pgsql_tmp1421.0: No space left on device",
@@ -495,7 +612,7 @@ if (kafkaBtn) {
   kafkaBtn.dataset.state = "done";
   kafkaBtn.disabled = true;
   kafkaBtn.setAttribute("aria-disabled", "true");
-  kafkaBtn.textContent = "Kafka Aiven intégré ✓";
+  kafkaBtn.textContent = "Kafka Aiven integrated ✓";
 }
 
 if (dbBtn) dbBtn.addEventListener("click", testDatabase);
