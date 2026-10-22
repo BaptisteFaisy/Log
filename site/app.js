@@ -491,6 +491,7 @@ function setKafkaButton(state, label) {
   kafkaBtn.textContent = label;
   kafkaBtn.disabled = state === "busy" || state === "done";
   kafkaBtn.setAttribute("aria-busy", state === "busy" ? "true" : "false");
+  if (state === "done" || state === "busy") kafkaBtn.removeAttribute("title");
 }
 
 async function kafkaRequest(method) {
@@ -503,6 +504,7 @@ async function kafkaRequest(method) {
   if (!response.ok) {
     const error = new Error(data.error || `http ${response.status}`);
     error.code = data.error;
+    error.data = data;
     throw error;
   }
   return data;
@@ -531,7 +533,13 @@ async function refreshKafkaState() {
     setKafkaButton("idle", KAFKA_LABEL);
   } catch (error) {
     // Cluster non configuré ou injoignable : le bouton reste actionnable.
-    setKafkaButton("idle", KAFKA_LABEL);
+    if (error.data && error.data.configured === false) {
+      setKafkaButton("idle", "Kafka non configuré");
+      kafkaBtn.title = "Renseigner KAFKA_BROKERS, KAFKA_USERNAME, KAFKA_PASSWORD et KAFKA_CA_PEM sur Vercel.";
+    } else {
+      setKafkaButton("idle", KAFKA_LABEL);
+      kafkaBtn.title = "";
+    }
   }
 }
 
@@ -545,13 +553,19 @@ async function integrateKafka() {
     const result = await kafkaRequest("POST");
     kafkaIntegrated = true;
     setKafkaButton("done", `${KAFKA_DONE} ✓`);
-    addRow("ok", `kafka aiven · message publié · ${result.topic} · p${result.partition} · offset ${result.offset}`);
+    const action = result.created ? "topic créé + message publié" : "message publié";
+    addRow("ok", `kafka aiven · ${action} · ${result.topic} · p${result.partition} · offset ${result.offset}`);
     setStatus("kafka aiven intégré");
   } catch (error) {
     const reason = error.code === "not_configured" ? "configuration Kafka absente côté serveur" : error.message;
     addRow("err", `kafka aiven · échec · ${reason}`);
     setStatus("kafka aiven en échec");
-    setKafkaButton("idle", "Réessayer l'intégration");
+    if (error.code === "not_configured") {
+      setKafkaButton("idle", "Kafka non configuré");
+      kafkaBtn.title = "Renseigner KAFKA_BROKERS, KAFKA_USERNAME, KAFKA_PASSWORD et KAFKA_CA_PEM sur Vercel.";
+    } else {
+      setKafkaButton("idle", "Réessayer l'intégration");
+    }
   } finally {
     kafkaBusy = false;
   }
