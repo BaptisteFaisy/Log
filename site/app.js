@@ -1253,6 +1253,8 @@ setInterval(() => {
 }, 1000);
 
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
 /* Flotte reelle : manifeste des groupes + topic otel-reports          */
 /* ------------------------------------------------------------------ */
 
@@ -1293,13 +1295,9 @@ function renderFleet(payload) {
 
   agentFleet.textContent = "";
 
-  const head = document.createElement("div");
-  head.className = "fleet-head";
-  head.append(
-    textSpan("fleet-badge", group.id),
-    textSpan("fleet-use", group.label, group.use_case || ""),
-  );
-
+  // Pas de rappel du nom du groupe ici : l'entete du panneau le porte deja en
+  // gros. Le bandeau ne repete que ce que l'entete ne dit pas — les membres,
+  // leur nombre de passages et la machine d'ou ils tournent.
   const members = document.createElement("ul");
   members.className = "fleet-members";
   for (const member of group.members || []) {
@@ -1315,7 +1313,7 @@ function renderFleet(payload) {
   }
 
   const origin = textSpan("fleet-origin", `${group.origin.machine} · ${group.origin.machine_label}`, group.use_case || "");
-  agentFleet.append(head, members, origin);
+  agentFleet.append(members, origin);
 
   const others = (payload.groups || []).filter((entry) => entry.id !== group.id);
   if (others.length) {
