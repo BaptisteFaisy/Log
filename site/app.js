@@ -123,6 +123,11 @@ function agentSlug(code) {
  */
 function createAgent(code, trace, error, real, options) {
   const restored = Boolean(options && options.restored);
+  // Pas de doublon : une trace qui a deja sa carte n'en recoit pas une seconde.
+  if (real && real.trace_id && state.agents.some((agent) => agent.traceId === real.trace_id)) {
+    addRow("inf", `carte deja presente · ${code} · trace ${real.trace_id} · pas de doublon`);
+    return;
+  }
   const slug = agentSlug(code);
   const label = real && real.agent ? real.agent : `agent/fix-${slug}`;
   const run = restored
@@ -231,8 +236,21 @@ function createAgent(code, trace, error, real, options) {
       : `${label} created · ${code} · ${trace} · ${run.mode}`,
   );
 
-  // Le seul mode d'execution est le vrai : suivi du rapport publie par le
-  // watcher de la machine. Aucune animation ne simule un agent (AGENTS.md).
+  // Simulation de la resolution : le site montre l'agent au travail des
+  // qu'une erreur est declenchee. NE PAS RETIRER sans l'accord de Baptiste.
+  // `awaitingReport` : un incident a bien ete publie dans Kafka, donc le vrai
+  // rapport arrivera — la simulation reste un affichage et ne libere pas la
+  // carte (entry.state reste "run"), sinon l'anti-doublon se rouvrirait alors
+  // que l'agent tourne encore.
+  if (!restored) {
+    startSimulation({
+      card, entry, segments, stateEl, logTag, logText, code, run,
+      awaitingReport: Boolean(real && real.trace_id),
+    });
+  }
+
+  // En parallele, si l'incident a ete publie dans Kafka, le rapport du watcher
+  // remplace la simulation des qu'il arrive (la sortie reelle fait foi).
   watchRealAgent({
     card,
     entry,
@@ -245,6 +263,100 @@ function createAgent(code, trace, error, real, options) {
     traceId: real.trace_id,
     restored,
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Simulation de la resolution (comportement par defaut du site)        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Anime la resolution du bug sur la carte d'agent, sans dependre de Kafka.
+ * ATTENTION : c'est le comportement demande par Baptiste. NE PAS RETIRER
+ * cette simulation sans son accord explicite.
+ *
+ * Elle s'arrete d'elle-meme des qu'un rapport reel arrive (la carte passe en
+ * state "done" via watchRealAgent) ou des que la carte est remplacee.
+ * `restored` : carte relue au chargement, on ne rejoue rien.
+ */
+function startSimulation({ card, entry, segments, stateEl, logTag, logText, code, run, awaitingReport }) {
+  const steps = ["analyze", "patch", "verify", "ready"];
+  const names = { analyze: "diagnose", patch: "patch", verify: "verify", ready: "write_memo" };
+  const speed = new URLSearchParams(window.location.search).get("demo") === "warm" ? 0.35 : 1;
+  let index = 0;
+
+  const stop = () => entry.state === "done" || !card.isConnected;
+  const delay = () => (run.mode === "warm" ? 320 + Math.random() * 260 : 900 + Math.random() * 700) * speed;
+
+  const tokens = () => {
+    const mode = run.mode === "warm" ? "warm" : "cold";
+    let seed = 2166136261;
+    for (const ch of `${run.fingerprint}|${mode}`) seed = Math.imul(seed ^ ch.charCodeAt(0), 16777619);
+    const rand = () => {
+      seed |= 0;
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const between = (min, max) => Math.round((min + rand() * (max - min)) / 10) * 10;
+    return mode === "warm"
+      ? { input: between(2000, 6000), output: between(400, 1200) }
+      : { input: between(18000, 42000), output: between(2000, 6000) };
+  };
+
+  const finish = () => {
+    if (stop()) return;
+    // Un incident a ete publie : la simulation n'est qu'un affichage, le vrai
+    // rapport fera foi. On garde donc la carte VERROUILLEE (entry.state reste
+    // "run") pour que l'anti-doublon ne rouvre pas un second agent alors que
+    // celui de la machine tourne encore.
+    if (awaitingReport) {
+      entry.simulatedDone = true;
+      card.dataset.simulated = "true";
+      card.dataset.outcome = "resolved";
+      stateEl.textContent = "rapport en attente";
+      logTag.textContent = "sim";
+      logText.textContent = `patch applied · tests 12/12 (simulation) · ${code}`;
+      addRow("inf", `simulation terminee · ${code} · en attente du vrai rapport de l'agent`);
+      setStatus("agent running");
+      if (run.run_id) metrics.addTokens(run.run_id, { ...tokens(), estimated: true });
+      updateAgentsMeta();
+      return;
+    }
+
+    entry.state = "done";
+    card.dataset.state = "done";
+    card.dataset.outcome = "resolved";
+    stateEl.textContent = "ready";
+    logTag.textContent = "ok";
+    logText.textContent = `patch applied · tests 12/12 · ${code}`;
+    addRow("ok", `patch applied · ${code} · tests 12/12`);
+    setStatus("fix ready");
+    if (run.run_id) {
+      metrics.addTokens(run.run_id, { ...tokens(), estimated: true });
+      metrics.endRun(run.run_id, { status: "resolved" });
+    }
+    updateAgentsMeta();
+  };
+
+  const advance = () => {
+    if (stop()) return;
+    if (run.run_id) metrics.step(run.run_id, names[steps[index]]);
+    if (segments[index]) segments[index].dataset.on = "true";
+    index += 1;
+
+    if (index >= steps.length) {
+      entry.timers.push(setTimeout(finish, 300 * speed));
+      return;
+    }
+    if (segments[index]) segments[index].dataset.on = "run";
+    stateEl.textContent = steps[index];
+    entry.timers.push(setTimeout(advance, delay()));
+  };
+
+  stateEl.textContent = steps[0];
+  entry.timers.push(setTimeout(advance, (run.mode === "warm" ? 320 : 900) * speed));
+  setStatus("agent running");
 }
 
 /* ------------------------------------------------------------------ */
@@ -307,7 +419,9 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
 
       if (response.status === 404) {
         // Pas encore de rapport : le watcher a pris la trace, l'agent tourne.
-        setPhase(1, restored ? "running · reprise" : `running · ${elapsed()}`);
+        // La carte peut deja avoir ete terminee par la simulation : on ne la
+        // repeint pas, sinon les etapes affichees repartent en arriere.
+        if (entry.state !== "done") setPhase(1, restored ? "running · reprise" : `running · ${elapsed()}`);
         if (Date.now() - startedAt > POLL_MAX_MS) {
           done(
             "failed", "err",
@@ -430,25 +544,39 @@ function codeForTrace(message) {
 /** Traces d'incident presentes dans le tail, de la plus recente a la plus ancienne. */
 function tracesFromTail(messages) {
   const out = [];
-  const seen = new Set();
+  const index = new Map();
   const list = Array.isArray(messages) ? messages : [];
   for (let i = list.length - 1; i >= 0; i -= 1) {
     const message = list[i];
     if (!message || typeof message !== "object") continue;
     const traceId = String(message.trace_id || "").trim();
-    if (!TRACE_ID_RE.test(traceId) || seen.has(traceId)) continue;
+    if (!TRACE_ID_RE.test(traceId)) continue;
     const level = String(message.level || "").toLowerCase();
     const errorType = String(message.error_type || "").trim();
     // Un message d'exploitation (inf/dbg) n'est pas un incident.
     if (!errorType && level !== "err" && level !== "wrn") continue;
-    seen.add(traceId);
-    out.push({
-      trace_id: traceId,
-      code: codeForTrace(message),
-      service: String(message.service || ""),
-      text: String(message.text || "").slice(0, 200),
-      ts: String(message.ts || ""),
-    });
+    const seen = index.get(traceId);
+    if (seen === undefined) {
+      index.set(traceId, out.length);
+      out.push({
+        trace_id: traceId,
+        level,
+        code: codeForTrace(message),
+        service: String(message.service || ""),
+        text: String(message.text || "").slice(0, 200),
+        ts: String(message.ts || ""),
+      });
+      continue;
+    }
+    // Une trace porte souvent plusieurs messages : le message d'erreur fait foi
+    // pour le texte de la carte, meme s'il precede un avertissement plus recent.
+    const entry = out[seen];
+    if (level === "err" && entry.level !== "err") {
+      entry.level = "err";
+      entry.code = codeForTrace(message);
+      entry.text = String(message.text || "").slice(0, 200);
+      if (message.service) entry.service = String(message.service);
+    }
   }
   return out;
 }
@@ -508,7 +636,12 @@ async function restoreAgents() {
 
     if (!todo.length) return;
 
-    addRow("inf", `reprise agents · ${todo.length} trace(s) relue(s) dans otel.logs`);
+    addRow(
+      "inf",
+      tail.reason
+        ? `reprise agents · ${todo.length} carte(s) relue(s) depuis la memoire locale`
+        : `reprise agents · ${todo.length} carte(s) relue(s) dans otel.logs`,
+    );
 
     // du plus ancien au plus recent : la carte la plus recente finit en tete
     todo
@@ -623,13 +756,9 @@ function addErrorCard(error, code, real) {
     return;
   }
 
-  // Seul un incident reellement publie dans Kafka peut lancer un agent : le
-  // front n'a pas de flux d'agent factice (AGENTS.md).
-  if (!real || !real.trace_id) {
-    addRow("inf", `pas de publication Kafka pour ${code} · aucun agent lance`);
-    updateAgentsMeta();
-    return;
-  }
+  // Un agent est lance a chaque erreur, publiee dans Kafka ou non : c'est la
+  // simulation de resolution demandee. NE PAS RETIRER sans accord de Baptiste.
+  if (!real || !real.trace_id) real = { trace_id: trace };
 
   setTimeout(() => createAgent(code, trace, error, real), 380);
 }
