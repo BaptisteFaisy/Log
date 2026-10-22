@@ -375,6 +375,20 @@ cd ~/Log/site
 vercel deploy --prod --yes --global-config ~/.config/vercel-log
 ```
 
+**Fonctions serverless du projet `log`** (`site/api/`, toutes en lecture seule) :
+
+| Route | Rôle |
+|---|---|
+| `api/pg-memoire.js` | tables et colonnes de `historique`, 25 dernières lignes, cellules bornées à 8 000 caractères |
+| `api/pg-memoire-row.js` | **une ligne entière** : `?db=&table=&id=&key=` (la popup « Plein écran » du guide) |
+| `api/dump.js` | export `.sql` de la base (schéma + données, secrets masqués) |
+| `api/logs.js`, `api/kafka.js` | flux de logs et état du cluster |
+
+`pg-memoire-row` existe parce que la liste tronque les cellules : le tableau a
+besoin de textes courts, la popup a besoin de la résolution complète. Elle
+refuse toute table hors `PG_MEMOIRE_DATABASES`, tout nom de table hors
+`[A-Za-z_][A-Za-z0-9_]{0,62}` et toute colonne de secret (`_redact.js`).
+
 Deux pièges, tous les deux rencontrés :
 
 1. **Le dossier doit être lié au projet `log`.** Sans `.vercel/project.json`
