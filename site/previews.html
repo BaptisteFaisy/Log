@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log — states</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <style>
+    body { display: block; overflow-x: hidden; }
+    .page { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 0 24px 80px; }
+    .bar { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 3px solid var(--line); margin-bottom: 34px; }
+    .bar img { height: 26px; width: auto; }
+    .bar-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+    .bar .btn { margin-left: auto; }
+    h1 { font-family: var(--display); font-size: clamp(28px, 4vw, 44px); letter-spacing: 0.01em; text-transform: uppercase; margin: 0 0 8px; font-weight: 400; }
+    .lead { color: var(--ink-2); font-size: 14px; line-height: 1.6; margin: 0 0 26px; max-width: 62ch; }
+    h2 { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); margin: 44px 0 16px; font-weight: 700; }
+    h2 span { background: var(--red); color: var(--ink); padding: 2px 6px; }
+    .states { display: grid; gap: 26px; }
+    .state-card { background: #fff; border: 3px solid var(--line); padding: 14px; box-shadow: 7px 7px 0 var(--line); }
+    .state-label { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .state-label b { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); background: var(--red); border: 2px solid var(--line); padding: 2px 6px; font-weight: 700; }
+    .demo-split { display: grid; grid-template-columns: minmax(0, 1fr) 288px; gap: 14px; align-items: stretch; }
+    .demo-split .terminal, .demo-split .agents { height: 420px; width: 100%; box-shadow: 6px 6px 0 var(--red), 6px 6px 0 2px var(--line); }
+    .demo-split .term-body, .demo-split .agents-body { padding-top: 8px; }
+    .demo-split .row { grid-template-columns: 78px 34px minmax(0, 1fr); column-gap: 8px; font-size: 10.5px; padding: 3px 10px; }
+    .demo-split .row time { font-size: 9px; }
+    .demo-split .card { margin: 8px 8px 10px; }
+    .demo-split .card-msg { font-size: 10.5px; }
+    .demo-split .card-stack { font-size: 9px; max-height: 72px; }
+    .note { margin-top: 40px; padding: 16px 18px; background: #fff; border: 3px solid var(--line); box-shadow: 5px 5px 0 var(--line); font-family: var(--mono); font-size: 12px; color: var(--ink-2); line-height: 1.7; }
+    .note b { color: var(--ink); background: var(--red); padding: 1px 4px; }
+    @media (max-width: 820px) {
+      .page { padding: 0 16px 60px; }
+      .demo-split { grid-template-columns: minmax(0, 1fr); }
+      .demo-split .terminal { height: 380px; }
+      .demo-split .agents { height: 300px; }
+    }
+  </style>
+</head>
+<body data-bg="halo">
+  <div class="page">
+    <header class="bar">
+      <img src="logo.png" alt="Log" />
+      <span class="bar-title">states</span>
+      <a class="btn btn-ghost btn-sm" href="index.html">Back to site</a>
+    </header>
+
+    <h1>When an error is detected.</h1>
+    <p class="lead">
+      A single flow, two moments: the error is caught, the agent is created on its own, then the
+      patch lands and the card turns green.
+    </p>
+
+    <h2>Terminal + <span>agent</span></h2>
+    <div class="states">
+      <div class="state-card">
+        <div class="state-label"><b>A</b> Error detected · the agent starts on its own</div>
+        <div class="demo-split">
+          <section class="terminal">
+            <header class="term-head">
+              <span class="traffic"><i></i><i></i><i></i></span>
+              <span class="term-title">log@vercel — ~/logs</span>
+              <span class="term-live"><i></i>live</span>
+            </header>
+            <div class="term-body">
+              <div class="row" data-level="inf"><time>14:02:11.204</time><span class="lvl">inf</span><span class="msg">POST /api/checkout → 500 · ERR_PAYLOAD_INVALID</span></div>
+              <article class="card card-error">
+                <div class="card-head">
+                  <span class="card-icon">!</span>
+                  <div class="card-titles"><strong>TypeError</strong><span class="card-sub">ERR_PAYLOAD_INVALID · trace 8f21c3</span></div>
+                  <time>14:02:11.482</time>
+                </div>
+                <p class="card-msg">Cannot read properties of null (reading 'items')</p>
+                <pre class="card-stack">at placeOrder (checkout.js:118:24)
+at handler (api/checkout.js:42:11)
+at processTicksAndRejections (node:20)</pre>
+                <div class="card-actions">
+                  <button class="btn btn-sm btn-ghost" type="button">Copy trace</button>
+                </div>
+              </article>
+              <div class="row" data-level="inf"><time>14:02:11.868</time><span class="lvl">inf</span><span class="msg">agent/fix-payload-invalid created · ERR_PAYLOAD_INVALID · 8f21c3</span></div>
+            </div>
+            <footer class="term-foot"><span>7 lines</span><span class="sep">·</span><span>agent running</span><span class="foot-right"><span>UTF-8</span><span class="sep">·</span><span>14:02:12</span></span></footer>
+          </section>
+
+          <aside class="agents">
+            <header class="agents-head">
+              <div class="agents-titles"><strong>agents</strong><span>error monitoring</span></div>
+              <span class="agents-count" data-busy="true">1 active</span>
+            </header>
+            <div class="agents-body">
+              <article class="agent-card" data-state="run">
+                <div class="agent-top">
+                  <span class="agent-orb"><i></i></span>
+                  <div class="agent-meta">
+                    <strong class="agent-name">agent/fix-payload-invalid</strong>
+                    <span class="agent-code">ERR_PAYLOAD_INVALID · 8f21c3</span>
+                  </div>
+                  <span class="agent-state">analyze</span>
+                </div>
+                <div class="agent-bars">
+                  <span data-on="run"></span>
+                  <span data-on="false"></span>
+                  <span data-on="false"></span>
+                  <span data-on="false"></span>
+                </div>
+                <div class="agent-log"><b>err</b><span>ERR_PAYLOAD_INVALID · Cannot read properties of null (reading 'items')</span></div>
+              </article>
+            </div>
+            <footer class="agents-foot"><span class="dotline"></span><span>watching · 1 error</span></footer>
+          </aside>
+        </div>
+      </div>
+
+      <div class="state-card">
+        <div class="state-label"><b>B</b> Fix ready · the agent turns green</div>
+        <div class="demo-split">
+          <section class="terminal">
+            <header class="term-head">
+              <span class="traffic"><i></i><i></i><i></i></span>
+              <span class="term-title">log@vercel — ~/logs</span>
+              <span class="term-live"><i></i>live</span>
+            </header>
+            <div class="term-body">
+              <div class="row" data-level="inf"><time>14:02:11.204</time><span class="lvl">inf</span><span class="msg">POST /api/checkout → 500 · ERR_PAYLOAD_INVALID</span></div>
+              <div class="row" data-level="inf"><time>14:02:11.868</time><span class="lvl">inf</span><span class="msg">agent/fix-payload-invalid created · 8f21c3</span></div>
+              <div class="row" data-level="ok"><time>14:02:14.882</time><span class="lvl">ok</span><span class="msg">patch applied · ERR_PAYLOAD_INVALID · tests 12/12</span></div>
+              <div class="row" data-level="inf"><time>14:02:15.130</time><span class="lvl">inf</span><span class="msg">GET /api/checkout 200 · 41 ms</span></div>
+            </div>
+            <footer class="term-foot"><span>9 lines</span><span class="sep">·</span><span>fix ready</span><span class="foot-right"><span>UTF-8</span><span class="sep">·</span><span>14:02:15</span></span></footer>
+          </section>
+
+          <aside class="agents">
+            <header class="agents-head">
+              <div class="agents-titles"><strong>agents</strong><span>error monitoring</span></div>
+              <span class="agents-count" data-busy="false">0 active</span>
+            </header>
+            <div class="agents-body">
+              <article class="agent-card" data-state="done">
+                <div class="agent-top">
+                  <span class="agent-orb"><i></i></span>
+                  <div class="agent-meta">
+                    <strong class="agent-name">agent/fix-payload-invalid</strong>
+                    <span class="agent-code">ERR_PAYLOAD_INVALID · 8f21c3</span>
+                  </div>
+                  <span class="agent-state">ready</span>
+                </div>
+                <div class="agent-bars">
+                  <span data-on="true"></span>
+                  <span data-on="true"></span>
+                  <span data-on="true"></span>
+                  <span data-on="true"></span>
+                </div>
+                <div class="agent-log"><b>ok</b><span>patch applied · tests 12/12 · ERR_PAYLOAD_INVALID</span></div>
+              </article>
+              <article class="agent-card" data-state="done">
+                <div class="agent-top">
+                  <span class="agent-orb"><i></i></span>
+                  <div class="agent-meta">
+                    <strong class="agent-name">agent/fix-parse-failed</strong>
+                    <span class="agent-code">ERR_PARSE_FAILED · 3b7e01</span>
+                  </div>
+                  <span class="agent-state">ready</span>
+                </div>
+                <div class="agent-bars">
+                  <span data-on="true"></span>
+                  <span data-on="true"></span>
+                  <span data-on="true"></span>
+                  <span data-on="true"></span>
+                </div>
+                <div class="agent-log"><b>ok</b><span>patch applied · tests 12/12 · ERR_PARSE_FAILED</span></div>
+              </article>
+            </div>
+            <footer class="agents-foot"><span class="dotline"></span><span>watching · 2 errors</span></footer>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      Live test: <b>index.html?demo=error</b> — the agent is created on its own, then walks
+      analyze → patch → verify → ready.
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,657 @@
+{
+  "version": 1,
+  "description": "Source unique des scenarios. Lue par seed, par trace-dump, par la console web (index.html + assets/app.js) et par l'API (api/incident.js). Aucun scenario n'est reecrit a la main ailleurs.",
+  "service": {
+    "name": "agent-demo",
+    "scope_name": "agent",
+    "scope_version": "1.0",
+    "resource_attributes": {
+      "service.name": "agent-demo",
+      "deployment.environment": "demo"
+    }
+  },
+  "base_timestamp": "2026-10-21 18:02:18.799",
+  "contract": {
+    "trace_key": "TraceId",
+    "trace_topic_suffix": "traces",
+    "log_topic_suffix": "logs",
+    "metric_topic_suffix": "metrics",
+    "timestamp_format": "YYYY-MM-DD HH:MM:SS.mmm",
+    "duration_unit": "nanoseconds",
+    "placeholders": ["{{trace_id}}", "{{span_id:<span_name>}}"]
+  },
+  "scenarios": [
+    {
+      "id": "platform_db_pool_exhausted",
+      "label": "Pool de connexions PostgreSQL sature",
+      "kind": "panne",
+      "error_type": "db_pool_exhausted",
+      "profile": "infra",
+      "severity": "ERROR",
+      "severity_number": 17,
+      "log_body": "Database connection pool exhausted (20/20 in use, 0 available)",
+      "exception_message": "com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Database connection pool exhausted (20/20 in use, 0 available)",
+      "agent_result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":4}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 1600,
+          "status": "Error",
+          "attributes": {
+            "error.type": "db_pool_exhausted",
+            "exception.message": "com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Database connection pool exhausted (20/20 in use, 0 available)",
+            "http.response.status_code": "500",
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1",
+            "db.connection_pool.active": "20",
+            "db.connection_pool.idle": "0",
+            "db.connection_pool.max": "20"
+          }
+        },
+        {
+          "name": "tool.check_reservation",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 120,
+          "duration_ms": 380,
+          "status": "Error",
+          "attributes": {
+            "http.response.status_code": "500",
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1",
+            "db.connection_pool.active": "20",
+            "db.connection_pool.idle": "0",
+            "db.connection_pool.max": "20"
+          }
+        },
+        {
+          "name": "tool.check_reservation",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 520,
+          "duration_ms": 380,
+          "status": "Error",
+          "attributes": {
+            "http.response.status_code": "500",
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1",
+            "db.connection_pool.active": "20",
+            "db.connection_pool.idle": "0",
+            "db.connection_pool.max": "20"
+          }
+        },
+        {
+          "name": "tool.check_reservation",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 920,
+          "duration_ms": 380,
+          "status": "Error",
+          "attributes": {
+            "http.response.status_code": "500",
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1",
+            "db.connection_pool.active": "20",
+            "db.connection_pool.idle": "0",
+            "db.connection_pool.max": "20"
+          }
+        },
+        {
+          "name": "tool.check_reservation",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 1320,
+          "duration_ms": 380,
+          "status": "Error",
+          "attributes": {
+            "http.response.status_code": "500",
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1",
+            "db.connection_pool.active": "20",
+            "db.connection_pool.idle": "0",
+            "db.connection_pool.max": "20"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "ERROR",
+          "severity_number": 17,
+          "span": "agent.run",
+          "offset_ms": 1500,
+          "body": "Database connection pool exhausted (20/20 in use, 0 available)",
+          "attributes": {
+            "error.type": "db_pool_exhausted",
+            "exception.message": "com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Database connection pool exhausted (20/20 in use, 0 available)",
+            "http.response.status_code": "500",
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1",
+            "db.connection_pool.active": "20",
+            "db.connection_pool.idle": "0",
+            "db.connection_pool.max": "20"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "db.client.connection.pool.active",
+          "unit": "{connection}",
+          "offset_ms": 1500,
+          "value": "20",
+          "attributes": {
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1"
+          }
+        },
+        {
+          "name": "db.client.connection.pool.idle",
+          "unit": "{connection}",
+          "offset_ms": 1500,
+          "value": "0",
+          "attributes": {
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1"
+          }
+        },
+        {
+          "name": "db.client.connection.pool.max",
+          "unit": "{connection}",
+          "offset_ms": 1500,
+          "value": "20",
+          "attributes": {
+            "db.system": "postgresql",
+            "db.connection_pool.name": "HikariPool-1"
+          }
+        },
+        {
+          "name": "db.client.connection.timeouts",
+          "unit": "1",
+          "offset_ms": 1500,
+          "value": "4",
+          "attributes": {
+            "db.system": "postgresql"
+          }
+        }
+      ]
+    },
+    {
+      "id": "platform_db_connection_timeout",
+      "label": "Timeout de connectique PostgreSQL (port 5432)",
+      "kind": "panne",
+      "error_type": "db_connection_timeout",
+      "profile": "infra",
+      "severity": "ERROR",
+      "severity_number": 17,
+      "log_body": "Connection timeout on port 5432",
+      "exception_message": "java.sql.SQLTransientConnectionException: Connection timeout on port 5432",
+      "agent_result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 30500,
+          "status": "Error",
+          "attributes": {
+            "error.type": "db_connection_timeout",
+            "exception.message": "java.sql.SQLTransientConnectionException: Connection timeout on port 5432",
+            "http.response.status_code": "504",
+            "db.system": "postgresql"
+          }
+        },
+        {
+          "name": "db.query",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_CLIENT",
+          "offset_ms": 200,
+          "duration_ms": 30000,
+          "status": "Error",
+          "attributes": {
+            "db.system": "postgresql",
+            "db.operation.name": "SELECT reservations",
+            "net.peer.name": "postgres-db.internal",
+            "net.peer.port": "5432",
+            "http.response.status_code": "504"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "ERROR",
+          "severity_number": 17,
+          "span": "agent.run",
+          "offset_ms": 30200,
+          "body": "Connection timeout on port 5432",
+          "attributes": {
+            "error.type": "db_connection_timeout",
+            "exception.message": "java.sql.SQLTransientConnectionException: Connection timeout on port 5432",
+            "db.system": "postgresql",
+            "net.peer.name": "postgres-db.internal",
+            "net.peer.port": "5432",
+            "http.response.status_code": "504"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "db.client.connections.timeouts",
+          "unit": "1",
+          "offset_ms": 30200,
+          "value": "1",
+          "attributes": {
+            "db.system": "postgresql"
+          }
+        },
+        {
+          "name": "db.client.operation.duration",
+          "unit": "s",
+          "offset_ms": 30200,
+          "value": "30",
+          "attributes": {
+            "db.system": "postgresql",
+            "db.operation.name": "SELECT reservations"
+          }
+        }
+      ]
+    },
+    {
+      "id": "platform_kafka_broker_unreachable",
+      "label": "Broker Kafka injoignable (ERR__TRANSPORT)",
+      "kind": "panne",
+      "error_type": "kafka_broker_unreachable",
+      "profile": "infra",
+      "severity": "ERROR",
+      "severity_number": 17,
+      "log_body": "Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)",
+      "exception_message": "org.apache.kafka.common.errors.BrokerNotAvailableException: Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)",
+      "agent_result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":2}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 2000,
+          "status": "Error",
+          "attributes": {
+            "error.type": "kafka_broker_unreachable",
+            "exception.message": "org.apache.kafka.common.errors.BrokerNotAvailableException: Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)",
+            "messaging.system": "kafka",
+            "messaging.destination.name": "agent-events"
+          }
+        },
+        {
+          "name": "messaging.publish",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_PRODUCER",
+          "offset_ms": 100,
+          "duration_ms": 400,
+          "status": "Error",
+          "attributes": {
+            "messaging.system": "kafka",
+            "messaging.destination.name": "agent-events",
+            "error.code": "ERR__TRANSPORT",
+            "messaging.operation.type": "send"
+          }
+        },
+        {
+          "name": "messaging.publish",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_PRODUCER",
+          "offset_ms": 900,
+          "duration_ms": 400,
+          "status": "Error",
+          "attributes": {
+            "messaging.system": "kafka",
+            "messaging.destination.name": "agent-events",
+            "error.code": "ERR__TRANSPORT",
+            "messaging.operation.type": "send"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "ERROR",
+          "severity_number": 17,
+          "span": "agent.run",
+          "offset_ms": 1400,
+          "body": "Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)",
+          "attributes": {
+            "error.type": "kafka_broker_unreachable",
+            "exception.message": "org.apache.kafka.common.errors.BrokerNotAvailableException: Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)",
+            "messaging.system": "kafka",
+            "messaging.destination.name": "agent-events",
+            "error.code": "ERR__TRANSPORT"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "messaging.publish.failures",
+          "unit": "1",
+          "offset_ms": 1400,
+          "value": "2",
+          "attributes": {
+            "messaging.system": "kafka",
+            "messaging.destination.name": "agent-events"
+          }
+        }
+      ]
+    },
+    {
+      "id": "platform_oom",
+      "label": "OutOfMemoryError Java (heap saturée)",
+      "kind": "panne",
+      "error_type": "oom",
+      "profile": "infra",
+      "severity": "ERROR",
+      "severity_number": 17,
+      "log_body": "java.lang.OutOfMemoryError: Java heap space",
+      "exception_message": "java.lang.OutOfMemoryError: Java heap space",
+      "agent_result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 1800,
+          "status": "Error",
+          "attributes": {
+            "error.type": "oom",
+            "exception.message": "java.lang.OutOfMemoryError: Java heap space",
+            "exception.type": "java.lang.OutOfMemoryError"
+          }
+        },
+        {
+          "name": "jvm.heap",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 50,
+          "duration_ms": 1600,
+          "status": "Error",
+          "attributes": {
+            "jvm.memory.used": "2147483648",
+            "jvm.memory.max": "2147483648",
+            "jvm.gc.pause": "1600",
+            "exception.type": "java.lang.OutOfMemoryError"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "ERROR",
+          "severity_number": 17,
+          "span": "agent.run",
+          "offset_ms": 1700,
+          "body": "java.lang.OutOfMemoryError: Java heap space",
+          "attributes": {
+            "error.type": "oom",
+            "exception.message": "java.lang.OutOfMemoryError: Java heap space",
+            "exception.type": "java.lang.OutOfMemoryError",
+            "jvm.memory.used": "2147483648",
+            "jvm.memory.max": "2147483648",
+            "jvm.gc.pause": "1600"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "jvm.memory.used",
+          "unit": "By",
+          "offset_ms": 1700,
+          "value": "2147483648",
+          "attributes": {
+            "jvm.memory.type": "heap"
+          }
+        },
+        {
+          "name": "jvm.memory.limit",
+          "unit": "By",
+          "offset_ms": 1700,
+          "value": "2147483648",
+          "attributes": {
+            "jvm.memory.type": "heap"
+          }
+        },
+        {
+          "name": "jvm.gc.pause",
+          "unit": "ms",
+          "offset_ms": 1700,
+          "value": "1600",
+          "attributes": {
+            "jvm.gc.action": "end of major GC"
+          }
+        }
+      ]
+    },
+    {
+      "id": "platform_disk_full",
+      "label": "Disque plein (tampon de telemetrie)",
+      "kind": "panne",
+      "error_type": "disk_full",
+      "profile": "infra",
+      "severity": "ERROR",
+      "severity_number": 17,
+      "log_body": "No space left on device: write /var/lib/app/telemetry-buffer failed",
+      "exception_message": "java.io.IOException: No space left on device: write /var/lib/app/telemetry-buffer failed",
+      "agent_result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 900,
+          "status": "Error",
+          "attributes": {
+            "error.type": "disk_full",
+            "exception.message": "java.io.IOException: No space left on device: write /var/lib/app/telemetry-buffer failed",
+            "file.path": "/var/lib/app/telemetry-buffer",
+            "filesystem.type": "ext4",
+            "system.disk.usage": "100",
+            "system.disk.free": "0",
+            "system.disk.size": "53687091200"
+          }
+        },
+        {
+          "name": "file.write",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 20,
+          "duration_ms": 700,
+          "status": "Error",
+          "attributes": {
+            "file.path": "/var/lib/app/telemetry-buffer",
+            "filesystem.type": "ext4",
+            "system.disk.usage": "100",
+            "system.disk.free": "0",
+            "system.disk.size": "53687091200"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "ERROR",
+          "severity_number": 17,
+          "span": "agent.run",
+          "offset_ms": 800,
+          "body": "No space left on device: write /var/lib/app/telemetry-buffer failed",
+          "attributes": {
+            "error.type": "disk_full",
+            "exception.message": "java.io.IOException: No space left on device: write /var/lib/app/telemetry-buffer failed",
+            "file.path": "/var/lib/app/telemetry-buffer",
+            "filesystem.type": "ext4",
+            "system.disk.usage": "100",
+            "system.disk.free": "0",
+            "system.disk.size": "53687091200"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "system.disk.usage",
+          "unit": "%",
+          "offset_ms": 800,
+          "value": "100",
+          "attributes": {
+            "file.path": "/var/lib/app/telemetry-buffer",
+            "filesystem.type": "ext4"
+          }
+        },
+        {
+          "name": "system.disk.free",
+          "unit": "By",
+          "offset_ms": 800,
+          "value": "0",
+          "attributes": {
+            "file.path": "/var/lib/app/telemetry-buffer",
+            "filesystem.type": "ext4"
+          }
+        },
+        {
+          "name": "system.disk.size",
+          "unit": "By",
+          "offset_ms": 800,
+          "value": "53687091200",
+          "attributes": {
+            "file.path": "/var/lib/app/telemetry-buffer",
+            "filesystem.type": "ext4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "healthy",
+      "label": "Run nominal (reference)",
+      "kind": "nominal",
+      "error_type": null,
+      "profile": "reference",
+      "severity": "INFO",
+      "severity_number": 9,
+      "log_body": "Agent run completed successfully: booking confirmed for 1 venue",
+      "exception_message": null,
+      "agent_result": "{\"success\":true,\"booking_confirmed\":true,\"tool_confirmed\":true,\"tool_calls\":2}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 1200,
+          "status": "Ok",
+          "attributes": {
+            "http.response.status_code": "200"
+          }
+        },
+        {
+          "name": "tool.search_venues",
+          "parent": "agent.run",
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 100,
+          "duration_ms": 400,
+          "status": "Ok",
+          "attributes": {
+            "http.response.status_code": "200",
+            "source.id": "venues-catalog",
+            "source.version": "7"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "INFO",
+          "severity_number": 9,
+          "span": "agent.run",
+          "offset_ms": 500,
+          "body": "Agent run completed successfully: booking confirmed for 1 venue",
+          "attributes": {
+            "http.response.status_code": "200",
+            "source.id": "venues-catalog",
+            "source.version": "7"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "agent.run.duration",
+          "unit": "s",
+          "offset_ms": 1200,
+          "value": "1.2",
+          "attributes": {
+            "agent.profile": "reference"
+          }
+        },
+        {
+          "name": "tool.search_venues.duration",
+          "unit": "s",
+          "offset_ms": 500,
+          "value": "0.4",
+          "attributes": {
+            "source.id": "venues-catalog",
+            "source.version": "7"
+          }
+        }
+      ]
+    }
+  ],
+  "proof_scenarios": [
+    {
+      "id": "proof_cache_miss_storm",
+      "label": "Preuve zero-code : cache miss storm",
+      "kind": "preuve",
+      "error_type": "cache_miss_storm",
+      "profile": "infra",
+      "severity": "ERROR",
+      "severity_number": 17,
+      "log_body": "Cache miss storm: hit ratio 0.02 over 10000 lookups",
+      "exception_message": "io.micrometer.cache.CacheException: Cache miss storm: hit ratio 0.02 over 10000 lookups",
+      "agent_result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}",
+      "spans": [
+        {
+          "name": "agent.run",
+          "parent": null,
+          "kind": "SPAN_KIND_INTERNAL",
+          "offset_ms": 0,
+          "duration_ms": 1100,
+          "status": "Error",
+          "attributes": {
+            "error.type": "cache_miss_storm",
+            "exception.message": "io.micrometer.cache.CacheException: Cache miss storm: hit ratio 0.02 over 10000 lookups",
+            "cache.hit_ratio": "0.02",
+            "cache.lookups": "10000"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "severity": "ERROR",
+          "severity_number": 17,
+          "span": "agent.run",
+          "offset_ms": 1000,
+          "body": "Cache miss storm: hit ratio 0.02 over 10000 lookups",
+          "attributes": {
+            "error.type": "cache_miss_storm",
+            "cache.hit_ratio": "0.02",
+            "cache.lookups": "10000"
+          }
+        }
+      ],
+      "metrics": [
+        {
+          "name": "cache.hit_ratio",
+          "unit": "1",
+          "offset_ms": 1000,
+          "value": "0.02",
+          "attributes": {
+            "cache.name": "venues"
+          }
+        }
+      ]
+    }
+  ]
+}

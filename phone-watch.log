@@ -1,0 +1,35 @@
+2026-10-21T00:23:21+02:00 watcher demarre (cible 100.79.244.93:5555)
+2026-10-21T00:33:03+02:00 heartbeat etat=injoignable
+2026-10-21T00:43:04+02:00 heartbeat etat=injoignable
+2026-10-21T00:53:06+02:00 heartbeat etat=injoignable
+2026-10-21T01:03:08+02:00 heartbeat etat=injoignable
+2026-10-21T01:13:10+02:00 heartbeat etat=injoignable
+2026-10-21T01:18:04+02:00 watcher demarre (cible 100.79.244.93:5555)
+2026-10-21T01:18:04+02:00 [OK] telephone connecte (100.79.244.93:43493)
+2026-10-21T01:27:44+02:00 heartbeat etat=device serial=100.79.244.93:43493
+2026-10-21T01:37:45+02:00 heartbeat etat=device serial=100.79.244.93:43493
+2026-10-21T01:47:45+02:00 heartbeat etat=device serial=100.79.244.93:43493
+2026-10-21T01:57:46+02:00 heartbeat etat=device serial=10.188.216.105:43493
+2026-10-21T02:05:01+02:00 [KO] etat=absent (100.79.244.93:5555)
+2026-10-21T02:10:17+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T02:20:34+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T02:30:36+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T02:33:56+02:00 [OK] telephone connecte (adb-2c6852ac-v3zO57._adb-tls-connect._tcp)
+2026-10-21T02:40:37+02:00 heartbeat etat=device serial=10.120.101.165:40047
+2026-10-21T02:50:37+02:00 heartbeat etat=device serial=10.120.101.165:40047
+2026-10-21T03:00:37+02:00 heartbeat etat=device serial=10.120.101.165:40047
+2026-10-21T03:10:38+02:00 heartbeat etat=device serial=10.120.101.165:40047
+2026-10-21T11:00:01+02:00 watcher demarre (cible 100.79.244.93:5555)
+2026-10-21T11:00:01+02:00 [OK] telephone connecte (adb-2c6852ac-v3zO57._adb-tls-connect._tcp)
+2026-10-21T11:10:55+02:00 [KO] etat=absent (100.79.244.93:5555)
+2026-10-21T11:18:36+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T11:28:39+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T11:34:41+02:00 [OK] telephone connecte (adb-2c6852ac-v3zO57._adb-tls-connect._tcp)
+2026-10-21T11:35:36+02:00 [KO] etat=absent (100.79.244.93:5555)
+2026-10-21T11:39:41+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T11:50:35+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T12:00:39+02:00 heartbeat etat=absent serial=aucun
+2026-10-21T12:02:38+02:00 watcher demarre (cible 100.79.244.93:5555)
+2026-10-21T12:02:38+02:00 [KO] etat=absent (100.79.244.93:5555)
+2026-10-21T12:04:52+02:00 watcher demarre (cible 100.79.244.93:5555)
+2026-10-21T12:04:52+02:00 [KO] etat=absent (100.79.244.93:5555)

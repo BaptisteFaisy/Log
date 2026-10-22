@@ -1,0 +1,40 @@
+=== date ===
+2026-10-21T12:13:24+02:00
+
+=== ps ===
+    300       1 baptist+ /usr/bin/python3 /home/baptistefaisy/bin/decision-router --port 8799
+    397     354 baptist+ bash /home/baptistefaisy/bin/phone-watch
+    401     354 baptist+ python3 /home/baptistefaisy/bin/scope-watch
+    415     354 baptist+ /home/baptistefaisy/.cargo/bin/zeroclaw daemon
+
+=== system units ===
+decision-router.service                      enabled         enabled
+phone-api.service                            disabled        enabled
+phone-auto.service                           static          -
+phone-scripts.service                        disabled        enabled
+phone-watch.service                          disabled        enabled
+scope-watch.service                          enabled         enabled
+phone-auto.timer                             disabled        enabled
+
+=== system is-enabled/is-active ===
+scope-watch.service enabled=enabled active=inactive
+decision-router.service enabled=enabled active=active
+phone-watch.service enabled=disabled active=inactive
+phone-auto.timer enabled=disabled active=inactive
+phone-auto.service enabled=static active=inactive
+phone-scripts.service enabled=disabled active=inactive
+phone-api.service enabled=disabled active=inactive
+
+=== user units ===
+decision-router.service                      disabled enabled
+phone-watch.service                          enabled  enabled
+router-tunnel.service                        disabled enabled
+scope-watch.service                          enabled  enabled
+zeroclaw.service                             enabled  enabled
+
+=== user is-enabled/is-active ===
+scope-watch.service enabled=enabled active=active
+phone-watch.service enabled=enabled active=active
+zeroclaw.service enabled=enabled active=active
+decision-router.service enabled=disabled active=inactive
+router-tunnel.service enabled=disabled active=inactive

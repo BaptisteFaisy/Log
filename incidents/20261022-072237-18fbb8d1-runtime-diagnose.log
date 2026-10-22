@@ -1,0 +1,106 @@
+[0m
+> runtime-diagnose · combo/cheap
+[0m$ [0mdf -h / /var /home 2>&1; echo "---FREE---"; free -m; echo "---PS---"; ps -eo pid,rss,comm --sort=-rss | head -12
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdb         91G   12G   79G  14% /
+/dev/vdb         91G   12G   79G  14% /
+/dev/vdb         91G   12G   79G  14% /
+---FREE---
+               total        used        free      shared  buff/cache   available
+Mem:            6546        5247          78         581        1887        1299
+Swap:              0           0           0
+---PS---
+    PID   RSS COMMAND
+  21777 587504 java
+  77109 454404 opencode
+  60061 317544 opencode
+   8489 98592 node
+  89735 96100 opencode
+    238 41288 tailscaled
+    231 35880 ld-linux-x86-64
+  88253 35596 python3
+  69374 21004 postgres
+  85318 19644 python3
+  83120 19564 python3
+[0m$ [0m/home/baptistefaisy/aiven-kafka-demo/trace-dump 18fbb8d1dff3cf35f4d9f9908b2536cf --detectors 2>&1 | head -100
+%4|1792653760.710|CONFWARN|rdkafka#consumer-1| [thrd:app]: Configuration property request.timeout.ms is a producer property and will be ignored by this consumer instance
+=== trace 18fbb8d1dff3cf35f4d9f9908b2536cf ===
+scenario=platform_disk_full profile=infra error.type=disk_full
+--- spans (2) ---
+  2026-10-21 18:02:18.799 agent.run                  900.0ms Error  {"error.type": "disk_full", "exception.message": "java.io.IOException: No space left on device: write /var/lib/app/telemetry-buffer failed", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4", "system.disk.usage": "100", "system.disk.free": "0", "system.disk.size": "53687091200", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}"}
+  2026-10-21 18:02:18.819 file.write                 700.0ms Error  {"error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4", "system.disk.usage": "100", "system.disk.free": "0", "system.disk.size": "53687091200"}
+--- logs (1) ---
+  2026-10-21 18:02:19.599 ERROR (sev 17) No space left on device: write /var/lib/app/telemetry-buffer failed
+--- metriques (6) ---
+  system.disk.usage = 100 [%] {"agent.scenario": "platform_disk_full", "agent.profile": "infra", "error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4"}
+  system.disk.free = 0 [By] {"agent.scenario": "platform_disk_full", "agent.profile": "infra", "error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4"}
+  system.disk.size = 53687091200 [By] {"agent.scenario": "platform_disk_full", "agent.profile": "infra", "error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4"}
+  system.disk.usage = 100 [%] {"agent.scenario": "platform_disk_full", "agent.profile": "infra", "error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4"}
+  system.disk.free = 0 [By] {"agent.scenario": "platform_disk_full", "agent.profile": "infra", "error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4"}
+  system.disk.size = 53687091200 [By] {"agent.scenario": "platform_disk_full", "agent.profile": "infra", "error.type": "disk_full", "file.path": "/var/lib/app/telemetry-buffer", "filesystem.type": "ext4"}
+--- detecteurs ---
+  [ok      ] retry_spiral     aucune spirale de retry (> 2 appels)
+  [ok      ] silent_failure   aucune promesse non tenue par l'outil
+  [ok      ] stale_source     aucune version perimee
+> runtime-diagnose · combo/cheap
+```
+ETAT      : DISQUE PLEIN sur le volume de /var/lib/app — system.disk.usage = 100 %,
+            system.disk.free = 0 B, sur un volume de 53 687 091 200 B (50 GiB, ext4).
+            Côté JVM : aucun compteur jvm.* dans la trace → pas de saturation heap
+            observable, pas de jvm.gc.pause long. Le problème n'est PAS la mémoire.
+
+CAUSE RACINE : le volume qui porte /var/lib/app/telemetry-buffer est rempli à 100 %.
+            Le tampon de télémétrie a grossi jusqu'à consommer tout l'espace libre
+            (pas de rotation/purge effective), donc l'agent ne peut plus écrire.
+            Fuite ou pic mémoire : EXCLUS (aucune métrique jvm.memory.used/limit
+            dans la trace, aucun gc.pause). Quota : NON — c'est le volume entier
+            qui est à 100 %, pas un quota par utilisateur/répertoire.
+
+SYMPTOME  : l'échec d'écriture de l'agent, c'est-à-dire la conséquence, pas la cause.
+            file.write (700 ms) puis agent.run (900 ms) échouent à 18:02:18.799/819
+            avec java.io.IOException: No space left on device.
+            agent.result = success:false, booking_confirmed:false, tool_confirmed:false
+            → 1 seul tool_call, échec immédiat : ce n'est pas une spirale de retry
+            (détecteur retry_spiral = ok), l'écriture n'a même pas pu démarrer.
+```
+
+**PREUVES** (trace `18fbb8d1dff3cf35f4d9f9908b2536cf`, `trace-dump --detectors`)
+
+| Compteur | Valeur | Lecture |
+|---|---|---|
+| `system.disk.usage` | **100 %** (×2 métriques) | volume saturé, pas proche du seuil : au plafond |
+| `system.disk.free` | **0 By** (×2) | zéro octet disponible → écriture impossible par construction |
+| `system.disk.size` | 53 687 091 200 By = **50 GiB** | taille du volume concerné |
+| `file.path` | `/var/lib/app/telemetry-buffer` | **le volume en cause est celui de `/var/lib/app`** |
+| `filesystem.type` | `ext4` | FS local (pas de couche objet/S3) |
+| spans | `file.write` Error 700 ms, `agent.run` Error 900 ms | le symptôme est bien l'écriture |
+| `error.type` | `disk_full` | confirme la classification |
+| détecteurs | `retry_spiral` ok, `silent_failure` ok, `stale_source` ok | pas d'aggravation secondaire, échec franc |
+
+Complément local (poste de travail, **autre machine** que l'hôte de l'incident) :
+`/dev/vdb` 91 G, 12 G utilisés, 14 % → le disque du poste est sain ; il ne
+contredit pas la trace, il confirme que le volume plein est distant et doit être
+traité sur l'hôte applicatif. `free -m` : 6,5 G RAM dont 1,3 G disponibles —
+sans rapport avec cet incident (pas d'OOM), et non transposable à l'hôte distant.
+
+**ACTION** (opérateur, sur l'hôte qui porte `/var/lib/app`)
+
+1. Localiser et mesurer le volume fautif :
+   `df -h /var/lib/app && du -xh --max-depth=2 /var/lib/app/telemetry-buffer | sort -h | tail -20`
+2. Récupérer l'espace immédiatement (débloque l'agent) :
+   `find /var/lib/app/telemetry-buffer -type f -mtime +1 -delete`
+   puis vérifier les fichiers supprimés mais encore ouverts par la JVM :
+   `lsof +L1 | grep telemetry-buffer` (un `kill -HUP`/restart libère le reste).
+3. Si le volume est réellement sous-dimensionné : l'**agrandir**
+   (`growpart` + `resize2fs` sur ext4, ou extension du volume cloud), cible
+   ≥ 100 GiB pour garder de la marge au-delà des 50 GiB actuels.
+4. Pérenniser : activer une rotation/purge du tampon (taille max + rétention,
+   ex. `logrotate` ou paramètre `buffer.max-bytes` de l'agent) — sinon le volume
+   se re-remplira à l'identique.
+5. Rejouer une vérification après action : `df -h /var/lib/app` doit montrer
+   `Use% < 80`, puis confirmer que `file.write` repasse en succès sur la trace
+   suivante.
+
+Pas d'appel `kafka-health` : l'erreur est `disk_full` côté hôte applicatif, elle
+ne touche ni broker, ni topic, ni consumer group — le topic `otel.traces` n'est
+que le canal de remontée de la télémétrie.

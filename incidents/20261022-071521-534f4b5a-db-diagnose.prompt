@@ -1,0 +1,15 @@
+INCIDENT dans le flux Kafka.
+topic        : otel.traces
+TraceId      : 534f4b5a2abb4171a35f896cfabfa740
+severite     : ERROR
+error.type   : db_connection_timeout
+horodatage   : 2026-10-21 18:02:18.799
+scenario     : platform_db_connection_timeout
+profil       : infra
+message      : java.sql.SQLTransientConnectionException: Connection timeout on port 5432
+attributs    : {"exception.message": "java.sql.SQLTransientConnectionException: Connection timeout on port 5432", "http.response.status_code": "504", "db.system": "postgresql", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}"}
+
+PREUVE (obligatoire avant toute conclusion) :
+  /home/baptistefaisy/aiven-kafka-demo/trace-dump 534f4b5a2abb4171a35f896cfabfa740 --detectors
+
+Reponds en 4 blocs : PANNIE / CAUSE / PREUVES / ACTION, en distinguant le symptome de la cause racine. N'appelle kafka-health que si le type d'erreur l'exige.

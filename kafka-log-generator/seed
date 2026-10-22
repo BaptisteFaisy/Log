@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""seed — generateur de logs (5 pannes de plateforme + 1 run nominal).
+
+Usage :
+  seed                      publie les 6 scenarios du catalogue
+  seed --emit <id>          publie un seul scenario (= un bouton du site)
+  seed --list               liste les scenarios du catalogue
+  seed --self-check         rejoue les 3 detecteurs sur les donnees generees
+  seed --out-dir DIR        exporte les messages en JSONL (sans publier)
+  seed --prefix <prefix>    force un prefixe de topics (ex: otel-proof)
+  seed --json               sortie JSON (succes comme echec)
+
+Codes de sortie : 0 ok / 1 usage / 2 configuration manquante /
+3 Kafka injoignable.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT_ROOT / "tools"))
+
+import contract  # noqa: E402
+import detectors  # noqa: E402
+import kafkalib  # noqa: E402
+
+EXIT_OK = kafkalib.EXIT_OK
+EXIT_USAGE = kafkalib.EXIT_USAGE
+EXIT_CONFIG = kafkalib.EXIT_CONFIG
+EXIT_KAFKA = kafkalib.EXIT_KAFKA
+
+
+def build_all(catalog, include_proof=False):
+    """(scenario_id, trace_id, messages) pour chaque scenario du catalogue."""
+    out = []
+    for sc in contract.all_scenarios(catalog, include_proof=include_proof):
+        trace_id = contract.new_trace_id()
+        out.append((sc, trace_id, contract.build_messages(catalog, sc, trace_id=trace_id)))
+    return out
+
+
+def publish_all(built, prefix=None, as_json=False):
+    publisher = kafkalib.Publisher(prefix=prefix)
+    published = []
+    for sc, trace_id, messages in built:
+        counts = {}
+        for suffix, key, payload in contract.iter_messages(messages):
+            publisher.send(suffix, key, contract.dumps(payload))
+            counts[suffix] = counts.get(suffix, 0) + 1
+        published.append({
+            "scenario": sc["id"],
+            "label": sc.get("label"),
+            "error_type": sc.get("error_type"),
+            "profile": sc.get("profile"),
+            "trace_id": trace_id,
+            "messages": counts,
+        })
+    publisher.flush()
+    return published
+
+
+def export_all(built, out_dir: Path):
+    out_dir.mkdir(parents=True, exist_ok=True)
+    files = {}
+    for suffix in ("traces", "logs", "metrics"):
+        path = out_dir / f"{suffix}.jsonl"
+        with path.open("w", encoding="utf-8") as fh:
+            for sc, _trace_id, messages in built:
+                for msg in messages.get(suffix, []):
+                    fh.write(contract.dumps(msg) + "\n")
+        files[suffix] = str(path)
+    return files
+
+
+# --------------------------------------------------------------------------
+# self-check
+# --------------------------------------------------------------------------
+def live_check(catalog):
+    """Verifie les runs du catalogue presents dans Kafka (§9.2).
+
+    Le topics peuvent contenir des traces d'autres producteurs (la mission
+    PostgreSQL, §12bis du README) : on verifie donc que les runs du
+    CATALOGUE sont exactement les 5 error.type de plateforme + le run nominal,
+    et on signale les autres sans les compter comme une erreur.
+    """
+    expected = {s["id"]: s.get("error_type") for s in catalog.get("scenarios", [])}
+    data = kafkalib.read_messages(suffixes=["traces"])
+    mine, others = {}, {}
+    for span in data.get("traces", []):
+        attrs = span.get("SpanAttributes") or {}
+        scenario = attrs.get("agent.scenario", "")
+        error_type = attrs.get("error.type")
+        if scenario in expected:
+            mine.setdefault(scenario, set()).add(error_type)
+        else:
+            others.setdefault(scenario or "(sans scenario)", set()).add(error_type)
+    rows = []
+    ok = True
+    for scenario, error_type in expected.items():
+        seen = mine.get(scenario)
+        good = bool(seen) and seen == {error_type}
+        ok = ok and good
+        rows.append({
+            "scenario": scenario,
+            "error_type": error_type,
+            "present": bool(seen),
+            "conforme": good,
+        })
+    return ok, rows, others
+
+
+def self_check(catalog, as_json=False, live=False):
+    checks = []
+
+    def add(name, ok, detail):
+        checks.append({"check": name, "ok": bool(ok), "detail": detail})
+        return ok
+
+    built = build_all(catalog)
+
+    # --- invariants du catalogue -----------------------------------------
+    scenarios = catalog.get("scenarios", [])
+    error_types = [s.get("error_type") for s in scenarios]
+    platform = sorted(t for t in error_types if t)
+    expected_types = sorted([
+        "db_pool_exhausted", "db_connection_timeout",
+        "kafka_broker_unreachable", "oom", "disk_full",
+    ])
+    add("5 error.type de plateforme + 1 run nominal",
+        platform == expected_types and len(scenarios) == 6,
+        f"trouve={platform}")
+
+    # --- detecteurs sur le jeu publie ------------------------------------
+    traces, logs, metrics = [], [], []
+    for _sc, _tid, messages in built:
+        traces += messages["traces"]
+        logs += messages["logs"]
+        metrics += messages["metrics"]
+    findings = detectors.detect(traces, logs, metrics)
+    counts = detectors.findings_by_detector(findings)
+    add("retry_spiral detecte exactement 1 fois", counts["retry_spiral"] == 1,
+        f"detecte={counts['retry_spiral']} (attendu 1)")
+    add("silent_failure : 0 constat", counts["silent_failure"] == 0,
+        f"detecte={counts['silent_failure']} (attendu 0)")
+    add("stale_source : 0 constat", counts["stale_source"] == 0,
+        f"detecte={counts['stale_source']} (attendu 0)")
+
+    # --- couplage pool sature / 4 appels ---------------------------------
+    pool = next((s for s in scenarios if s.get("error_type") == "db_pool_exhausted"), None)
+    pool_calls = len([s for s in (pool or {}).get("spans", []) if s["name"] == "tool.check_reservation"])
+    add("pool sature : 4 appels tool.check_reservation", pool_calls == 4,
+        f"appels={pool_calls} (attendu 4)")
+
+    # --- un run casse doit etre detecte ----------------------------------
+    broken = detectors.build_broken_variants(catalog, contract.build_messages)
+    bfind = detectors.detect(broken["traces"], broken["logs"], broken["metrics"])
+    bcounts = detectors.findings_by_detector(bfind)
+    for det in ("retry_spiral", "silent_failure", "stale_source"):
+        add(f"detecteur {det} : se declenche sur un run casse",
+            bcounts[det] >= 1, f"detecte={bcounts[det]} (attendu >= 1)")
+
+    # un run juste sous le seuil ne doit PAS etre flaggue
+    below_id = "f" * 32
+    flagged_below = [f for f in bfind if f["trace_id"] == below_id]
+    add("retry_spiral : 2 appels (sous le seuil) ne sont pas flaggues",
+        not flagged_below,
+        f"constats={len(flagged_below)} (attendu 0)")
+
+    # --- contrat des messages --------------------------------------------
+    contract_errors = []
+    for sc, trace_id, messages in built:
+        for suffix, key, msg in contract.iter_messages(messages):
+            if key != trace_id:
+                contract_errors.append(f"{sc['id']}: la cle Kafka n'est pas le TraceId")
+            if suffix in ("traces", "logs") and msg.get("TraceId") != trace_id:
+                contract_errors.append(f"{sc['id']}: le TraceId du message ne correspond pas")
+            if suffix == "traces":
+                if "agent.scenario" not in (msg.get("SpanAttributes") or {}):
+                    contract_errors.append(f"{sc['id']}: agent.scenario absent du span")
+                if "agent.profile" not in (msg.get("SpanAttributes") or {}):
+                    contract_errors.append(f"{sc['id']}: agent.profile absent du span")
+                if msg.get("SpanName") == "agent.run":
+                    res = (msg.get("SpanAttributes") or {}).get("agent.result")
+                    if not isinstance(res, str):
+                        contract_errors.append(f"{sc['id']}: agent.result n'est pas une chaine JSON")
+                    else:
+                        try:
+                            json.loads(res)
+                        except ValueError:
+                            contract_errors.append(f"{sc['id']}: agent.result n'est pas du JSON valide")
+                if not isinstance(msg.get("Duration"), int):
+                    contract_errors.append(f"{sc['id']}: Duration n'est pas un entier (ns)")
+                ts = msg.get("Timestamp", "")
+                if len(ts) != 23 or ts[10] != " " or ts[19] != ".":
+                    contract_errors.append(f"{sc['id']}: Timestamp hors format YYYY-MM-DD HH:MM:SS.mmm")
+            if suffix == "logs":
+                if "SpanAttributes" not in msg:
+                    contract_errors.append(f"{sc['id']}: SpanAttributes absent du log")
+                elif "agent.scenario" not in (msg.get("SpanAttributes") or {}):
+                    contract_errors.append(f"{sc['id']}: agent.scenario absent du SpanAttributes du log")
+            if suffix == "metrics":
+                if not isinstance(msg.get("TimeUnix"), int):
+                    contract_errors.append(f"{sc['id']}: TimeUnix n'est pas un entier (ns)")
+    add("contrat des messages (§3)", not contract_errors,
+        "; ".join(sorted(set(contract_errors))[:3]) or "aucune anomalie")
+
+    ok = all(c["ok"] for c in checks)
+    live_rows = None
+    if live:
+        live_ok, live_rows, others = live_check(catalog)
+        add("runs du catalogue dans Kafka : 5 error.type + 1 nominal", live_ok,
+            "conforme" if live_ok else "au moins un scenario du catalogue est absent ou altere")
+        ok = ok and live_ok
+
+    report = {"ok": ok, "checks": checks,
+              "detectors": counts, "broken_detectors": bcounts}
+
+    if as_json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        print("== seed --self-check ==")
+        for c in checks:
+            print(f"[{'OK  ' if c['ok'] else 'FAIL'}] {c['check']} — {c['detail']}")
+        print("— verdict des 3 detecteurs sur le jeu publie :")
+        for line in detectors.verdict_lines(findings):
+            print("   " + line)
+        print("— verdict sur les jeux CASSES (jamais publies) :")
+        for line in detectors.verdict_lines(bfind):
+            print("   " + line)
+        if live_rows is not None:
+            print("— runs du catalogue vus dans Kafka :")
+            for row in live_rows:
+                print(f"   [{'OK  ' if row['conforme'] else 'KO  '}] {row['scenario']:32s} "
+                      f"error_type={row['error_type']}")
+        print(f"RESULTAT : {'OK' if ok else 'ECHEC'}")
+    return 0 if ok else 1
+
+
+# --------------------------------------------------------------------------
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="seed", description="Generateur de logs OpenTelemetry pour Aiven Kafka")
+    parser.add_argument("--emit", metavar="SCENARIO", help="publie un seul scenario")
+    parser.add_argument("--self-check", action="store_true",
+                        help="rejoue les 3 detecteurs sur les donnees generees")
+    parser.add_argument("--live", action="store_true",
+                        help="avec --self-check : verifie aussi les runs du catalogue dans Kafka")
+    parser.add_argument("--list", action="store_true", help="liste les scenarios")
+    parser.add_argument("--out-dir", metavar="DIR", help="exporte les messages en JSONL")
+    parser.add_argument("--prefix", metavar="PREFIX", help="prefixe de topics")
+    parser.add_argument("--include-proof", action="store_true",
+                        help="inclut les scenarios de preuve zero-code")
+    parser.add_argument("--json", action="store_true", help="sortie JSON")
+    args = parser.parse_args(argv)
+
+    # Re-execution dans le venv dedie avant toute sortie (§0.6)
+    kafkalib.ensure_kafka_interpreter()
+
+    try:
+        catalog = contract.load_catalog()
+    except contract.ContractError as exc:
+        print(f"ERREUR : {exc}", file=sys.stderr)
+        return EXIT_CONFIG
+
+    if args.list:
+        rows = contract.all_scenarios(catalog, include_proof=args.include_proof)
+        if args.json:
+            print(json.dumps([{"id": r["id"], "label": r.get("label"),
+                               "error_type": r.get("error_type"),
+                               "profile": r.get("profile")} for r in rows],
+                             indent=2, ensure_ascii=False))
+        else:
+            for r in rows:
+                print(f"{r['id']:32s} error_type={str(r.get('error_type')):26s} "
+                      f"profile={r.get('profile')}  {r.get('label', '')}")
+        return EXIT_OK
+
+    if args.self_check:
+        return self_check(catalog, as_json=args.json, live=args.live)
+
+    try:
+        if args.emit:
+            scenario = contract.scenario_by_id(catalog, args.emit, include_proof=args.include_proof)
+            trace_id = contract.new_trace_id()
+            built = [(scenario, trace_id,
+                      contract.build_messages(catalog, scenario, trace_id=trace_id))]
+        else:
+            built = build_all(catalog, include_proof=args.include_proof)
+    except contract.ContractError as exc:
+        print(f"ERREUR : {exc}", file=sys.stderr)
+        return EXIT_USAGE
+
+    if args.out_dir:
+        files = export_all(built, Path(args.out_dir))
+        if args.json:
+            print(json.dumps({"ok": True, "files": files}, indent=2))
+        else:
+            for k, v in files.items():
+                print(f"export {k:8s} -> {v}")
+        return EXIT_OK
+
+    try:
+        published = publish_all(built, prefix=args.prefix)
+    except kafkalib.ConfigError as exc:
+        print(f"ERREUR : {exc}", file=sys.stderr)
+        return EXIT_CONFIG
+    except kafkalib.KafkaUnreachable as exc:
+        print(f"ERREUR : {exc}", file=sys.stderr)
+        return EXIT_KAFKA
+
+    if args.json:
+        print(json.dumps({"ok": True, "published": published}, indent=2, ensure_ascii=False))
+    else:
+        print(f"== {len(published)} scenario(s) publie(s) ==")
+        for row in published:
+            counts = row["messages"]
+            print(f"  {row['scenario']:32s} trace_id={row['trace_id']} "
+                  f"traces={counts.get('traces', 0)} logs={counts.get('logs', 0)} "
+                  f"metrics={counts.get('metrics', 0)} error_type={row['error_type']}")
+        print("Verifie avec : ./trace-dump <trace_id> --detectors")
+    return EXIT_OK
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("interrompu", file=sys.stderr)
+        sys.exit(1)

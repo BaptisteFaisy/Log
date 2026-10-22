@@ -1,0 +1,6 @@
+{
+  "regions": ["lhr1"],
+  "functions": {
+    "api/dump.js": { "maxDuration": 60 }
+  }
+}

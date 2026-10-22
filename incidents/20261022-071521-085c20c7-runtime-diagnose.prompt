@@ -1,0 +1,15 @@
+INCIDENT dans le flux Kafka.
+topic        : otel.traces
+TraceId      : 085c20c715ed4bb3950345a77b6d7df4
+severite     : ERROR
+error.type   : oom
+horodatage   : 2026-10-21 18:02:18.799
+scenario     : platform_oom
+profil       : infra
+message      : java.lang.OutOfMemoryError: Java heap space
+attributs    : {"exception.message": "java.lang.OutOfMemoryError: Java heap space", "exception.type": "java.lang.OutOfMemoryError", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":1}"}
+
+PREUVE (obligatoire avant toute conclusion) :
+  /home/baptistefaisy/aiven-kafka-demo/trace-dump 085c20c715ed4bb3950345a77b6d7df4 --detectors
+
+Reponds en 4 blocs : PANNIE / CAUSE / PREUVES / ACTION, en distinguant le symptome de la cause racine. N'appelle kafka-health que si le type d'erreur l'exige.

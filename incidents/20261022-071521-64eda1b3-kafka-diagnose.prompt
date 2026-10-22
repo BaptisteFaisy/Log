@@ -1,0 +1,15 @@
+INCIDENT dans le flux Kafka.
+topic        : otel.traces
+TraceId      : 64eda1b37ffe4505bd9b85670bba6f1a
+severite     : ERROR
+error.type   : kafka_broker_unreachable
+horodatage   : 2026-10-21 18:02:18.799
+scenario     : platform_kafka_broker_unreachable
+profil       : infra
+message      : org.apache.kafka.common.errors.BrokerNotAvailableException: Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)
+attributs    : {"exception.message": "org.apache.kafka.common.errors.BrokerNotAvailableException: Kafka Broker Unreachable: broker not reachable (ERR__TRANSPORT)", "messaging.system": "kafka", "messaging.destination.name": "agent-events", "agent.result": "{\"success\":false,\"booking_confirmed\":false,\"tool_confirmed\":false,\"tool_calls\":2}"}
+
+PREUVE (obligatoire avant toute conclusion) :
+  /home/baptistefaisy/aiven-kafka-demo/trace-dump 64eda1b37ffe4505bd9b85670bba6f1a --detectors
+
+Reponds en 4 blocs : PANNIE / CAUSE / PREUVES / ACTION, en distinguant le symptome de la cause racine. N'appelle kafka-health que si le type d'erreur l'exige.
