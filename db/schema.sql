@@ -71,3 +71,28 @@ create index if not exists error_resolutions_updated_idx on error_resolutions (u
 -- Recherche de probleme similaire (reformulation, faute de frappe).
 create index if not exists error_resolutions_fix_trgm_idx on error_resolutions using gin (fix gin_trgm_ops);
 create index if not exists error_resolutions_cause_trgm_idx on error_resolutions using gin (cause gin_trgm_ops);
+
+-- Rapports produits par les agents reels (topic otel-reports).
+-- C'est la sortie du watcher de BaptisteFaisy/Log : un rapport par incident.
+create table if not exists agent_reports (
+  id            bigserial   primary key,
+  topic         text        not null,
+  partition     integer     not null,
+  kafka_offset  bigint      not null,
+  trace_id      text,
+  error_type    text,
+  code          text        not null,
+  scenario      text,
+  agent         text        not null,
+  status        text        not null default 'unknown',
+  summary       text,
+  report        text,
+  payload       jsonb       not null default '{}'::jsonb,
+  published_at  timestamptz not null default now(),
+  received_at   timestamptz not null default now(),
+  constraint agent_reports_kafka_position unique (topic, partition, kafka_offset)
+);
+
+create index if not exists agent_reports_trace_idx on agent_reports (trace_id);
+create index if not exists agent_reports_published_idx on agent_reports (published_at desc);
+create index if not exists agent_reports_code_idx on agent_reports (code);

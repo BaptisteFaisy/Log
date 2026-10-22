@@ -51,6 +51,21 @@ npm run memory -- runs
 puis la table historique de Baptiste). La méthode est lue dans PostgreSQL.
 `record` enregistre la méthode et le run.
 
+## Rapports des agents réels (`otel-reports`)
+
+Le watcher de Baptiste publie chaque rapport d'agent sur `otel-reports`.
+`npm run consumer:reports` les ingère dans `agent_reports` et, quand le statut
+est `resolved`, met à jour automatiquement la mémoire (`error_resolutions` +
+`agent_runs`) — aucun `record` manuel n'est alors nécessaire.
+
+```bash
+npm run consumer:reports      # Kafka otel-reports -> PostgreSQL (à laisser tourner)
+```
+
+Le log d'origine est retrouvé par `TraceId` : c'est lui qui fixe le
+`fingerprint`, donc la même clé que celle utilisée par `npm run memory`.
+Les rapports sont exposés par `GET /api/reports?trace_id=…&code=…`.
+
 ## Autres commandes
 
 ```bash

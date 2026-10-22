@@ -9,7 +9,8 @@
     "memory": "node scripts/agent-memory.mjs",
     "db:schema": "node scripts/apply-schema.mjs",
     "api:test": "node scripts/test-api.cjs",
-    "test": "node --test scripts/*.test.mjs"
+    "test": "node --test scripts/*.test.mjs",
+    "consumer:reports": "node scripts/consumer-reports.cjs"
   },
   "repository": {
     "type": "git",

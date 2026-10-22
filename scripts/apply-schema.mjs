@@ -38,15 +38,36 @@ const config = adminUrl
 
 const sql = readFileSync(join(root, "db", "schema.sql"), "utf8");
 
+/* Une instruction par requete : une table deja possedee par un autre role ne
+   doit pas empecher la creation des tables manquantes (42501 = must be owner). */
+function statements(text) {
+  return text
+    .split(/;\s*(?:\r?\n|$)/)
+    .map((part) => part.trim())
+    .filter((part) => part && !part.split(/\r?\n/).every((line) => line.trim().startsWith("--")));
+}
+
 async function apply(clientConfig) {
   const client = new pg.Client(clientConfig);
   await client.connect();
+  const skipped = [];
   try {
-    await client.query(sql);
+    for (const statement of statements(sql)) {
+      try {
+        await client.query(statement);
+      } catch (error) {
+        if (error.code === "42501") {
+          skipped.push(statement.split(/\r?\n/)[0].slice(0, 60));
+          continue;
+        }
+        throw error;
+      }
+    }
     const tables = await client.query(
       "select table_name from information_schema.tables where table_schema='public' order by 1",
     );
     console.log("schema ok:", tables.rows.map((row) => row.table_name).join(", "));
+    if (skipped.length) console.log("ignore (proprietaire different):", skipped.join(" | "));
   } finally {
     await client.end();
   }
