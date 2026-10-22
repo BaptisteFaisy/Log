@@ -184,7 +184,7 @@ function createAgent(code, trace, error) {
   card.append(top, bars, log);
   agentList.prepend(card);
 
-  const entry = { node: card, state: "run", timers: [], run, modeEl, code, label };
+  const entry = { node: card, state: "run", timers: [], run, modeEl, code, label, fingerprint: run.fingerprint };
   state.agents.unshift(entry);
 
   while (state.agents.length > MAX_AGENTS) {
@@ -355,6 +355,16 @@ function addErrorCard(error, code) {
   setTimeout(() => {
     card.dataset.fresh = "false";
   }, 2000);
+
+  // Un seul agent par message : si le meme message a deja un agent en cours,
+  // on affiche l'erreur mais on ne relance rien.
+  const fp = metrics.fingerprint(code, error.message, error.stack);
+  const busy = state.agents.some((a) => a.state !== "done" && a.fingerprint === fp);
+  if (busy) {
+    addRow("inf", `agent deja en cours sur ce message · ${code} · pas de nouveau lancement`);
+    updateAgentsMeta();
+    return;
+  }
 
   setTimeout(() => createAgent(code, trace, error), 380);
 }
