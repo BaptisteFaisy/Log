@@ -379,15 +379,17 @@ async function findReport(traceId, timeoutMs) {
 /**
  * Le terminal n'affiche QUE des messages reellement lus dans otel.logs.
  *
- * Un seul consommateur par instance chaude, en affectation MANUELLE
- * (consumer.assign) : pas de groupe, donc pas de rebalance ni d'offset commite
- * qui ferait repartir une instance a la fin du topic. On demande les
- * watermarks, on recule de TAIL_BACKFILL messages pour avoir de l'historique,
- * puis on laisse tourner. Les messages recus restent dans un anneau borne.
+ * Un consommateur par instance chaude, dans un groupe PROPRE A L'INSTANCE
+ * (kafkajs 2.x n'a pas consumer.assign : on passe par un groupe). Sans commit
+ * d'offset, chaque instance relit le topic depuis le debut ; l'anneau garde les
+ * TAIL_MAX derniers messages, donc le resultat est « la fin du topic ».
+ *
+ * `ready` = tous les watermarks hauts releves au demarrage ont ete atteints :
+ * avant cela, la lecture est un rattrapage et le site le dit.
  */
-const TAIL_BACKFILL = 80;
 const TAIL_MAX = 400;
-const TAIL_READY_TIMEOUT_MS = 25000;
+const TAIL_READY_TIMEOUT_MS = 30000;
+const TAIL_GROUP_PREFIX = "otel-watch-site-tail";
 
 let tailReader = null;
 
@@ -448,7 +450,7 @@ function pushTail(self, partition, message) {
 function startTail(cfg) {
   const topic = topicName("logs");
   const consumer = kafkaClient(cfg).consumer({
-    groupId: `otel-watch-site-tail-${crypto.randomBytes(4).toString("hex")}`,
+    groupId: `${TAIL_GROUP_PREFIX}-${crypto.randomBytes(4).toString("hex")}`,
     allowAutoTopicCreation: false,
   });
   const self = {
@@ -470,34 +472,35 @@ function startTail(cfg) {
     discardTail(new KafkaDownError(readable(error)));
   });
 
+  const settled = () => {
+    if (!self.targets.size) return true;
+    return [...self.targets].every(([partition, target]) => (self.reached.get(partition) || 0) >= target);
+  };
+
   (async () => {
     try {
-      await consumer.connect();
-      const admin = kafkaClient(cfg).admin();
-      await admin.connect();
-      let offsets;
+      // Watermarks hauts AVANT de consommer : c'est la ligne d'arrivee du
+      // rattrapage. Un topic vide (high = low = 0) est pret immediatement.
       try {
-        offsets = await admin.fetchTopicOffsets(topic);
-      } finally {
-        await admin.disconnect().catch(() => {});
+        const admin = kafkaClient(cfg).admin();
+        await admin.connect();
+        try {
+          const offsets = await admin.fetchTopicOffsets(topic);
+          for (const item of offsets) {
+            self.targets.set(Number(item.partition), Number(item.high));
+            self.reached.set(Number(item.partition), Number(item.low));
+          }
+        } finally {
+          await admin.disconnect().catch(() => {});
+        }
+      } catch (err) {
+        // Watermarks illisibles (ACL Describe...) : on consomme quand meme,
+        // et on considerera la lecture prete apres le delai de grace.
+        process.stderr.write(`tail otel.logs : watermarks indisponibles (${readable(err)})\n`);
       }
-      const assignments = [];
-      for (const item of offsets) {
-        const partition = Number(item.partition);
-        const low = Number(item.low);
-        const high = Number(item.high);
-        const start = Math.max(low, high - TAIL_BACKFILL);
-        assignments.push({ topic, partition, offset: String(start) });
-        self.targets.set(partition, high);
-        self.reached.set(partition, start);
-      }
-      if (!assignments.length) {
-        self.ready = true;
-        return;
-      }
-      consumer.assign(assignments);
-      const settled = () =>
-        [...self.targets].every(([partition, target]) => (self.reached.get(partition) || 0) >= target);
+
+      await consumer.connect();
+      await consumer.subscribe({ topics: [topic], fromBeginning: true });
       if (settled()) self.ready = true;
 
       await consumer.run({

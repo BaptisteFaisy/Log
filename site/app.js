@@ -33,6 +33,15 @@ function stamp() {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
 }
 
+/** Heure d'un message Kafka (ISO 8601 ou « 2026-10-22 12:44:57.000 »). */
+function clockOf(value) {
+  const text = String(value || "").trim();
+  if (!text) return stamp();
+  const d = new Date(text.includes("T") ? text : text.replace(" ", "T") + "Z");
+  if (Number.isNaN(d.getTime())) return text.slice(11, 19) || stamp();
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+}
+
 function nearBottom() {
   return stream.scrollHeight - stream.scrollTop - stream.clientHeight < 80;
 }
@@ -60,13 +69,14 @@ function refreshCount() {
 
 const LABELS = { dbg: "dbg", inf: "inf", wrn: "wrn", ok: "ok", err: "err" };
 
-function addRow(level, text) {
+function addRow(level, text, tsIso) {
   const row = document.createElement("div");
   row.className = "row";
   row.dataset.level = level;
 
   const time = document.createElement("time");
-  time.textContent = stamp();
+  time.textContent = tsIso ? clockOf(tsIso) : stamp();
+  if (tsIso) row.title = tsIso;
 
   const lvl = document.createElement("span");
   lvl.className = "lvl";
@@ -105,15 +115,24 @@ function agentSlug(code) {
   return code.toLowerCase().replace(/^err_/, "").replace(/_/g, "-");
 }
 
-function createAgent(code, trace, error, real) {
+/**
+ * Cree une carte d'agent. `options.restored` marque une carte relue au
+ * chargement de la page (trace reelle deja publiee, cf. restoreAgents) : elle
+ * ne rouvre pas un run local, sinon l'observabilite compterait deux fois le
+ * meme incident a chaque rafraichissement.
+ */
+function createAgent(code, trace, error, real, options) {
+  const restored = Boolean(options && options.restored);
   const slug = agentSlug(code);
   const label = real && real.agent ? real.agent : `agent/fix-${slug}`;
-  const run = metrics.startRun({
-    code,
-    message: error ? error.message : "",
-    stack: error ? error.stack : "",
-    agent: label,
-  });
+  const run = restored
+    ? { run_id: null, fingerprint: null, mode: "restored" }
+    : metrics.startRun({
+        code,
+        message: error ? error.message : "",
+        stack: error ? error.stack : "",
+        agent: label,
+      });
 
   const card = document.createElement("article");
   card.className = "agent-card";
@@ -143,10 +162,16 @@ function createAgent(code, trace, error, real) {
   const modeEl = document.createElement("span");
   modeEl.className = "agent-mode";
   modeEl.dataset.mode = run.mode;
-  modeEl.textContent =
-    run.mode === "warm" ? "warm · memo" : run.mode === "warm_degraded" ? "warm degraded" : "cold";
-  modeEl.title =
-    run.mode === "warm"
+  modeEl.textContent = restored
+    ? "restored"
+    : run.mode === "warm"
+      ? "warm · memo"
+      : run.mode === "warm_degraded"
+        ? "warm degraded"
+        : "cold";
+  modeEl.title = restored
+    ? "carte restauree apres un rafraichissement : trace reelle relue dans otel.logs, etat relu via /api/report"
+    : run.mode === "warm"
       ? "resolution memo loaded from the database"
       : run.mode === "warm_degraded"
         ? "recurrence with no usable memo"
@@ -178,7 +203,17 @@ function createAgent(code, trace, error, real) {
   card.append(top, bars, log);
   agentList.prepend(card);
 
-  const entry = { node: card, state: "run", timers: [], run, modeEl, code, label, fingerprint: run.fingerprint };
+  const entry = {
+    node: card,
+    state: "run",
+    timers: [],
+    run,
+    modeEl,
+    code,
+    label,
+    traceId: real.trace_id,
+    fingerprint: run.fingerprint,
+  };
   state.agents.unshift(entry);
 
   while (state.agents.length > MAX_AGENTS) {
@@ -189,11 +224,27 @@ function createAgent(code, trace, error, real) {
 
   segments[0].dataset.on = "run";
   updateAgentsMeta();
-  addRow("inf", `${label} created · ${code} · ${trace} · ${run.mode}`);
+  addRow(
+    "inf",
+    restored
+      ? `${label} repris · ${code} · ${trace} · trace relue dans otel.logs`
+      : `${label} created · ${code} · ${trace} · ${run.mode}`,
+  );
 
   // Le seul mode d'execution est le vrai : suivi du rapport publie par le
   // watcher de la machine. Aucune animation ne simule un agent (AGENTS.md).
-  watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId: real.trace_id });
+  watchRealAgent({
+    card,
+    entry,
+    segments,
+    stateEl,
+    logTag,
+    logText,
+    code,
+    run,
+    traceId: real.trace_id,
+    restored,
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -209,7 +260,7 @@ function createAgent(code, trace, error, real) {
 const POLL_EVERY_MS = 5000;
 const POLL_MAX_MS = 15 * 60 * 1000;
 
-function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId }) {
+function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId, restored }) {
   const startedAt = Date.now();
 
   const elapsed = () => {
@@ -232,12 +283,20 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
     logText.textContent = text;
     addRow(terminalLevel, text);
     setStatus(status);
+    // run_id nul pour une carte restauree : endRun ne fait rien, c'est voulu.
     metrics.endRun(run.run_id, { status: outcome === "failed" ? "failed" : "resolved" });
     updateAgentsMeta();
   };
 
-  setPhase(0, `queue · ${traceId.slice(0, 8)}`);
-  addRow("inf", `trace ${traceId} · attente du watcher (kafka otel.logs → agent local)`);
+  // Carte restauree : on ne connait pas l'heure de depart reelle de l'agent,
+  // donc pas de chrono invente — on dit seulement que le suivi reprend.
+  setPhase(0, restored ? `sync · ${traceId.slice(0, 8)}` : `queue · ${traceId.slice(0, 8)}`);
+  addRow(
+    "inf",
+    restored
+      ? `trace ${traceId} · reprise apres refresh · etat relu via /api/report`
+      : `trace ${traceId} · attente du watcher (kafka otel.logs → agent local)`,
+  );
 
   const poll = async () => {
     try {
@@ -248,7 +307,7 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
 
       if (response.status === 404) {
         // Pas encore de rapport : le watcher a pris la trace, l'agent tourne.
-        setPhase(1, `running · ${elapsed()}`);
+        setPhase(1, restored ? "running · reprise" : `running · ${elapsed()}`);
         if (Date.now() - startedAt > POLL_MAX_MS) {
           done(
             "failed", "err",
@@ -299,7 +358,175 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
     }
   };
 
-  entry.timers.push(setTimeout(poll, 2500));
+  // Une carte restauree interroge le rapport tout de suite : l'agent a pu
+  // finir pendant que la page etait fermee.
+  entry.timers.push(setTimeout(poll, restored ? 400 : 2500));
+}
+
+/* ------------------------------------------------------------------ */
+/* Reprise des cartes apres un rafraichissement                         */
+/* ------------------------------------------------------------------ */
+
+/* Les cartes ne vivaient qu'en memoire : un refresh les effacait alors que
+   l'agent tournait toujours. Au chargement on relit donc la verite cote
+   serveur — GET /api/tail, les vraies traces publiees dans otel.logs — et on
+   complete avec les traces deja vues, gardees en localStorage pour celles qui
+   sont deja sorties du tail. Aucune carte inventee : chaque trace vient d'un
+   message reel de Kafka (AGENTS.md). Si /api/tail ne repond pas, la page
+   continue normalement : seules les traces locales sont reprises. */
+const TRACE_KEY = "log.agent.traces.v1";
+const TRACE_MAX = 30; // borne de la memoire locale : les 30 plus recentes
+const TAIL_LIMIT = 60;
+const TAIL_TIMEOUT_MS = 6000;
+const TRACE_ID_RE = /^[0-9A-Za-z_-]{8,64}$/;
+
+function loadKnownTraces() {
+  try {
+    const raw = window.localStorage.getItem(TRACE_KEY);
+    if (!raw) return [];
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) return [];
+    return saved.filter((t) => t && typeof t === "object" && TRACE_ID_RE.test(String(t.trace_id || "")));
+  } catch (err) {
+    // localStorage refuse (navigation privee, quota) : /api/tail suffit
+    return [];
+  }
+}
+
+function saveKnownTraces(list) {
+  try {
+    window.localStorage.setItem(TRACE_KEY, JSON.stringify(list.slice(0, TRACE_MAX)));
+  } catch (err) {
+    /* quota depasse ou stockage refuse : pas bloquant, le tail fera foi */
+  }
+}
+
+/** Retient une trace vue (clic ou reprise) pour la retrouver au prochain refresh. */
+function rememberTrace(entry) {
+  if (!entry || !TRACE_ID_RE.test(String(entry.trace_id || ""))) return;
+  const list = loadKnownTraces().filter((t) => t.trace_id !== entry.trace_id);
+  list.unshift({
+    trace_id: entry.trace_id,
+    code: entry.code || "",
+    service: entry.service || "",
+    text: String(entry.text || "").slice(0, 200),
+    ts: entry.ts || new Date().toISOString(),
+  });
+  saveKnownTraces(list);
+}
+
+/* Le tail donne le scenario (`code` = agent.scenario) ou a defaut le type
+   d'erreur : on les ramene aux codes du catalogue pour que la carte porte le
+   meme libelle qu'une carte creee par un clic. */
+function codeForTrace(message) {
+  const raw = String(message.code || message.error_type || "").trim();
+  if (!raw) return "ERR_UNKNOWN";
+  const known = SCENARIOS.find((s) => s.scenario === raw || s.code === raw.toUpperCase());
+  if (known) return known.code;
+  if (/^err_/i.test(raw)) return raw.toUpperCase().slice(0, 48);
+  return `ERR_${raw.replace(/[^A-Za-z0-9]+/g, "_").toUpperCase()}`.slice(0, 48);
+}
+
+/** Traces d'incident presentes dans le tail, de la plus recente a la plus ancienne. */
+function tracesFromTail(messages) {
+  const out = [];
+  const seen = new Set();
+  const list = Array.isArray(messages) ? messages : [];
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const message = list[i];
+    if (!message || typeof message !== "object") continue;
+    const traceId = String(message.trace_id || "").trim();
+    if (!TRACE_ID_RE.test(traceId) || seen.has(traceId)) continue;
+    const level = String(message.level || "").toLowerCase();
+    const errorType = String(message.error_type || "").trim();
+    // Un message d'exploitation (inf/dbg) n'est pas un incident.
+    if (!errorType && level !== "err" && level !== "wrn") continue;
+    seen.add(traceId);
+    out.push({
+      trace_id: traceId,
+      code: codeForTrace(message),
+      service: String(message.service || ""),
+      text: String(message.text || "").slice(0, 200),
+      ts: String(message.ts || ""),
+    });
+  }
+  return out;
+}
+
+/** Lecture de /api/tail : jamais bloquante, jamais d'exception qui remonte. */
+async function readTail() {
+  const controller = new AbortController();
+  const guard = setTimeout(() => controller.abort(), TAIL_TIMEOUT_MS);
+  try {
+    const response = await fetch(`/api/tail?limit=${TAIL_LIMIT}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data || data.ok !== true || !Array.isArray(data.messages)) {
+      return { traces: [], reason: (data && (data.hint || data.error)) || `http ${response.status}` };
+    }
+    return { traces: tracesFromTail(data.messages), reason: null };
+  } catch (err) {
+    return {
+      traces: [],
+      reason: err && err.name === "AbortError" ? "delai depasse" : "serveur injoignable",
+    };
+  } finally {
+    clearTimeout(guard);
+  }
+}
+
+async function restoreAgents() {
+  const stored = loadKnownTraces();
+  const tail = await readTail();
+
+  try {
+    // fusion : le tail (le plus recent) d'abord, puis la memoire locale
+    const merged = [];
+    const seen = new Set();
+    [...tail.traces, ...stored].forEach((item) => {
+      if (!item || seen.has(item.trace_id)) return;
+      seen.add(item.trace_id);
+      merged.push(item);
+    });
+
+    saveKnownTraces(merged);
+
+    if (tail.reason) {
+      addRow(
+        "dbg",
+        `reprise agents · otel.logs illisible (${tail.reason}) · ${stored.length} trace(s) relue(s) en local`,
+      );
+    }
+
+    // pas de doublon : une trace qui a deja sa carte n'en recoit pas d'autre
+    const todo = merged
+      .filter((item) => !state.agents.some((agent) => agent.traceId === item.trace_id))
+      .slice(0, MAX_AGENTS);
+
+    if (!todo.length) return;
+
+    addRow("inf", `reprise agents · ${todo.length} trace(s) relue(s) dans otel.logs`);
+
+    // du plus ancien au plus recent : la carte la plus recente finit en tete
+    todo
+      .slice()
+      .reverse()
+      .forEach((item, index) => {
+        setTimeout(() => {
+          if (state.agents.some((agent) => agent.traceId === item.trace_id)) return;
+          const code = item.code || codeForTrace(item);
+          const error = new Error(item.text || `${code} · trace ${item.trace_id}`);
+          error.name = code;
+          createAgent(code, item.trace_id, error, { trace_id: item.trace_id }, { restored: true });
+        }, index * 80);
+      });
+  } catch (err) {
+    // rendu deja en place : on n'affiche pas de trace, on continue
+    addRow("dbg", "reprise agents · impossible de relire les cartes · la console reste utilisable");
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -524,6 +751,14 @@ async function fireError() {
     const data = await response.json().catch(() => ({}));
     if (response.ok && data.ok && data.trace_id) {
       real = { trace_id: data.trace_id, scenario: scenario.scenario };
+      // retenue en local : la carte doit reapparaitre meme si la trace sort du tail
+      rememberTrace({
+        trace_id: data.trace_id,
+        code: scenario.code,
+        service: scenario.service,
+        text: error.message,
+        ts: new Date().toISOString(),
+      });
       addRow("ok", `incident publie · trace ${data.trace_id} · ${data.error_type} · ${data.messages} messages`);
       setStatus("incident publie");
     } else {
@@ -621,7 +856,6 @@ async function verifyKafka(announce) {
   // Deja vert : on ne reaffiche pas « checking… » a chaque controle.
   if (kafkaState !== "done") {
     paintKafka("check", KAFKA_CHECK, "Verification du broker Aiven en cours…");
-    paintSource("check", "source · …", "Verification du broker Aiven en cours…");
   }
 
   let health = null;
@@ -647,11 +881,6 @@ async function verifyKafka(announce) {
       KAFKA_DONE,
       `Broker Aiven joint · topic ${health.topic} · ${health.brokers} brokers · verifie a ${seen}`,
     );
-    paintSource(
-      "kafka",
-      `kafka aiven · ${health.topic}`,
-      `Les lignes partent dans Aiven Kafka (topic ${health.topic}, ${health.brokers} brokers, ack=all) · verifie a ${seen}`,
-    );
     if (announce) {
       addRow("ok", `kafka aiven · verifie · topic ${health.topic} · ${health.brokers} brokers · ack=all`);
       setStatus("kafka aiven verified");
@@ -665,7 +894,6 @@ async function verifyKafka(announce) {
   if (kafkaState === "done" && kafkaFailures < 2) return null;
 
   paintKafka("down", KAFKA_DOWN, `Kafka injoignable : ${reason}`);
-  paintSource("down", "kafka aiven · injoignable", `Kafka injoignable : ${reason}`);
   if (announce) {
     addRow("err", `kafka aiven · injoignable · ${reason}`);
     setStatus("kafka aiven unreachable");
@@ -689,38 +917,113 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* ------------------------------------------------------------------ */
-/* Flux continu                                                        */
+/* Flux continu : otel.logs, lu pour de vrai                          */
 /* ------------------------------------------------------------------ */
 
-const ROUTES = ["/api/health", "/api/session", "/api/logs", "/api/metrics", "/api/checkout", "/api/profile", "/api/events"];
-const REGIONS = ["cdg1", "fra1", "iad1"];
-const KEYS = ["sess:8f21", "user:gaia", "logs:page:1", "cfg:edge"];
+/* Aucune ligne n'est inventee ici. Chaque ligne affichee vient de
+   GET /api/tail, qui consomme le topic Aiven `otel.logs` (api/_kafka.js).
+   Topic vide = terminal vide : c'est la verite, pas un bug d'affichage. */
 
-const rnd = (min, max) => Math.round(min + Math.random() * (max - min));
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
+const TAIL_ENDPOINT = "/api/tail";
+const TAIL_FIRST_LIMIT = 200;
+const TAIL_POLL_MS = 4000;
+const seenOffsets = new Set();
+let tailErrors = 0;
+let tailBusy = false;
 
-const FEED = [
-  () => ["inf", `GET ${pick(ROUTES)} 200 · ${rnd(8, 140)} ms`],
-  () => ["dbg", `cache ${pick(["hit", "miss", "revalidate"])} · key=${pick(KEYS)}`],
-  () => ["ok", `worker ready · region=${pick(REGIONS)} · pid=${rnd(1000, 9999)}`],
-  () => ["inf", `POST ${pick(ROUTES)} 201 · ${rnd(20, 260)} ms · ${rnd(2, 40)} kb`],
-  () => ["dbg", `queue consume · batch=${rnd(1, 12)} · lag=${rnd(0, 90)} ms`],
-  () => ["inf", `deploy ready · dpl_${randomId(9)}`],
-  () => ["wrn", `slow query · ${pick(["orders", "sessions", "events"])} ${rnd(420, 1800)} ms (threshold 400 ms)`],
-  () => ["dbg", `trace ${randomId(16)} · sampled=0.${rnd(1, 9)}`],
-  () => ["inf", `WS /socket connected · clients=${rnd(1, 240)}`],
-];
-
-function feed() {
-  const [level, text] = pick(FEED)();
-  addRow(level, text);
-  setTimeout(feed, Math.random() > 0.9 ? rnd(120, 380) : rnd(650, 1900));
+function offsetKey(msg) {
+  return `${msg.partition}:${msg.offset}`;
 }
 
-addRow("inf", "session attached · tail -f /var/log/app.log");
-addRow("ok", "error and unhandledrejection handlers active");
+function paintTailSource(up, count, detail) {
+  if (up === true) {
+    paintSource(
+      "kafka",
+      `kafka · otel.logs`,
+      `${count} message${count > 1 ? "s" : ""} lu${count > 1 ? "s" : ""} dans le topic Aiven otel.logs${detail ? ` · ${detail}` : ""}`,
+    );
+  } else if (up === false) {
+    paintSource("down", "kafka · injoignable", detail || "Lecture de otel.logs impossible.");
+  } else {
+    paintSource("pending", "kafka · …", detail || "Lecture de otel.logs en cours…");
+  }
+}
+
+async function tailOnce(first) {
+  if (tailBusy) return null;
+  tailBusy = true;
+  const controller = new AbortController();
+  const guard = setTimeout(() => controller.abort(), 12000);
+  let data = null;
+  let ok = false;
+  try {
+    const response = await fetch(`${TAIL_ENDPOINT}?limit=${first ? TAIL_FIRST_LIMIT : 80}`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    ok = response.ok;
+    data = await response.json().catch(() => null);
+  } catch (error) {
+    data = null;
+  } finally {
+    clearTimeout(guard);
+    tailBusy = false;
+  }
+
+  if (!ok || !data || data.ok !== true) {
+    tailErrors += 1;
+    const reason = (data && (data.hint || data.error)) || "pas de reponse de /api/tail";
+    paintTailSource(false, 0, `Lecture de otel.logs impossible : ${reason}`);
+    if (tailErrors === 1) {
+      addRow("err", `tail otel.logs · echec · ${reason}`);
+      setStatus("kafka unreachable");
+    }
+    return null;
+  }
+
+  tailErrors = 0;
+  const messages = Array.isArray(data.messages) ? data.messages : [];
+  paintTailSource(true, messages.length, data.ready ? "" : "rattrapage en cours");
+
+  let appended = 0;
+  for (const msg of messages) {
+    const key = offsetKey(msg);
+    if (seenOffsets.has(key)) continue;
+    seenOffsets.add(key);
+    addRow(msg.level || "inf", msg.text || "", msg.ts);
+    appended += 1;
+  }
+
+  // Un topic muet doit se voir : on le dit une fois, sans inventer de lignes.
+  if (!messages.length && first) {
+    addRow("inf", "otel.logs · topic lu · aucun message pour l'instant");
+  }
+
+  setStatus(
+    messages.length
+      ? `otel.logs · ${messages.length} message${messages.length > 1 ? "s" : ""} · ${data.topic}`
+      : "otel.logs · en attente",
+  );
+
+  // L'anneau serveur est borne : on borne aussi le compteur cote client.
+  if (seenOffsets.size > 4000) seenOffsets.clear();
+  return appended;
+}
+
+async function tailLoop() {
+  await tailOnce(true);
+  setInterval(() => tailOnce(false), TAIL_POLL_MS);
+}
+
 updateAgentsMeta();
-setTimeout(feed, 500);
+tailLoop();
+
+// Reprise des cartes : un rafraichissement ne doit pas effacer un agent qui
+// tourne encore. Asynchrone, silencieux en cas d'echec — jamais bloquant.
+restoreAgents().catch(() => {
+  addRow("dbg", "reprise agents · indisponible · la console reste utilisable");
+});
 
 if (params.get("demo") === "error" || params.get("demo") === "agent") {
   setTimeout(fireError, 600);
