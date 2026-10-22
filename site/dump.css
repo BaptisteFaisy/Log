@@ -1,0 +1,23 @@
+/* ------------------------------------------------------------------ */
+/* Bouton « SQL dump » (dump.js)                                       */
+/*                                                                    */
+/* Le bouton vit dans l'en-tete du panneau db et herite de .btn.       */
+/* Regles ci-dessous : libelle court sur mobile + etat de chargement.  */
+/* ------------------------------------------------------------------ */
+
+.btn-sql-short { display: none; }
+
+/* Sur mobile l'en-tete du panneau est etroit : le titre pg-memoire
+   passait sur deux lignes a cause du libelle complet. */
+@media (max-width: 640px) {
+  .db-head .btn-sql-label { display: none; }
+  .db-head .btn-sql-short { display: inline; }
+
+  /* Repli : le bouton ne doit pas disparaitre comme les autres liens
+     .btn-ghost de la barre du haut. */
+  .topbar .btn-ghost.btn-sql { display: inline-flex; }
+}
+
+/* Etat de chargement pendant la recuperation du fichier. */
+.btn-sql[aria-busy="true"],
+#dumpSql[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
