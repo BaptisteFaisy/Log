@@ -4,6 +4,7 @@
     "api/dump.js": { "maxDuration": 60 },
     "api/kafka.js": { "maxDuration": 30 },
     "api/incident.js": { "maxDuration": 30, "includeFiles": "scenarios/**" },
-    "api/report.js": { "maxDuration": 30 }
+    "api/report.js": { "maxDuration": 30 },
+    "api/tail.js": { "maxDuration": 60 }
   }
 }

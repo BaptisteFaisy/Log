@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
 
   let result;
   try {
-    result = await tailMessages(limit, 5000);
+    result = await tailMessages(limit, 12000);
   } catch (err) {
     const configError = err instanceof KafkaConfigError;
     // le detail brut (adresse du broker...) reste dans les journaux serveur

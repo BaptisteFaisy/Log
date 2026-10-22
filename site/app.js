@@ -391,6 +391,7 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
     entry.state = "done";
     card.dataset.state = "done";
     card.dataset.outcome = outcome;
+    delete card.dataset.simulated; // l'affichage simule est remplace par le reel
     logTag.textContent = tag;
     logText.textContent = text;
     addRow(terminalLevel, text);
@@ -419,9 +420,14 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
 
       if (response.status === 404) {
         // Pas encore de rapport : le watcher a pris la trace, l'agent tourne.
-        // La carte peut deja avoir ete terminee par la simulation : on ne la
-        // repeint pas, sinon les etapes affichees repartent en arriere.
-        if (entry.state !== "done") setPhase(1, restored ? "running · reprise" : `running · ${elapsed()}`);
+        // Si la simulation a deja termine son affichage, on ne repeint pas les
+        // etapes (elles repartiraient en arriere) : on affiche seulement le
+        // temps d'attente du vrai rapport.
+        if (entry.simulatedDone) {
+          stateEl.textContent = `rapport en attente · ${elapsed()}`;
+        } else if (entry.state !== "done") {
+          setPhase(1, restored ? "running · reprise" : `running · ${elapsed()}`);
+        }
         if (Date.now() - startedAt > POLL_MAX_MS) {
           done(
             "failed", "err",

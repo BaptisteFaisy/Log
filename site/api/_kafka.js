@@ -388,8 +388,12 @@ async function findReport(traceId, timeoutMs) {
  * avant cela, la lecture est un rattrapage et le site le dit.
  */
 const TAIL_MAX = 400;
+const TAIL_BACKFILL = 60;
 const TAIL_READY_TIMEOUT_MS = 30000;
-const TAIL_GROUP_PREFIX = "otel-watch-site-tail";
+/* Le prefixe de groupe doit rester dans le perimetre autorise par l'ACL Aiven
+   du compte du site (meme prefixe que le lecteur de rapports, qui fonctionne
+   en production) : un groupe hors de ce prefixe est refuse par le broker. */
+const TAIL_GROUP_PREFIX = "otel-watch-site-reader";
 
 let tailReader = null;
 
@@ -468,7 +472,13 @@ function startTail(cfg) {
   consumer.on(consumer.events.CRASH, (event) => {
     const { error, restart } = event.payload;
     process.stderr.write(`tail otel.logs : arret (${error && error.message}), restart=${restart}\n`);
-    if (restart) return;
+    // kafkajs relance seul (restart=true) : c'est le cas normal d'un SASL
+    // transitoire sur le coordinateur de groupe (Vercel lhr1 -> do-fra).
+    // Jeter le lecteur ici transformerait une coupure d'une seconde en 503.
+    if (restart) {
+      self.ready = self.messages.length > 0;
+      return;
+    }
     discardTail(new KafkaDownError(readable(error)));
   });
 
@@ -503,11 +513,38 @@ function startTail(cfg) {
       await consumer.subscribe({ topics: [topic], fromBeginning: true });
       if (settled()) self.ready = true;
 
+      const seeked = new Set();
       await consumer.run({
         autoCommit: false,
-        eachMessage: async ({ partition, message }) => {
-          self.reached.set(Number(partition), Number(message.offset) + 1);
-          pushTail(self, Number(partition), message);
+        // eachBatch (et non eachMessage) pour pouvoir SAUTER le debut du topic :
+        // relire 10 000 messages a chaque demarrage a froid ferait expirer la
+        // fonction Vercel. On recule seulement de TAIL_BACKFILL messages.
+        eachBatch: async ({ batch }) => {
+          const partition = Number(batch.partition);
+          const high = self.targets.get(partition);
+          if (!seeked.has(partition)) {
+            seeked.add(partition);
+            let first = null;
+            try {
+              first = Number(batch.firstOffset());
+            } catch (err) {
+              first = null; // lot vide : rien a sauter
+            }
+            if (first !== null && high != null && first < high - TAIL_BACKFILL) {
+              const target = Math.max(0, high - TAIL_BACKFILL);
+              consumer.seek({
+                topic: batch.topic,
+                partition: batch.partition,
+                offset: String(target),
+              });
+              self.reached.set(partition, target);
+              return;
+            }
+          }
+          for (const message of batch.messages) {
+            self.reached.set(partition, Number(message.offset) + 1);
+            pushTail(self, partition, message);
+          }
           if (!self.ready && settled()) self.ready = true;
         },
       });
@@ -530,11 +567,13 @@ async function tailMessages(limit, waitMs) {
   const self = tailReader && !tailReader.error ? tailReader : startTail(cfg);
   const wanted = Math.max(1, Math.min(Number(limit) || 60, TAIL_MAX));
   const deadline = Date.now() + (Number(waitMs) || 5000);
-  while (!self.ready && !self.error && Date.now() < deadline) {
+  // On attend soit le rattrapage complet, soit le premier message : la premiere
+  // negociation de groupe peut prendre plusieurs secondes depuis Vercel.
+  while (!self.error && !(self.ready && self.messages.length) && Date.now() < deadline) {
     await sleep(150);
   }
-  if (self.error) throw self.error;
-  if (!self.ready && Date.now() - self.startedAt > TAIL_READY_TIMEOUT_MS) {
+  if (self.error && !self.messages.length) throw self.error;
+  if (!self.ready && !self.messages.length && Date.now() - self.startedAt > TAIL_READY_TIMEOUT_MS) {
     throw new KafkaDownError("lecture de otel.logs trop longue (consommateur non pret)");
   }
   return {
