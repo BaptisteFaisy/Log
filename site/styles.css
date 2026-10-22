@@ -1364,9 +1364,7 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
 
 body {
   font-family: "Inter", sans-serif;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 79px, rgba(10, 10, 10, 0.07) 79px 80px),
-    var(--paper);
+  background: var(--paper);
 }
 
 body::before {
@@ -1408,6 +1406,14 @@ body::before {
 .btn-primary:hover { background: var(--red); color: var(--ink); }
 .btn:focus-visible { box-shadow: 4px 4px 0 var(--line), 0 0 0 3px rgba(10, 10, 10, 0.18); }
 .btn-sm { padding: 7px 11px; font-size: 10.5px; box-shadow: 3px 3px 0 var(--line); }
+
+.btn[data-state="done"] {
+  background: var(--ok);
+  color: #fff;
+  border-color: var(--line);
+}
+.btn[data-state="done"]:hover { transform: none; box-shadow: 4px 4px 0 var(--line); }
+.btn[data-state="done"][disabled] { opacity: 1; }
 
 .terminal,
 .agents {

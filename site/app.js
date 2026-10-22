@@ -480,6 +480,33 @@ fireBtn.addEventListener("click", fireError);
 
 const dbBtn = document.getElementById("db-test");
 const kafkaBtn = document.getElementById("kafka");
+const KAFKA_LABEL = "Intégrer Kafka Aiven";
+const KAFKA_DONE = "Kafka Aiven intégré";
+let kafkaBusy = false;
+let kafkaIntegrated = false;
+
+function setKafkaButton(state, label) {
+  if (!kafkaBtn) return;
+  kafkaBtn.dataset.state = state;
+  kafkaBtn.textContent = label;
+  kafkaBtn.disabled = state === "busy" || state === "done";
+  kafkaBtn.setAttribute("aria-busy", state === "busy" ? "true" : "false");
+}
+
+async function kafkaRequest(method) {
+  const response = await fetch("/api/kafka", {
+    method,
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || `http ${response.status}`);
+    error.code = data.error;
+    throw error;
+  }
+  return data;
+}
 
 function testDatabase() {
   addRow("inf", "db test · PostgreSQL Aiven · pg-memoire/historique");
@@ -490,17 +517,49 @@ function testDatabase() {
   }, 420);
 }
 
-function integrateKafka() {
-  addRow("inf", "kafka aiven · bootstrap agent-kafka · topic otel.logs");
+async function refreshKafkaState() {
+  if (!kafkaBtn) return;
+  try {
+    const state = await kafkaRequest("GET");
+    if (state.integrated) {
+      kafkaIntegrated = true;
+      setKafkaButton("done", `${KAFKA_DONE} ✓`);
+      addRow("ok", `kafka aiven · topic ${state.topic} · déjà intégré (${state.partitions} partition${state.partitions > 1 ? "s" : ""})`);
+      setStatus("kafka aiven intégré");
+      return;
+    }
+    setKafkaButton("idle", KAFKA_LABEL);
+  } catch (error) {
+    // Cluster non configuré ou injoignable : le bouton reste actionnable.
+    setKafkaButton("idle", KAFKA_LABEL);
+  }
+}
+
+async function integrateKafka() {
+  if (!kafkaBtn || kafkaBusy || kafkaIntegrated) return;
+  kafkaBusy = true;
+  setKafkaButton("busy", "Intégration en cours…");
+  addRow("inf", "kafka aiven · connexion au cluster Aiven…");
   setStatus("kafka aiven en cours");
-  setTimeout(() => {
-    addRow("ok", "kafka aiven · producteur connecté · ack=all");
-    setStatus("kafka aiven connecté");
-  }, 520);
+  try {
+    const result = await kafkaRequest("POST");
+    kafkaIntegrated = true;
+    setKafkaButton("done", `${KAFKA_DONE} ✓`);
+    addRow("ok", `kafka aiven · message publié · ${result.topic} · p${result.partition} · offset ${result.offset}`);
+    setStatus("kafka aiven intégré");
+  } catch (error) {
+    const reason = error.code === "not_configured" ? "configuration Kafka absente côté serveur" : error.message;
+    addRow("err", `kafka aiven · échec · ${reason}`);
+    setStatus("kafka aiven en échec");
+    setKafkaButton("idle", "Réessayer l'intégration");
+  } finally {
+    kafkaBusy = false;
+  }
 }
 
 if (dbBtn) dbBtn.addEventListener("click", testDatabase);
 if (kafkaBtn) kafkaBtn.addEventListener("click", integrateKafka);
+refreshKafkaState();
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && event.target === document.body) {
