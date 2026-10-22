@@ -4830,3 +4830,4 @@
   "missing_topics": [],
   "warnings": []
 }
+{"ok": false, "error": "kafka_unreachable", "hint": "broker injoignable sur localhost:9092 : KafkaError{code=_TIMED_OUT,val=-185,str=\"Failed to get metadata: Local: Timed out\"} -> verifie le service Aiven (avn service get agent-kafka), le port dans components[] et l'ACL Describe"}
