@@ -14,7 +14,10 @@
 
 const { Kafka, logLevel } = require("kafkajs");
 
-const TOPIC = process.env.KAFKA_TOPIC || "otel.logs";
+// Le projet Vercel « log » definit KAFKA_BOOTSTRAP et KAFKA_TOPIC_PREFIX ; les
+// deux orthographes sont acceptees pour ne pas dependre du nom choisi.
+const PREFIX = (process.env.KAFKA_TOPIC_PREFIX || "otel").trim() || "otel";
+const TOPIC = process.env.KAFKA_TOPIC || `${PREFIX}.logs`;
 const TIMEOUT_MS = Number(process.env.KAFKA_TIMEOUT_MS) || 8000;
 
 function readCa() {
@@ -24,7 +27,7 @@ function readCa() {
 }
 
 function kafkaConfig() {
-  const brokers = (process.env.KAFKA_BROKERS || process.env.KAFKA_BOOTSTRAP || "")
+  const brokers = (process.env.KAFKA_BOOTSTRAP || process.env.KAFKA_BROKERS || "")
     .split(",")
     .map((broker) => broker.trim())
     .filter(Boolean);
