@@ -37,3 +37,19 @@
   - app demarre (uvicorn 8077) : /healthz -> {"ok":true,"pgvector":true,"embed_dim":384,"database":true,"valkey":true}
   - valkey : ping True (Valkey 7.2.4), set/get OK en TLS, schema.rds() OK
   - Kafka (:9092) et services Kafka des autres agents non touches ; aucun git ; depot Log toujours inexistant
+
+2026-10-22T09:35:00+02:00 [agent-opencode] GitHub BaptisteFaisy/Log : push initial + push automatique
+  - le repo BaptisteFaisy/Log EXISTAIT deja (cree a 07:00:34Z par un autre agent) mais etait VIDE (size=0, aucun commit)
+  - push par SSH (git@github.com:BaptisteFaisy/Log.git), branche main, identite Baptiste / 119856854+BaptisteFaisy@users.noreply.github.com
+  - 4 commits : 8f2bc44 (etat initial, 29 fichiers) -> 0223538 -> b6aec27
+  - 30 fichiers suivis = copie integrale de ~/logs (historique-pg, kafka-health, decision-router, api-audit,
+    scope-watch, phone-*, suite-pilot*, incidents/, cleanup-*/, pre-kill-*/) + .gitignore + README.md
+  - SECURITE : scan BLOQUANT avant chaque push (bin/scan-secrets.py) sur les 5 familles de secrets de la machine
+    (PGADMIN/PGAPP/VALAPP, aiven_token, gh oauth token, gh PAT) + motifs generiques (gho_/ghp_/github_pat_/aivenv1/
+    avnpw_/sk-/Bearer/DSN avec mot de passe/cle PEM/hex 24)
+  - controle POSITIF du scanner valide sur fichier de test (7 detections) puis sur le reel : PROPRE
+  - test de garde-fou : secret plante dans ~/logs -> PUSH ANNULE (rc=1, HEAD inchange), apres nettoyage -> push OK ;
+    0 occurrence du jeton dans l'historique git et dans tous les objets
+  - .gitignore : deny-list (.aiven_token, *.token, remote-password*.txt, *.pem, id_ed25519*, .env, creds.env, log-sync.log)
+  - push AUTOMATIQUE (AGENTS.md) : ~/.config/systemd/user/log-sync.{service,timer} -> bin/sync-logs.sh toutes les 10 min,
+    timer enabled+active, verrou flock (une instance a la fois), journal dans ~/logs/log-sync.log (non versionne)
