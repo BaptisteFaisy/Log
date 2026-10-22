@@ -4,6 +4,8 @@
 
 (() => {
   const ENDPOINT = "/api/pg-memoire";
+  // Ligne complete : /api/pg-memoire tronque les cellules, la popup a besoin du texte entier.
+  const ROW_ENDPOINT = "/api/pg-memoire-row";
   const REFRESH_MS = 30000;
 
   // Tout en bas de la page : après la section Observability si elle existe.
@@ -63,6 +65,153 @@
   panel.append(head, tabs, info, view, foot);
   section.append(panel);
   anchor.after(section);
+
+  /* Popup : une ligne entiere ------------------------------------------ */
+
+  // Un seul <dialog> reutilise pour chaque ligne : le panneau reste en place,
+  // et Échap, le bouton Fermer ou un clic sur le fond le referment.
+  const dialog = el("dialog", "db-dialog");
+  dialog.setAttribute("aria-labelledby", "dbDialogTitle");
+
+  const dialogHead = el("header", "db-dialog-head");
+  const dialogTitles = el("div", "db-dialog-titles");
+  const dialogTitle = el("h3", "", "row");
+  dialogTitle.id = "dbDialogTitle";
+  dialogTitles.append(el("span", "db-dialog-kicker", "pg-memoire · full row"), dialogTitle);
+  const dialogBadge = el("span", "db-dialog-badge", "");
+  dialogHead.append(dialogTitles, dialogBadge);
+
+  const dialogBody = el("div", "db-dialog-body");
+
+  const dialogFoot = el("footer", "db-dialog-foot");
+  const dialogStatus = el("span", "db-dialog-status", "");
+  dialogStatus.setAttribute("role", "status");
+  const copyButton = el("button", "btn btn-sm btn-ghost", "Copy text");
+  copyButton.type = "button";
+  const closeButton = el("button", "btn btn-sm btn-ghost", "Close");
+  closeButton.type = "button";
+  dialogFoot.append(dialogStatus, copyButton, closeButton);
+
+  dialog.append(dialogHead, dialogBody, dialogFoot);
+  document.body.append(dialog);
+
+  // Texte mis dans le presse-papiers : la colonne « resolution » si elle existe,
+  // sinon la valeur la plus longue de la ligne.
+  let copyText = "";
+
+  const textLength = (value) => (value === null || value === undefined ? 0 : String(value).length);
+
+  function renderRow(row) {
+    dialogBadge.textContent = row.kind || "row";
+    dialogTitle.textContent = `${row.table} · ${row.primaryKey} ${row.key}`;
+
+    const fields = row.columns.map((column, i) => ({ name: column.name, type: column.type, value: row.values[i] }));
+    const resolution = fields.find((field) => field.name === "resolution");
+    const longest = fields.reduce((best, field) => (textLength(field.value) > textLength(best.value) ? field : best), fields[0]);
+    copyText = String((resolution || longest || {}).value || "");
+
+    const blocks = fields.map((field) => {
+      const block = el("div", "db-field");
+
+      const fieldHead = el("div", "db-field-head");
+      fieldHead.append(el("strong", "", field.name), el("small", "", field.type));
+
+      const value = el("pre", "db-field-value");
+      if (field.value === null || field.value === undefined) value.append(el("span", "db-null", "null"));
+      else value.textContent = field.value;
+
+      block.append(fieldHead, value);
+      return block;
+    });
+
+    dialogBody.replaceChildren(...blocks);
+    dialogBody.scrollTop = 0;
+
+    const bits = [plural(fields.length, "column")];
+    if (row.hidden && row.hidden.length) bits.push(`hidden: ${row.hidden.join(", ")}`);
+    if (row.truncated) bits.push(`text cut at ${row.cellLimit} characters`);
+    dialogStatus.textContent = bits.join(" · ");
+  }
+
+  function renderRowError(message, detail) {
+    dialogBadge.textContent = "error";
+    dialogStatus.textContent = message;
+    copyText = "";
+
+    const empty = el("div", "db-empty");
+    const orb = el("span", "agents-empty-orb");
+    orb.setAttribute("aria-hidden", "true");
+    empty.append(orb, el("p", "", message), el("span", "", detail));
+    dialogBody.replaceChildren(empty);
+  }
+
+  async function openRow(database, table, key, keyColumn) {
+    dialogBadge.textContent = "loading";
+    dialogTitle.textContent = `${table} · ${keyColumn || "id"} ${key}`;
+    dialogStatus.textContent = "fetching the full row";
+    copyText = "";
+
+    const loading = el("div", "db-empty");
+    const orb = el("span", "agents-empty-orb");
+    orb.setAttribute("aria-hidden", "true");
+    loading.append(orb, el("p", "", "loading row"), el("span", "", `${database}.${table} · ${key}`));
+    dialogBody.replaceChildren(loading);
+
+    if (!dialog.open) dialog.showModal();
+
+    const params = [
+      `db=${encodeURIComponent(database)}`,
+      `table=${encodeURIComponent(table)}`,
+      `id=${encodeURIComponent(key)}`,
+    ];
+    if (keyColumn) params.push(`key=${encodeURIComponent(keyColumn)}`);
+    const query = params.join("&");
+    const started = performance.now();
+
+    try {
+      const response = await fetch(`${ROW_ENDPOINT}?${query}`, { headers: { Accept: "application/json" } });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || !Array.isArray(data.columns)) {
+        throw new Error((data && data.error) || `HTTP ${response.status}`);
+      }
+      renderRow(data);
+      log("inf", `GET ${ROW_ENDPOINT}?${query} 200 · ${plural(data.columns.length, "column")} · ${Math.round(performance.now() - started)} ms`);
+    } catch (error) {
+      renderRowError("row unavailable", `${ROW_ENDPOINT} · ${error.message}`);
+      log("wrn", `GET ${ROW_ENDPOINT} failed · ${error.message}`);
+    }
+  }
+
+  closeButton.addEventListener("click", () => dialog.close());
+
+  // Clic sur le fond assombri : ferme la popup.
+  dialog.addEventListener("click", (event) => {
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    const inside =
+      event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+    if (!inside) dialog.close();
+  });
+
+  copyButton.addEventListener("click", async () => {
+    if (!copyText) {
+      dialogStatus.textContent = "nothing to copy";
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      dialogStatus.textContent = "copied";
+    } catch {
+      // Presse-papiers refuse (contexte non securise) : on selectionne le texte.
+      const range = document.createRange();
+      range.selectNodeContents(dialogBody);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      dialogStatus.textContent = "press Ctrl+C to copy the selection";
+    }
+  });
 
   const state = { data: null, current: null, counts: null, down: new Set(), timer: null, busy: false };
 
@@ -132,6 +281,14 @@
     view.replaceChildren(empty);
   }
 
+  // Colonne qui identifie une ligne : annoncée par /api/pg-memoire (`table.key`).
+  // Sans elle, les lignes ne sont pas cliquables.
+  function keyIndex(table) {
+    if (!table.key) return -1;
+    const i = table.columns.indexOf(table.key);
+    return i;
+  }
+
   function renderTable() {
     const found = findTable(state.current);
 
@@ -142,9 +299,11 @@
     }
 
     const { db, table } = found;
+    const idIndex = keyIndex(table);
     const bits = [`${db.name}.${table.name}`, plural(table.rows, "row")];
     if (table.rows > table.sample.length) bits.push(`latest ${table.sample.length}`);
     if (table.orderBy) bits.push(`order by ${table.orderBy} desc`);
+    if (idIndex >= 0) bits.push(`click a row for the full text`);
     if (table.hidden.length) bits.push(`hidden: ${table.hidden.join(", ")}`);
     info.textContent = bits.join(" · ");
 
@@ -184,6 +343,24 @@
         }
         tr.append(td);
       });
+
+      // Ligne cliquable : ouvre la popup avec le texte complet de la ligne.
+      const key = idIndex >= 0 ? row[idIndex] : null;
+      if (key !== null && key !== undefined && key !== "") {
+        const label = `${table.columns[idIndex]} ${key}`;
+        tr.dataset.key = String(key);
+        tr.tabIndex = 0;
+        tr.setAttribute("role", "button");
+        tr.setAttribute("aria-label", `Open the full row ${db.name}.${table.name} ${label}`);
+        tr.title = `Open ${db.name}.${table.name} ${label}`;
+        const open = () => openRow(db.name, table.name, String(key), table.key);
+        tr.addEventListener("click", open);
+        tr.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          open();
+        });
+      }
 
       tbody.append(tr);
     }

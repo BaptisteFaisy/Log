@@ -67,9 +67,15 @@ function connectionFor(database) {
 }
 
 // Tables et colonnes lisibles du schema public, en une seule requete.
+// `pk` : la cle primaire quand la relation en a une (les vues n'en ont jamais).
 const CATALOG_SQL = `
   SELECT c.relname AS name,
          c.relkind AS kind,
+         (SELECT a2.attname
+            FROM pg_index i
+            JOIN pg_attribute a2 ON a2.attrelid = i.indrelid AND a2.attnum = i.indkey[0]
+           WHERE i.indrelid = c.oid AND i.indisprimary
+           LIMIT 1) AS pk,
          json_agg(json_build_object('name', a.attname, 'type', t.typname) ORDER BY a.attnum) AS columns
   FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -81,6 +87,15 @@ const CATALOG_SQL = `
     AND has_table_privilege(c.oid, 'SELECT')
   GROUP BY c.oid, c.relname, c.relkind
   ORDER BY c.relname`;
+
+// Colonne qui identifie une ligne dans le panneau. La meme regle sert ici et
+// dans /api/pg-memoire-row : le front n'a donc pas a la deviner.
+function keyColumn(columns, pk) {
+  const names = columns.map((column) => column.name);
+  if (pk && names.includes(pk)) return pk;
+  if (names.includes("id")) return "id";
+  return null;
+}
 
 function selectExpression(column) {
   const id = quoteIdent(column.name);
@@ -140,6 +155,7 @@ async function readDatabase(database) {
         kind: KINDS[relation.kind],
         rows: total,
         orderBy,
+        key: keyColumn(shown, relation.pk),
         columns: shown.map((column) => column.name),
         types: shown.map(typeName),
         hidden,

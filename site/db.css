@@ -234,6 +234,11 @@
 
 .db-table tbody tr:hover td { background: rgba(255, 46, 147, 0.16); }
 
+/* Ligne cliquable : ouvre la popup « ligne complete » */
+.db-table tbody tr[data-key] { cursor: pointer; }
+.db-table tbody tr[data-key]:focus-visible { outline: 3px solid var(--line); outline-offset: -3px; }
+.db-table tbody tr[data-key]:focus-visible td { background: rgba(255, 46, 147, 0.22); }
+
 .db-cell {
   max-width: 360px;
   overflow: hidden;
@@ -295,6 +300,178 @@
   .db-scroll { max-height: 380px; }
   .db-cell { max-width: 240px; }
   .db-foot .foot-right > :not(:last-child) { display: none; }
+}
+
+/* Popup : une ligne entiere ------------------------------------------- */
+
+.db-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(84vh, 780px);
+  padding: 0;
+  color: var(--ink-2);
+  background: var(--panel);
+  border: 3px solid var(--line);
+  box-shadow: 9px 9px 0 var(--red), 9px 9px 0 3px var(--line);
+  overflow: hidden;
+}
+
+.db-dialog::backdrop { background: rgba(10, 10, 10, 0.55); }
+
+.db-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  animation: db-dialog-in 0.14s ease-out;
+}
+
+@keyframes db-dialog-in {
+  from { transform: translate(4px, 4px); opacity: 0.4; }
+  to { transform: translate(0, 0); opacity: 1; }
+}
+
+.db-dialog-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--ink);
+  color: #fff;
+  border-bottom: 3px solid var(--line);
+}
+
+.db-dialog-titles { display: grid; gap: 1px; min-width: 0; }
+
+.db-dialog-titles h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.db-dialog-kicker {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.db-dialog-badge {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--red);
+  border: 2px solid var(--red);
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.db-dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  background: var(--paper);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 22, 20, 0.16) transparent;
+  overscroll-behavior: contain;
+}
+
+.db-dialog-body::-webkit-scrollbar { width: 9px; }
+.db-dialog-body::-webkit-scrollbar-track { background: transparent; }
+.db-dialog-body::-webkit-scrollbar-thumb {
+  background: rgba(26, 22, 20, 0.14);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.db-field {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+.db-field-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 9px;
+  border-bottom: 2px solid var(--line);
+  background: var(--red);
+}
+
+.db-field-head strong {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.db-field-head small {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  color: rgba(10, 10, 10, 0.6);
+}
+
+.db-field-value {
+  margin: 0;
+  padding: 8px 9px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+}
+
+.db-field-value .db-null { color: #b3aaa4; }
+
+.db-dialog-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-top: 3px solid var(--line);
+  background: var(--panel);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.db-dialog-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-3);
+}
+
+@media (max-width: 640px) {
+  .db-dialog { width: calc(100vw - 20px); max-height: 88vh; }
+  .db-dialog-foot { flex-wrap: wrap; }
+  .db-dialog-status { flex-basis: 100%; white-space: normal; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-dialog[open] { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

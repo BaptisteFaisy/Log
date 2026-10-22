@@ -89,10 +89,6 @@
       <header class="obs-head">
         <div class="obs-titles">
           <h2 id="obsTitle">Observability</h2>
-          <p>
-            before = first resolution (no memo) · after = recurrence using the resolution method
-            stored in the database
-          </p>
         </div>
         <div class="obs-actions">
           <span id="obsSource" class="obs-source">source · localStorage</span>
@@ -103,7 +99,6 @@
         <div class="obs-toolbar">
           <button class="btn btn-ghost btn-sm" type="button" data-action="json">Export JSON</button>
           <button class="btn btn-ghost btn-sm" type="button" data-action="csv">Export CSV</button>
-          <button class="btn btn-ghost btn-sm" type="button" data-action="memos">Clear memos</button>
           <button class="btn btn-ghost btn-sm" type="button" data-action="reset">Reset</button>
         </div>
 
@@ -111,22 +106,10 @@
 
         <div class="obs-table-wrap">
           <table id="obsTable" class="obs-table">
-            <caption>
-              Per-error metrics — resolution time and tokens before / after memoization.
-              Click a row to expand the step details.
-            </caption>
             <thead></thead>
             <tbody id="obsTableBody"></tbody>
           </table>
         </div>
-
-        <p class="obs-legend">
-          <span class="obs-badge" data-mode="cold">cold</span> before = first resolution, no
-          memo · <span class="obs-badge" data-mode="warm">warm · memo</span> after = recurrence using the
-          resolution method read from the database ·
-          <span class="obs-badge" data-mode="warm_degraded">warm degraded</span> recurrence with no
-          usable memo (excluded from warm averages)
-        </p>
       </div>
     </div>
   </section>

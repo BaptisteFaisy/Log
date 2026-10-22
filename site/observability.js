@@ -42,8 +42,6 @@
     });
   };
 
-  const weak = (n) => (n != null && n < 3 ? " · small sample" : "");
-
   function kpi(label, value, sub, tone) {
     const card = el("div", "obs-kpi");
     if (tone) card.dataset.tone = tone;
@@ -64,11 +62,11 @@
     const approx = snap.runs.some((r) => r.tokens.estimated) ? "≈" : "";
     const tok = (n) => (n == null ? "—" : `${approx}${fmtTokens(n)}`);
     kpisEl.replaceChildren(
-      kpi("Median time before", fmtMs(t.median_duration_cold), `cold · n=${t.n_cold}${weak(t.n_cold)}`),
-      kpi("Median time after", fmtMs(t.median_duration_warm), `warm · n=${t.n_warm}${weak(t.n_warm)}`),
+      kpi("Median time before", fmtMs(t.median_duration_cold)),
+      kpi("Median time after", fmtMs(t.median_duration_warm)),
       kpi("Time saved", fmtDelta(t.delta_time_pct), `${fmtMs(t.time_saved_ms)} saved`, "gain"),
-      kpi("Median tokens before", tok(t.median_tokens_cold), `cold · n=${t.n_cold}${weak(t.n_cold)}`),
-      kpi("Median tokens after", tok(t.median_tokens_warm), `warm · n=${t.n_warm}${weak(t.n_warm)}`),
+      kpi("Median tokens before", tok(t.median_tokens_cold)),
+      kpi("Median tokens after", tok(t.median_tokens_warm)),
       kpi("Tokens saved", fmtDelta(t.delta_tokens_pct), `${fmtTokens(t.tokens_saved)} saved`, "gain"),
       kpi("Tokens used", tok(t.tokens_total), `${fmtTokens(t.tokens_cold)} cold · ${fmtTokens(t.tokens_warm)} warm`),
       kpi("Memo hit rate", t.memo_hit_rate == null ? "—" : `${Math.round(t.memo_hit_rate * 100)} %`, `${t.n_warm} warm · ${t.n_warm_degraded} degraded`),
