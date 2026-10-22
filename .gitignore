@@ -24,6 +24,9 @@ known_hosts
 creds.env
 secrets/
 
+# journal du sync lui-meme (ecrit par bin/sync-logs.sh -> ~/logs/)
+log-sync.log
+
 # divers
 *.pyc
 __pycache__/
