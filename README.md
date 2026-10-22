@@ -621,6 +621,36 @@ Base PostgreSQL `historique` du service Aiven `pg-memoire` (plan `hobbyist`).
 Chaque bug connu y est stocké sous forme d'un **nom + une résolution**, pour
 que l'agent suivant confronté au même bug reparte d'une piste.
 
+#### À quoi ça sert, concrètement
+
+`pg-memoire` est la **mémoire longue des bugs** : c'est la seule base de la
+flotte qui garde la trace d'un problème *déjà résolu* et de *comment* il l'a
+été. Sans elle, chaque agent repart de zéro et re-diagnostique le même incident
+la semaine suivante.
+
+Le cycle qu'elle rend possible :
+
+1. **Avant** d'analyser, l'agent de diagnostic cherche le nom du problème
+   signalé dans la base (`trouver`, insensible à la casse et aux accents).
+2. S'il trouve une entrée, il **réutilise la piste** qu'elle décrit — sans la
+   prendre pour une preuve : il la confronte aux faits observés.
+3. Après résolution, il **documente** : mise à jour de l'entrée existante
+   (*append*, jamais d'écrasement, `occurrences + 1`) ou création d'une
+   nouvelle entrée nom + résolution.
+
+Ce qu'elle n'est **pas** :
+
+- ni un journal d'événements — les logs sont dans `~/logs/` et ce dépôt ;
+- ni le catalogue d'erreurs applicatives — c'est `pg-erreurs` (§8.2), un
+  service **distinct**, avec ses propres identifiants ;
+- ni un cache — c'est `valkey-memoire` (§8.3).
+
+État vérifié le 2026-10-22 : service `RUNNING` (PG 18, `do-lon`), base
+`historique` en ligne, **5 entrées** (timeout de connexion, port PostgreSQL
+changé après recréation du service, mot de passe masqué dans l'API Aiven,
+`password authentication failed` via `avn service cli psql`, auth PG après
+recréation).
+
 **Table `historique` — 6 colonnes :**
 
 | colonne | type | rôle |
