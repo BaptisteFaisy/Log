@@ -376,11 +376,13 @@ suivant.
 
 Tous produits dans `~/logs/`, copiés ici. **Format et producteur** :
 
-### `kafka-health.log` — 340 Ko, 1 ligne/minute
+### `kafka-health.log` — 340 Ko, ~10 400 lignes
 
 Producteur : `kafka-health.timer` → `bin/kafka-health --deep --json`.
 
-Une ligne JSON par sonde :
+Ce fichier mélange **deux formats**, il faut le savoir avant de le parser :
+
+**Format 1 — sonde courte, une ligne JSON** (les 422 premières lignes) :
 
 ```json
 {"state":"DOWN","ok":false,"bootstrap":"localhost:9092","tcp_reachable":false,
@@ -389,56 +391,86 @@ Une ligne JSON par sonde :
 ```
 
 Champs à lire : `state` (`UP`/`DEGRADED`/`DOWN`), `ok`, `tcp_reachable`,
-`findings[]` (`level`, `code`, `msg`). Codes de sortie du script :
-`0` OK, `1` usage, `2` config, `3` DOWN.
+`findings[]` (`level`, `code`, `msg`). Codes de sonde vus : `tcp_ok`,
+`tcp_unreachable`, `brokers`, `topics`.
 
-### `decision-router.log` — 120 Ko
+**Format 2 — rapport profond, JSON indenté sur plusieurs lignes** (à partir de
+la ligne 423) : `topics{partitions, topic_id, detail[leader, replicas, isrs]}`,
+`brokers[{id, host, port}]`, `consumer_groups[{group_id, state}]`
+(`EMPTY` / `STABLE`), `expected_topics`, `missing_topics`, `warnings`.
 
-Producteur : le routeur de décisions (course de modèles).
+> ⚠️ Ce fichier n'est **pas** du JSONL pur : `jq` ligne à ligne échoue sur la
+> partie indentée. Les erreurs du client librdkafka (`%5|epoch|REQTMOUT|…`) y
+> sont aussi entremêlées, plus des `{"ok":false,"error":"kafka_unreachable"}`.
 
-Une ligne JSON par événement de routage :
+Codes de sortie du script : `0` OK, `1` usage, `2` config, `3` DOWN.
+
+### `decision-router.log` — 120 Ko, 565 lignes — *historique*
+
+Producteur : `~/bin/decision-router --port 8799`, routeur local interposé
+entre `phone-task` et le gateway Vercel. **Le script a été supprimé le 21/10**
+(unit archivée dans `cleanup-20261021-121324/`) : ce journal **n'évolue plus**,
+c'est une archive. **Aucun lien avec OpenCode** (zéro occurrence
+`agent`/`session`).
+
+Une ligne JSON par événement. Trois types :
 
 ```json
 {"at":"2026-10-21T01:24:31","event":"fail","model":"winnow:e4b","status":0,
  "kind":"transient","cooldown":30,"detail":"[Errno 111] Connection refused"}
+{"at":"2026-10-21T01:25:30","event":"route","model":"perplexity/pplx-decider-v1.2",
+ "ms":1445,"attempts":2,"tokens":1553}
 {"at":"2026-10-21T14:25:16","event":"race","model":"perplexity/pplx-decider-flash-v1.2",
  "chosen":"perplexity/pplx-decider-flash-v1.2","ms":556,"raced":3,"tokens":6009}
 ```
 
-`event` : `fail` (modèle en échec + `kind` + `cooldown`), `race` (plusieurs
-modèles en course, `chosen` = gagnant, `ms` = latence, `raced` = nb de
-concurrents, `tokens` consommés).
+| `event` | Sens | Champs propres |
+|---|---|---|
+| `fail` | un modèle a échoué | `status`, `kind`, `cooldown`, `detail` |
+| `route` | un modèle a répondu | `ms`, `attempts`, `tokens` |
+| `race` | course de plusieurs modèles | `chosen` (gagnant), `raced` (nb concurrents) |
 
-### `api-audit.log` — 11 Ko
+`kind` : `transient`, `restricted`, `rejected`, `missing`, `error`.
+17 modèles distincts, courses de 3.
 
-Producteur : l'API locale (port `8787`).
+### `api-audit.log` — 11 Ko, 67 lignes — *historique*
+
+Producteur : l'API HTTP locale du harnais téléphone (`phone-api.service`,
+port `8787`). **Script retiré depuis** : archive, n'évolue plus.
 
 Une ligne JSON par requête HTTP ou cycle de vie :
 
 ```json
 {"ts":"2026-10-21T00:36:28+02:00","event":"request","method":"GET","path":"/health",
- "client":"127.0.0.1","user":"…","name":"…"}
+ "client":"127.0.0.1","user":"…","authorized":true,"reason":null}
 {"ts":"2026-10-21T11:48:04+02:00","event":"start","port":8787,"serial":"…","pid":651086}
 ```
 
-`event` : `request`, `start`, `stop`. Utile pour corréler un incident avec un
-appel API précis.
+`event` : `request` (42), `state` (14), `start` (10), `shell` (1).
+Routes : `/health`, `/state`, `/status`, `/audit`, `/shell`, `/logcat`,
+`/install`. `authorized` a toujours été `true` — aucun refus enregistré.
+Utile pour corréler un incident avec un appel API précis.
 
-### `historique-pg.log` — 8 Ko
+### `historique-pg.log` — 8 Ko, 6 entrées
 
-Producteur : l'agent de maintenance de la base « historique ».
+Producteur : un **agent OpenCode** — ce ne sont pas des lignes automatiques
+mais des entrées narratives rédigées à la main (préfixe `[agent-opencode]`).
+Le fichier n'est donc **pas strictement chronologique**.
 
-Format **texte horodaté**, pas JSON — c'est un journal de décisions :
+Format **texte**, un bloc = une date + un titre, puis des puces indentées :
 
 ```
 2026-10-22T01:40:00+02:00 [agent-opencode] PROMPT-HISTORIQUE-PGROUCHE.md : version 3 reecrite
   - etat verifie : service Aiven "pg-memoire" ABSENT (0 service dans …) -> prompt v1 obsolete
 ```
 
-Il trace les opérations de provisionnement, les vérifications de schéma et les
-mises à jour de documentation de la base.
+Il trace les **opérations Aiven/SQL** sans jamais citer de SQL brut :
+recréation de `pg-memoire` / `valkey-memoire`, plans, `service_uri_params`,
+`avn service database-create`, extensions (`citext`, `pg_trgm`, `unaccent`),
+migration v1→v2 (11→6 colonnes, 8→6 fonctions), `DATABASE_URL`, tests
+(`occurrences=2`, `format_ok`), push GitHub.
 
-### `incidents/` — 31 fichiers
+### `incidents/` — 33 fichiers (5 `.prompt`, 28 `.log`)
 
 Deux familles :
 
@@ -453,23 +485,52 @@ Deux familles :
 C'est la pièce la plus utile pour comprendre *pourquoi* un agent a conclu ce
 qu'il a conclu : on a l'entrée (`.prompt`) et la sortie (`.log`).
 
-### `scope-watch.log` — 16 Ko
+### `scope-watch.log` — 16 Ko, 237 lignes — *historique*
 
-Producteur : le veilleur de périmètre des agents téléphone. Format texte :
+Producteur : `~/bin/scope-watch` (boucle de 60 s), chien de garde du miroir
+ScreenScope + ADB. **Script supprimé le 21/10** et unit **neutralisée** par un
+drop-in (`ExecStart=/bin/false`) : archive. Format texte :
 
 ```
 2026-10-21T02:32:12 etat: miroir=True adb=False launlse
 2026-10-21T02:32:12 adb toujours injoignable (le 'debogage sans fil' est-il actif ?)
 ```
 
-### `phone-auto.log`, `phone-watch.log`, `phone-wait-adb.log`
+6 redémarrages du service d'accessibilité enregistrés.
+
+### `phone-auto.log`, `phone-watch.log`, `phone-wait-adb.log` — *historique*
 
 Déploiement et supervision des agents téléphone (helpers et services poussés
-sur les machines USB, attente d'`adb`). Format texte horodaté.
+sur les machines USB, attente d'`adb`). Producteurs supprimés le 21/10.
 
-### `suite-pilot2.log`, `suite-pilot3.log`
+| Fichier | Lignes | Contenu |
+|---|---|---|
+| `phone-watch.log` | 35 | heartbeat 10 min : `heartbeat etat=device serial=…`, `[OK] telephone connecte`, `[KO] etat=absent` |
+| `phone-auto.log` | 84 | déploiement : `deploiement des helpers et services sur les machines USB`, `telephone non joignable : branche-le en USB sur baptiste@…` |
+| `phone-wait-adb.log` | 2 | guet de `100.79.244.93:5555` (timeout 900 s) puis `timeout : le telephone n'ecoute toujours pas` |
 
-Traces d'exécution de suites de tests pilotes (quelques lignes).
+### `suite-pilot2.log`, `suite-pilot3.log` — *historique*
+
+Banc de suites du harnais mobile (`phone-task`), rapports détaillés dans
+`~/.phone-tasks/suite/`. Format :
+
+```
+[1/4] settings-night-mode-on
+      ECHEC  (2 tours, 4160 ms)  [boucle] cmd '...' -> '0' (attendu {'equals': '2'})
+=== 1/4 reussies (25.0 %) — moyenne 2.5 tours — $0.004080
+echecs : boucle=3
+```
+
+`pilot2` = 4 tests terminés (21/10 03:25) ; `pilot3` = 1 ligne, exécution
+interrompue.
+
+> **Producteurs disparus.** `decision-router`, `scope-watch`, `phone-watch`,
+> `phone-auto`, `phone-api` ont été **supprimés le 21/10**. Leurs units sont
+> archivées dans `cleanup-20261021-121324/*.service` et `restore.sh` (dans
+> `cleanup-20261021-131324/`) permet de les réactiver. Les journaux
+> correspondants ci-dessus sont donc des **archives figées**, pas des flux
+> vivants. Seuls `kafka-health.log`, `incidents/` et `log-sync.log` sont
+> encore alimentés.
 
 ### `cleanup-*/` et `pre-kill-*/`
 
@@ -499,40 +560,56 @@ servent de point de comparaison si quelque chose casse après l'opération.
 `scan-secrets.py` combine deux détections :
 
 - **valeurs réelles** lues sur la machine (fichiers de credentials, jetons
-  GitHub, mot de passe Aiven) — comparaison littérale ;
+  GitHub, mots de passe Aiven) — comparaison littérale. Depuis le 22/10, les
+  fichiers d'environnement de la démo Kafka sont lus aussi
+  (`~/aiven-kafka-demo/env*.sh`, `.secrets/*.env`, `.creds.json`), mais
+  uniquement pour les clés qui portent un secret (`*PASS*`, `*SECRET*`,
+  `*TOKEN*`, `*CREDENTIAL*`, `*PRIVATE*`) : `KAFKA_SERVICE` ou `PGDATABASE`
+  ne sont pas confidentiels et noieraient le signal ;
 - **motifs** : `gho_/ghp_/ghu_/ghs_`, `github_pat_`, `aivenv1`, `avnpw_`,
-  `sk-…`, mots de passe dans une URL `postgres://user:pw@…`, `Bearer …`,
-  chaînes hex de 24 caractères, clés privées PEM.
+  `AVNS_` (mot de passe de service Aiven), `sk-…`, mots de passe dans une URL
+  `postgres://user:pw@…`, `Bearer …`, chaînes hex de 24 caractères, clés
+  privées PEM.
 
 Il n'affiche **jamais** la valeur d'un secret : seulement sa nature et sa
 position. Sortie `0` = propre, `1` = secret détecté.
 
-### ⚠️ Incident en cours — push bloqué depuis le 22/10 10:13
+`log-sync.log` (416 lignes) en garde la trace : 8 push réussis, 1
+`SECRET DETECTE … PUSH ANNULE`, 3 échecs. Ce journal n'est **pas versionné**
+(cf. `.gitignore`) — il changerait à chaque tick.
 
-`log-sync.service` est **en échec** et **4 commits locaux ne sont pas
-publiés** (le dépôt distant est arrêté à `0d85386`).
+### ✅ Incident du 22/10 10:13 — résolu (mot de passe Aiven dans les logs)
 
-Cause : **le scan local est propre, mais le *secret scanning* de GitHub
-refuse le push.** Deux fichiers de `incidents/` contiennent un mot de passe de
-service Aiven (préfixe `AVNS_`) capturé dans la sortie d'un agent :
+`log-sync.service` était en échec : 4 commits locaux non publiés (dépôt distant
+arrêté à `0d85386`). Le scan local disait « PROPRE » mais le *secret scanning*
+de GitHub refusait le push (`GH013`).
 
-- `incidents/20261022-080823-f2522645-incident-watch.log`
-- `incidents/20261022-081603-33079f56-db-diagnose.log`
+Cause : un sous-agent a fait `cat env-agent-kafka.sh` et son transcript a été
+journalisé dans `incidents/` — mot de passe SASL Aiven (`AVNS_…`) en clair dans
+5 fichiers. Deux lacunes du garde-fou : `scan-secrets.py` ne connaissait ni le
+motif `AVNS_`, ni les `env*.sh` de la démo comme source de valeurs secrètes.
 
-C'est exactement le cas prévu par la règle : **un log qui contient un token
-est un incident, pas un push.**
+Traitement (22/10 11:01) :
 
-À traiter :
+1. `scan-secrets.py` corrigé : motif `AVNS_` + sources `env*.sh` / `.creds.json`
+   (clés sensibles seulement). Un contrôle d'index (`git show :<fichier>`) a
+   été ajouté au passage : vérifier le contenu **indexé**, pas seulement le
+   working tree.
+2. Valeurs remplacées par `***REDACTED***` dans les 5 transcripts (`~/logs` et
+   `~/Log`) — 74 remplacements, aucun secret affiché pendant l'opération.
+3. Historique local réécrit : les 4 commits auto + le commit du générateur ont
+   été rejoués sur `0d85386`, donc **le secret n'est jamais entré dans
+   l'historique publié** (aucune de ces versions n'avait été poussée).
+4. `log-sync.service` repassé au vert, `main` à jour.
 
-1. **Révoquer / faire tourner** le mot de passe Aiven exposé (il est dans un
-   fichier local, donc considéré comme compromis).
-2. **Purger** ces deux fichiers de l'historique local (`git filter-repo` ou
-   réécriture ciblée), pas seulement du dernier commit — les 4 commits non
-   poussés les contiennent tous.
-3. **Renforcer** `scan-secrets.py` : ajouter un motif `AVNS_[A-Za-z0-9]{20,}`
-   (mot de passe de service Aiven). C'est la lacune qui a laissé passer le
-   secret : le scan connaît `avnpw_` mais pas `AVNS_`.
-4. Vérifier ensuite que `log-sync.service` repasse au vert.
+Reste à faire, côté humain : **faire tourner le mot de passe SASL Aiven**
+(`demo-app`), puis mettre à jour `env-agent-kafka.sh` et redémarrer
+`kafka-incident-watch.service`. Le mot de passe a circulé dans des transcripts,
+il doit être considéré comme compromis même s'il n'a jamais été publié.
+
+Règle qui en sort : **ne jamais `cat` un `env*.sh`** (ni dans un sous-agent, ni
+dans une commande dont la sortie est journalisée) — utiliser
+`sed 's/=.*/=<redacted>/'` ou `grep -oE '^[A-Z_]+'`.
 
 ---
 
