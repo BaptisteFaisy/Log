@@ -222,23 +222,43 @@ async function collect(client) {
   return meta;
 }
 
-// Extensions PostgreSQL necessaires aux types exportes (citext, pgcrypto...).
-// Sans elles, le dump ne se rejoue pas dans une base neuve.
-async function extensionsFor(client, typeNames) {
-  const names = [...new Set(typeNames.map((t) => String(t).replace(/\[\]$/, "").replace(/\(.*$/, "").trim()))];
-  if (!names.length) return [];
-
+// Extensions PostgreSQL necessaires au dump.
+//
+// Deux sources de dependance, et non une seule :
+//   - les types de colonnes (citext, pgcrypto...) ;
+//   - les objets references par le DDL : un index GIN sur gin_trgm_ops exige
+//     pg_trgm, sans qu'aucun type de colonne ne le trahisse.
+// Une extension n'est emise que si l'un de ses objets apparait dans le DDL
+// genere : inutile d'imposer pgvector quand aucune colonne vector n'est exportee.
+async function extensionsFor(client, ddl) {
   const { rows } = await client.query(
-    `SELECT DISTINCT e.extname AS name
-       FROM pg_type t
-       JOIN pg_depend d ON d.classid = 'pg_type'::regclass AND d.objid = t.oid AND d.deptype = 'e'
-       JOIN pg_extension e ON e.oid = d.refobjid
-      WHERE t.typname = ANY($1::text[])
-      ORDER BY e.extname`,
-    [names],
+    `SELECT e.extname AS ext, t.typname AS member
+       FROM pg_extension e
+       JOIN pg_depend d ON d.refclassid = 'pg_extension'::regclass AND d.refobjid = e.oid AND d.deptype = 'e'
+       JOIN pg_type t ON d.classid = 'pg_type'::regclass AND d.objid = t.oid
+     UNION
+     SELECT e.extname, p.proname
+       FROM pg_extension e
+       JOIN pg_depend d ON d.refclassid = 'pg_extension'::regclass AND d.refobjid = e.oid AND d.deptype = 'e'
+       JOIN pg_proc p ON d.classid = 'pg_proc'::regclass AND d.objid = p.oid
+     UNION
+     SELECT e.extname, c.opcname
+       FROM pg_extension e
+       JOIN pg_depend d ON d.refclassid = 'pg_extension'::regclass AND d.refobjid = e.oid AND d.deptype = 'e'
+       JOIN pg_opclass c ON d.classid = 'pg_opclass'::regclass AND d.objid = c.oid`,
   );
 
-  return rows.map((r) => r.name);
+  const found = new Map();
+  for (const { ext, member } of rows) {
+    if (!member || String(member).length < 3) continue;
+    const rx = new RegExp(`(^|[^a-z0-9_])${String(member).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9_]|$)`, "i");
+    if (rx.test(ddl)) found.set(ext, true);
+  }
+
+  // plpgsql est toujours present : l'emettre n'apporte rien.
+  found.delete("plpgsql");
+
+  return [...found.keys()].sort();
 }
 
 /* ------------------------------------------------------------------ */
@@ -302,12 +322,20 @@ async function dumpDatabase(client, database) {
     exported.push({ table: table.name, cols });
   }
 
-  // Extensions requises par les types exportes : sans elles (citext, pgcrypto)
-  // le dump ne se rejoue pas dans une base neuve.
-  const extensions = await extensionsFor(
-    client,
-    exported.flatMap((e) => e.cols.map((c) => c.data_type)),
-  );
+  const exportedNames = new Set(exported.map((t) => t.table));
+
+  // Extensions requises par le DDL exporte : sans elles le dump ne se rejoue
+  // pas dans une base neuve. On interroge le DDL lui-meme, pas seulement les
+  // types de colonnes : un index GIN sur gin_trgm_ops exige pg_trgm alors
+  // qu'aucune colonne n'est de type pg_trgm.
+  const ddlBlob = [
+    ...exported.flatMap((e) => e.cols.map((c) => `${c.column_name} ${c.data_type} ${c.column_default || ""}`)),
+    ...meta.constraints.filter((c) => exportedNames.has(c.table_name)).map((c) => c.def),
+    ...meta.indexes.filter((i) => exportedNames.has(i.table_name)).map((i) => i.def),
+    ...meta.views.map((v) => String(v.def)),
+  ].join("\n");
+
+  const extensions = await extensionsFor(client, ddlBlob);
   for (const name of extensions) out.push(`CREATE EXTENSION IF NOT EXISTS ${ident(name)};`);
   if (extensions.length) out.push("");
 
@@ -347,8 +375,6 @@ async function dumpDatabase(client, database) {
     out.push(");");
     out.push("");
   }
-
-  const exportedNames = new Set(exported.map((t) => t.table));
 
   for (const c of meta.constraints) {
     if (!exportedNames.has(c.table_name)) continue;
