@@ -41,10 +41,9 @@
         <span class="term-title">log@vercel — ~/logs</span>
         <span class="term-right">
           <!-- Source des lignes : renseignee par app.js apres GET /api/tail.
-               « kafka aiven · otel.logs » n'apparait que si le topic a vraiment
-               ete lu dans le cluster Aiven ; sinon « injoignable ». -->
+               « kafka · otel.logs » n'apparait que si le topic a vraiment ete lu. -->
           <span id="source" class="term-source" data-source="pending" title="lecture de otel.logs en cours">
-            <i></i>kafka aiven · …
+            <i></i>kafka · …
           </span>
           <span class="term-live"><i></i>live</span>
         </span>
@@ -67,17 +66,19 @@
     <aside class="agents" aria-label="Fix agents">
       <header class="agents-head">
         <div class="agents-titles">
-          <strong>agents</strong>
-          <span>error monitoring</span>
+          <strong id="agentGroupName">agents</strong>
+          <span id="agentGroupMeta">error monitoring</span>
         </div>
         <span id="agentCount" class="agents-count">0 active</span>
       </header>
 
+      <div id="agentFleet" class="agents-fleet" hidden></div>
+
       <div id="agentList" class="agents-body">
         <div id="agentsEmpty" class="agents-empty">
           <span class="agents-empty-orb" aria-hidden="true"></span>
-          <p>no agents</p>
-          <span>waiting for an incident</span>
+          <p id="agentsEmptyTitle">no agents</p>
+          <span id="agentsEmptyHint">waiting for an incident</span>
         </div>
       </div>
 
@@ -124,6 +125,11 @@
     /* API d'ingestion (Vercel Functions + PostgreSQL Aiven, cf. api/).
        Vide = 100 % local (localStorage). Mettre "/api" pour brancher la base. */
     window.LOG_METRICS_API = "";
+    /* Agents reels (Vercel Function /api/agents <- Aiven otel-reports).
+       Le panneau « agents » nomme alors le groupe declare dans
+       ~/aiven-kafka-demo/agents/group.json (groupe -> cas d'usage -> machine)
+       et affiche ses passages reels ; vide = panneau local, comme avant. */
+    window.LOG_AGENTS_API = "/api/agents";
   </script>
   <script src="metrics.js"></script>
   <script src="app.js"></script>

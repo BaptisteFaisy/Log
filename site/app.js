@@ -8,6 +8,16 @@ const agentList = document.getElementById("agentList");
 const agentsEmpty = document.getElementById("agentsEmpty");
 const agentCount = document.getElementById("agentCount");
 const agentFoot = document.getElementById("agentFoot");
+const agentGroupName = document.getElementById("agentGroupName");
+const agentGroupMeta = document.getElementById("agentGroupMeta");
+const agentFleet = document.getElementById("agentFleet");
+
+/* Flotte reelle : des que /api/agents repond, le panneau nomme le groupe
+   d'agents (agents/group.json) et montre ses passages reellement publies
+   dans otel-reports. Sans API (page ouverte en fichier local), rien ne
+   change : le bandeau reste masque. */
+const AGENTS_API = String(window.LOG_AGENTS_API || "").trim().replace(/\/$/, "");
+const REAL_AGENTS = Boolean(AGENTS_API) && window.location.protocol !== "file:";
 
 const MAX_ROWS = 160;
 const MAX_AGENTS = 3;
@@ -104,6 +114,10 @@ function addRow(level, text, tsIso) {
 /* ------------------------------------------------------------------ */
 
 function updateAgentsMeta() {
+  if (state.agents.length > 0) {
+    const recent = document.getElementById("agentRecent");
+    if (recent) recent.remove();
+  }
   const running = state.agents.filter((a) => a.state !== "done").length;
   agentCount.textContent = `${running} active`;
   agentCount.dataset.busy = running > 0 ? "true" : "false";
@@ -498,9 +512,10 @@ const TRACE_KEY = "log.agent.traces.v1";
 const TRACE_MAX = 30; // borne de la memoire locale : les 30 plus recentes
 const TAIL_LIMIT = 60;
 const TAIL_TIMEOUT_MS = 6000;
-// Duree de vie d'une trace « a nous » sans rapport : au-dela, l'agent a fini
-// (delai maximal 45 min) ou n'a jamais demarre, donc plus rien a attendre.
-const RECENT_MS = 60 * 60 * 1000;
+// Au-dela de cette duree, une trace sans rapport n'est plus reprise : l'agent a
+// fini (delai maximal 45 min) ou n'a jamais demarre, donc sa carte tournerait a
+// vide. Sert aussi de purge a la memoire locale.
+const RESTORE_MS = 20 * 60 * 1000;
 const TRACE_ID_RE = /^[0-9A-Za-z_-]{8,64}$/;
 
 function loadKnownTraces() {
@@ -591,10 +606,10 @@ function tracesFromTail(messages) {
 }
 
 /**
- * Demande a /api/report si CETTE trace a un rapport. Sert a ne pas reprendre
- * une carte d'agent qui n'a jamais existe : une simple ligne d'erreur dans
- * otel.logs ne prouve pas qu'un agent a tourne (AGENTS.md : pas de flux
- * d'agent factice cote front). Jamais bloquant : null si le serveur ne sait pas.
+ * Demande a /api/report si CETTE trace a un rapport. Sert a ne pas reprendre une
+ * carte d'agent qui n'a jamais existe : une simple ligne d'erreur dans otel.logs
+ * ne prouve pas qu'un agent a tourne (AGENTS.md : pas de flux d'agent factice
+ * cote front). Jamais bloquant : null si le serveur ne sait pas.
  */
 async function readReport(traceId) {
   const controller = new AbortController();
@@ -664,33 +679,37 @@ async function restoreAgents() {
       );
     }
 
-    // pas de doublon : une trace qui a deja sa carte n'en recoit pas d'autre
-    const candidates = merged
+    // Priorite aux traces de CE navigateur (on sait qu'un agent a ete demande),
+    // puis les traces du tail. Pas de doublon : une trace qui a deja sa carte
+    // n'en recoit pas d'autre.
+    const ordered = [
+      ...merged.filter((item) => mine.has(item.trace_id)),
+      ...merged.filter((item) => !mine.has(item.trace_id)),
+    ];
+    const candidates = ordered
       .filter((item) => !state.agents.some((agent) => agent.traceId === item.trace_id))
       .slice(0, MAX_AGENTS * 2);
 
     if (!candidates.length) return;
 
     // Une carte d'agent n'est reprise que si elle a une REALITE cote serveur :
-    //   - un rapport publie dans otel-reports  -> l'agent a vraiment tourne ;
-    //   - une trace publiee par ce navigateur  -> l'agent peut etre en cours.
+    //   - un rapport publie dans otel-reports -> l'agent a vraiment tourne ;
+    //   - une trace publiee par ce navigateur -> l'agent peut etre en cours.
     // Une simple ligne d'erreur dans otel.logs ne suffit pas : sinon la page
     // affiche des « agents en cours » qui n'ont jamais existe et qui tournent a
     // vide jusqu'au bout du delai d'attente (bug constate le 2026-10-22).
     const checked = await Promise.all(
       candidates.map(async (item) => ({ item, report: await readReport(item.trace_id) })),
     );
-
-    // Une trace « a nous » sans rapport n'est reprise que si elle est RECENTE :
-    // au-dela, l'agent a forcement fini (ou n'a jamais demarre) et sa carte
-    // tournerait a vide. Purge aussi les vieilles entrees de la memoire locale,
-    // sinon un navigateur qui a connu l'ancien code garde des cartes fantomes.
     const fresh = (item) => {
       const at = Date.parse(item.ts || "");
-      return Number.isFinite(at) && Date.now() - at < RECENT_MS;
+      return Number.isFinite(at) && Date.now() - at < RESTORE_MS;
     };
     const keep = checked.filter(({ item, report }) => report || (mine.has(item.trace_id) && fresh(item)));
     const ignored = checked.length - keep.length;
+
+    // menage de la memoire locale : une trace a nous, sans rapport et trop
+    // vieille, ne sera jamais reprise -> on l'oublie.
     const kept = new Set(keep.map(({ item }) => item.trace_id));
     saveKnownTraces(stored.filter((t) => kept.has(t.trace_id) || fresh(t)));
 
@@ -1020,11 +1039,10 @@ let kafkaFailures = 0;
 /* Banniere : source reelle des lignes                                 */
 /* ------------------------------------------------------------------ */
 
-/* La banniere du terminal dit d'ou viennent les lignes, et seulement ce qui a
-   ete prouve : « kafka aiven » n'apparait qu'apres une lecture reelle de
-   GET /api/tail (topic Aiven otel.logs). Aucun libelle n'est ecrit en dur dans
-   le HTML, et la banniere ne fait aucun appel reseau de son propre chef : elle
-   lit l'etat deja verifie par tailOnce() (lecture) et verifyKafka() (bouton). */
+/* La banniere du terminal affiche la meme verite que le bouton : « kafka
+   aiven » seulement apres une reponse reelle de GET /api/logs. Elle ne fait
+   aucun appel reseau de son propre chef — elle lit l'etat deja verifie par
+   verifyKafka(), pour ne pas doubler les requetes ni contredire le bouton. */
 const sourceEl = document.getElementById("source");
 
 function paintSource(kind, label, title) {
@@ -1131,17 +1149,15 @@ function offsetKey(msg) {
 
 function paintTailSource(up, count, detail) {
   if (up === true) {
-    // Le mot « aiven » n'apparait qu'ici : apres une lecture reelle du topic
-    // Aiven otel.logs (GET /api/tail). Aucun libelle n'est ecrit en dur.
     paintSource(
       "kafka",
-      `kafka aiven · otel.logs`,
-      `${count} message${count > 1 ? "s" : ""} lu${count > 1 ? "s" : ""} dans le topic Aiven otel.logs (kafka-1687d005)${detail ? ` · ${detail}` : ""}`,
+      `kafka · otel.logs`,
+      `${count} message${count > 1 ? "s" : ""} lu${count > 1 ? "s" : ""} dans le topic Aiven otel.logs${detail ? ` · ${detail}` : ""}`,
     );
   } else if (up === false) {
-    paintSource("down", "kafka aiven · injoignable", detail || "Lecture de otel.logs impossible.");
+    paintSource("down", "kafka · injoignable", detail || "Lecture de otel.logs impossible.");
   } else {
-    paintSource("pending", "kafka aiven · …", detail || "Lecture de otel.logs en cours…");
+    paintSource("pending", "kafka · …", detail || "Lecture de otel.logs en cours…");
   }
 }
 
@@ -1235,3 +1251,190 @@ if (DEMO_WARM) {
 setInterval(() => {
   clockEl.textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
 }, 1000);
+
+/* ------------------------------------------------------------------ */
+/* Flotte reelle : manifeste des groupes + topic otel-reports          */
+/* ------------------------------------------------------------------ */
+
+/* Ce bloc ne s'active que si window.LOG_AGENTS_API est defini (site deploye).
+   Il n'invente aucun agent : la flotte vient de agents/group.json (groupe ->
+   cas d'usage -> machine d'origine -> membres) et les passages du topic
+   otel-reports, ou le watcher republie chaque rapport. */
+
+const AGENT_POLL_MS = 20000;
+
+function shortTime(value) {
+  const match = String(value || "").match(/(\d{2}:\d{2}:\d{2})/);
+  return match ? `${match[1]} UTC` : "";
+}
+
+function activeGroup(payload) {
+  const list = payload.groups || [];
+  return list.find((group) => group.id === payload.active_group) || list[0] || null;
+}
+
+function textSpan(className, text, title) {
+  const node = document.createElement("span");
+  node.className = className;
+  node.textContent = text;
+  if (title) node.title = title;
+  return node;
+}
+
+/* Bandeau « qui est la flotte » : groupe, cas d'usage, membres, machine. */
+function renderFleet(payload) {
+  const group = activeGroup(payload);
+  if (agentGroupName) agentGroupName.textContent = group ? group.id : "agents";
+  if (agentGroupMeta) {
+    agentGroupMeta.textContent = group ? `${group.origin.machine} · ${group.label}` : "error monitoring";
+    agentGroupMeta.title = group ? group.use_case || "" : "";
+  }
+  if (!agentFleet || !group) return;
+
+  agentFleet.textContent = "";
+
+  const head = document.createElement("div");
+  head.className = "fleet-head";
+  head.append(
+    textSpan("fleet-badge", group.id),
+    textSpan("fleet-use", group.label, group.use_case || ""),
+  );
+
+  const members = document.createElement("ul");
+  members.className = "fleet-members";
+  for (const member of group.members || []) {
+    const item = document.createElement("li");
+    item.className = "fleet-member";
+    const runs = (member.stats && member.stats.runs) || 0;
+    item.append(
+      textSpan("fleet-name", member.name),
+      textSpan("fleet-role", member.role || "", member.summary || member.role || ""),
+      textSpan("fleet-stat", runs === 0 ? "0 run" : `${runs} run${runs === 1 ? "" : "s"}`),
+    );
+    members.append(item);
+  }
+
+  const origin = textSpan("fleet-origin", `${group.origin.machine} · ${group.origin.machine_label}`, group.use_case || "");
+  agentFleet.append(head, members, origin);
+
+  const others = (payload.groups || []).filter((entry) => entry.id !== group.id);
+  if (others.length) {
+    agentFleet.append(
+      textSpan(
+        "fleet-origin",
+        `autres groupes : ${others.map((entry) => `${entry.id} (${(entry.members || []).length})`).join(", ")}`,
+      ),
+    );
+  }
+
+  agentFleet.hidden = false;
+}
+
+/* Une carte = un rapport deja publie dans otel-reports (historique). */
+function runCard(run) {
+  const failed = run.exit_code !== null && run.exit_code !== undefined && run.exit_code !== 0;
+
+  const card = document.createElement("article");
+  card.className = "agent-card";
+  card.dataset.state = "done";
+  card.dataset.source = "kafka";
+  card.dataset.outcome = failed ? "failed" : "ok";
+
+  const top = document.createElement("div");
+  top.className = "agent-top";
+
+  const orb = document.createElement("span");
+  orb.className = "agent-orb";
+  orb.append(document.createElement("i"));
+
+  const meta = document.createElement("div");
+  meta.className = "agent-meta";
+  const name = document.createElement("strong");
+  name.className = "agent-name";
+  name.textContent = run.agent || "agent";
+  const code = document.createElement("span");
+  code.className = "agent-code";
+  code.textContent = `${run.error_type || "incident"} · ${String(run.trace_id || "").slice(0, 8)}`;
+  meta.append(name, code);
+
+  const tag = document.createElement("span");
+  tag.className = "agent-mode";
+  tag.dataset.mode = "kafka";
+  tag.textContent = run.group || "kafka";
+  tag.title = [run.group_label, run.role].filter(Boolean).join(" · ");
+
+  const stateEl = document.createElement("span");
+  stateEl.className = "agent-state";
+  stateEl.textContent = failed ? "failed" : "done";
+
+  top.append(orb, meta, tag, stateEl);
+
+  const log = document.createElement("div");
+  log.className = "agent-log";
+  const logTag = document.createElement("b");
+  logTag.textContent = failed ? "err" : "ok";
+  const logText = document.createElement("span");
+  const bits = [
+    shortTime(run.timestamp),
+    run.origin || "",
+    run.exit_code === null || run.exit_code === undefined ? "" : `exit ${run.exit_code}`,
+  ];
+  logText.textContent = bits.filter(Boolean).join(" · ");
+  logText.title = run.excerpt || "";
+  log.append(logTag, logText);
+
+  card.append(top, log);
+  return card;
+}
+
+/* Historique : affiche seulement quand aucun agent local n'occupe le panneau. */
+function renderRecent(payload) {
+  const existing = document.getElementById("agentRecent");
+  if (existing) existing.remove();
+
+  const runs = payload.runs || [];
+  if (!runs.length || state.agents.length > 0) {
+    if (agentsEmpty) agentsEmpty.hidden = state.agents.length > 0;
+    return;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.id = "agentRecent";
+  wrap.className = "agents-recent";
+  wrap.append(textSpan("agents-recent-title", `derniers rapports · ${runs.length}`));
+  for (const run of runs) wrap.append(runCard(run));
+  // L'historique remplace l'invite « no agents » : afficher les deux serait
+  // contradictoire (« aucun agent » juste au-dessus de rapports recents).
+  if (agentsEmpty) agentsEmpty.hidden = true;
+  agentList.append(wrap);
+}
+
+function renderAgents(payload) {
+  renderFleet(payload);
+  renderRecent(payload);
+  if (agentFoot && payload.kafka !== "up") {
+    agentFoot.textContent = `kafka ${payload.kafka || "down"}${payload.reason ? ` · ${payload.reason}` : ""}`;
+  }
+}
+
+async function loadAgents() {
+  try {
+    const response = await fetch(AGENTS_API, { headers: { accept: "application/json" }, cache: "no-store" });
+    const payload = await response.json();
+    if (!payload || !payload.ok) throw new Error((payload && (payload.reason || payload.error)) || "agents indisponibles");
+    renderAgents(payload);
+  } catch (error) {
+    if (agentGroupMeta) agentGroupMeta.textContent = `agents indisponibles · ${error.message}`;
+  }
+}
+
+function startAgents() {
+  if (!REAL_AGENTS) return;
+  loadAgents();
+  setInterval(loadAgents, AGENT_POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") loadAgents();
+  });
+}
+
+startAgents();

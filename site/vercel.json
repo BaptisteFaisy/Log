@@ -5,6 +5,7 @@
     "api/kafka.js": { "maxDuration": 30 },
     "api/incident.js": { "maxDuration": 30, "includeFiles": "scenarios/**" },
     "api/report.js": { "maxDuration": 30 },
-    "api/tail.js": { "maxDuration": 60 }
+    "api/tail.js": { "maxDuration": 60 },
+    "api/agents.js": { "maxDuration": 30 }
   }
 }

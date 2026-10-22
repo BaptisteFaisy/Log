@@ -545,7 +545,8 @@ function startTail(cfg) {
             self.reached.set(partition, Number(message.offset) + 1);
             pushTail(self, partition, message);
             // Sans resolveOffset, kafkajs ne fait pas avancer la position du
-            // lot : le consommateur resterait bloque sur les memes messages.
+            // lot : le consommateur resterait bloque sur les memes messages et
+            // les lignes nouvelles n'apparaitraient jamais.
             resolveOffset(message.offset);
           }
           await heartbeat();
@@ -587,6 +588,67 @@ async function tailMessages(limit, waitMs) {
   };
 }
 
+/**
+ * Tous les rapports connus, du plus recent au plus ancien.
+ *
+ * Meme lecteur que findReport (un groupe par instance, relecture depuis le
+ * debut, sans commit d'offset) : aucune connexion Kafka supplementaire.
+ * Ne leve jamais : une panne devient { kafka: "down", reason } pour que la
+ * console affiche la flotte meme quand le cluster ne repond pas.
+ */
+const SETTLE_MS = 1200; // inactivite qui signale la fin de la relecture
+
+async function listReports(timeoutMs) {
+  const topic = topicName("reports");
+  const budget = timeoutMs || 8000;
+  const started = Date.now();
+  let cfg;
+  try {
+    cfg = config();
+  } catch (err) {
+    return { kafka: "unconfigured", reason: "Kafka non configure", topic: "", reports: [] };
+  }
+  try {
+    const current = getReader(cfg);
+    while (!current.joinedAt && !current.error && Date.now() - started < budget) {
+      await sleep(150);
+    }
+    if (current.error && !current.topicMissing) {
+      return { kafka: "down", reason: publicReason(current.error), topic, reports: [] };
+    }
+    if (current.topicMissing) {
+      return { kafka: "up", reason: "", topic, reports: [] }; // aucun rapport publie
+    }
+    if (!current.joinedAt) {
+      return { kafka: "slow", reason: "lecteur de rapports pas encore pret", topic, reports: [] };
+    }
+    // Groupe forme : laisser la relecture depuis le debut arriver. On ne sort
+    // pas au premier rapport venu (le topic se relit du plus ancien au plus
+    // recent) : on attend que la liste se stabilise, avec le budget complet
+    // comme plafond, comme findReport.
+    const deadline = Math.max(started + budget, current.joinedAt + CATCHUP_MS);
+    let lastSize = -1;
+    let stableSince = 0;
+    while (!current.error && Date.now() < deadline) {
+      const size = current.reports.size;
+      if (size !== lastSize) {
+        lastSize = size;
+        stableSince = Date.now();
+      } else if (size > 0 && Date.now() - stableSince > SETTLE_MS) {
+        break; // plus rien n'arrive : la relecture est terminee
+      }
+      await sleep(150);
+    }
+    const reports = Array.from(current.reports.values()).sort((a, b) =>
+      String(b.Timestamp || "").localeCompare(String(a.Timestamp || ""))
+    );
+    return { kafka: "up", reason: "", topic, reports };
+  } catch (err) {
+    process.stderr.write(`lecteur de rapports : ${err.message || err}\n`);
+    return { kafka: "down", reason: publicReason(err), topic, reports: [] };
+  }
+}
+
 module.exports = {
   KafkaConfigError,
   KafkaDownError,
@@ -595,6 +657,7 @@ module.exports = {
   publishTo,
   health,
   findReport,
+  listReports,
   tailMessages,
   configured,
   topicName,
