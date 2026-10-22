@@ -3,13 +3,15 @@
 // Variables d'environnement (Vercel > Settings > Environment Variables, jamais dans le depot) :
 //   PG_MEMOIRE_URL        postgres://hote:port/base  (utilisateur + mot de passe inclus dans l URL)
 //   PG_MEMOIRE_CA         certificat CA du projet Aiven (PEM, ou PEM encode en base64)
-//   PG_MEMOIRE_DATABASES  bases affichees (defaut : historique,defaultdb)
+//   PG_MEMOIRE_DATABASES  bases affichees (defaut : historique)
 //   PG_MEMOIRE_TIMEOUT_MS delai max de connexion / requete (defaut : 8000)
 
 const { Client } = require("pg");
 const { PRIVATE_NAME, PRIVATE_COLUMN, redact } = require("./_redact");
 
-const DATABASES = (process.env.PG_MEMOIRE_DATABASES || "historique,defaultdb")
+// Seule la base « historique » est publiee : « defaultdb » (demo pgvector du
+// hackathon, jamais alimentee) n'apportait que 4 tables vides a l'ecran.
+const DATABASES = (process.env.PG_MEMOIRE_DATABASES || "historique")
   .split(",")
   .map((name) => name.trim())
   .filter(Boolean);

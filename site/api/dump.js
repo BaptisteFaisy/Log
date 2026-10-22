@@ -1,7 +1,7 @@
 // Vercel Function : export SQL (dump) d'une base PostgreSQL Aiven « pg-memoire ».
 //
 //   GET /api/dump               -> telecharge la 1re base configuree (historique)
-//   GET /api/dump?db=defaultdb  -> telecharge cette base
+//   GET /api/dump?db=historique -> telecharge cette base
 //   GET /api/dump?db=historique&inline=1 -> affiche le SQL dans le navigateur
 //
 // Le fichier produit est un .sql rejouable tel quel :
@@ -10,7 +10,7 @@
 // Variables d'environnement : les memes que /api/pg-memoire, aucune de plus.
 //   PG_MEMOIRE_URL        postgres://hote:port/base  (utilisateur + mot de passe inclus dans l URL)
 //   PG_MEMOIRE_CA         certificat CA du projet Aiven (PEM, ou PEM encode en base64)
-//   PG_MEMOIRE_DATABASES  bases exportables (defaut : historique,defaultdb)
+//   PG_MEMOIRE_DATABASES  bases exportables (defaut : historique)
 //
 // Regles de surete, alignees sur /api/pg-memoire (le site est public) :
 //   - transaction READ ONLY : aucune ecriture possible ;
@@ -26,7 +26,9 @@ const { PRIVATE_NAME, PRIVATE_COLUMN } = require("./_redact");
 // depuis les fonctions. On force l'IPv4.
 dns.setDefaultResultOrder("ipv4first");
 
-const DATABASES = (process.env.PG_MEMOIRE_DATABASES || "historique,defaultdb")
+// Seule la base « historique » est exportable : « defaultdb » (demo pgvector du
+// hackathon, jamais alimentee) est retiree du site.
+const DATABASES = (process.env.PG_MEMOIRE_DATABASES || "historique")
   .split(",")
   .map((name) => name.trim())
   .filter(Boolean);
