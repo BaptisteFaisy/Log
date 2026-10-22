@@ -541,6 +541,44 @@ besoin de textes courts, la popup a besoin de la résolution complète. Elle
 refuse toute table hors `PG_MEMOIRE_DATABASES`, tout nom de table hors
 `[A-Za-z_][A-Za-z0-9_]{0,62}` et toute colonne de secret (`_redact.js`).
 
+**Le bouton « Trigger an error log » lance un VRAI agent.** La chaîne complète,
+vérifiée en production le 2026-10-22 :
+
+```
+navigateur → POST /api/incident {scenario:"platform_oom"}
+           → site/api/incident.js publie le contrat du catalogue
+             dans otel.traces + otel.logs + otel.metrics (clé = TraceId)
+           → kafka-incident-watch (sur la machine) consomme et lance
+             `opencode run --agent debug-historique` (vrai processus)
+           → le watcher republie le rapport dans otel-reports
+           → GET /api/report?trace_id=… renvoie le rapport réel
+           → la carte d'agent du site affiche ce rapport
+```
+
+| Route | Rôle | Réponse |
+|---|---|---|
+| `POST /api/incident` | publie un scénario du catalogue | `200 {trace_id, error_type, messages}` · `400 unknown_scenario` · `503 kafka_unreachable` |
+| `GET /api/report?trace_id=` | lit le rapport publié par le watcher | `200 {agent, exit_code, report}` · `404 pending` · `503` |
+
+Le catalogue est `site/scenarios/catalog.json` (copie de
+`aiven-kafka-demo/scenarios/`), lu par `site/lib/contract.js` : la console et
+`tools/seed` produisent donc **exactement** le même message.
+
+**Deux règles à ne pas régresser :**
+
+1. **La simulation ne verrouille rien.** La carte d'agent s'anime tout de suite
+   (comportement voulu, `startSimulation`), mais tant que l'incident a été
+   publié, la carte reste **verrouillée** (`entry.state = "run"`,
+   `entry.simulatedDone`) jusqu'à l'arrivée du rapport réel : c'est ce qui
+   empêche un second agent de partir sur un message qui réapparaît. Si on laisse
+   la simulation terminer la carte (`state = "done"`), l'anti-doublon se rouvre
+   au bout de ~2,5 s et trois erreurs identiques publient trois incidents.
+2. **Un seul POST par message en cours.** `fireError()` calcule
+   `metrics.fingerprint(code, message, stack)` et vérifie `state.agents` **avant**
+   de publier ; `addErrorCard`/`createAgent` revérifient (même trace ou même
+   empreinte) pour les erreurs JS du site. Côté machine, le watcher applique la
+   même règle (§4.3, `running_messages`).
+
 **Trois pièges, tous rencontrés :**
 
 1. **Le dossier doit être lié au projet `log`.** Sans `.vercel/project.json`
