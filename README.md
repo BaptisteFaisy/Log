@@ -299,6 +299,17 @@ C'est le **déclencheur**. Service `kafka-incident-watch.service`, lancé avec
 | `WATCHER_COOLDOWN_ERROR_S` | 1800 | même `error.type` |
 | `WATCHER_AGENT_TIMEOUT_S` | 900 | au-delà, l'agent est coupé |
 
+**Un seul agent par message (règle à ne pas régresser).** Si le même message
+d'erreur réapparaît alors qu'un agent le traite déjà, **rien n'est relancé**.
+C'est nécessaire parce qu'une erreur réémise repart avec un **nouveau
+`TraceId`** : le cooldown par trace ne l'attrape pas. Le message est reconnu par
+une empreinte `sha1(error.type + texte normalisé)` — ids, adresses, nombres et
+durées sont masqués, donc « timeout après 312 ms » et « après 87 ms » sont le
+même message. Trois verrous : message déjà en cours, message déjà en file,
+doublon encore en attente. La même règle est appliquée dans la console web
+(`site/app.js`). Preuve : `./tools/dedup-selftest` (9 contrôles, sans Kafka),
+intégré à `./tools/check.sh` (étape 3bis). Détail : `~/aiven-kafka-demo/README.md` §6.5.
+
 Un `flock` garantit une instance unique ; l'état (offsets, cooldowns) est
 persisté dans `~/.local/state/kafka-incident-watch/<hash>.json`.
 
@@ -354,6 +365,30 @@ Options : `--detectors` (défaut, lisible), `--json` (machine), `--list`.
 
 Elle lit le bus Kafka et affiche les rapports d'agents. Un **repli local**
 existe (`tools/site-server.py`) pour travailler sans réseau.
+
+**Déployer `log-lac-five.vercel.app`** — c'est le projet Vercel **`log`**, dont la
+source est `~/Log/site/` :
+
+```bash
+cd ~/Log/site
+vercel deploy --prod --yes --global-config ~/.config/vercel-log
+```
+
+Deux pièges, tous les deux rencontrés :
+
+1. **Le dossier doit être lié au projet `log`.** Sans `.vercel/project.json`
+   (`{"projectId":"prj_kNIldg2h6v3Q0VjdJGQizMkMGrwU","orgId":"team_2mVkYxiteDPS64R4CJj8TDPG"}`),
+   `vercel deploy` crée le projet `site` — un autre site, pas celui-ci.
+2. **Ne pas déployer depuis une copie temporaire** (`/tmp/...`) : un déploiement
+   lancé depuis une copie ancienne **écrase la production** et fait disparaître
+   les correctifs. C'est arrivé le 2026-10-22 (l'anti-doublon d'agent de §4.3
+   avait été remplacé par un `app.js` plus vieux). Après tout déploiement,
+   vérifier que le fichier servi est bien le fichier local :
+
+   ```bash
+   curl -s https://log-lac-five.vercel.app/app.js | md5sum
+   md5sum ~/Log/site/app.js        # les deux empreintes doivent être identiques
+   ```
 
 ---
 
