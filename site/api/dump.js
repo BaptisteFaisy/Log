@@ -276,6 +276,8 @@ async function dumpDatabase(client, database) {
 
   const out = [];
   const skipped = [];
+  const unreadableSequences = [];
+  const recoveredSequences = [];
 
   out.push(`-- pg-memoire — export SQL de la base « ${database} » (schema ${SCHEMA})`);
   out.push("-- Aiven for PostgreSQL · lecture seule · genere par /api/dump");
@@ -342,14 +344,68 @@ async function dumpDatabase(client, database) {
   if (extensions.length) out.push("");
 
   // Séquences
+  //
+  // Le role de lecture n'a pas forcement USAGE/SELECT sur toutes les
+  // sequences du schema (une table ajoutee par un autre compte suffit a le
+  // priver de la sienne). Une sequence illisible ne doit pas faire echouer
+  // tout l'export.
+  //
+  // Le SAVEPOINT est indispensable : dans une transaction, une erreur la
+  // marque comme avortee et fait echouer toutes les requetes suivantes.
+  //
+  // Et omettre le setval ne suffit pas : la sequence repartirait a 1 et la
+  // premiere insertion entrerait en collision avec les lignes exportees. On
+  // retombe donc sur max(colonne) de la table proprietaire, lisible par le
+  // role de lecture puisque les donnees le sont.
+  const sequenceOwners = new Map();
+  for (const { table, cols } of exported) {
+    for (const c of cols) {
+      const match = /nextval\('([^']+)'::regclass\)/.exec(c.column_default || "");
+      if (match) sequenceOwners.set(match[1].replace(/^.*\./, ""), { table, column: c.column_name });
+    }
+  }
+
   for (const seq of meta.sequences) {
     out.push(
       `CREATE SEQUENCE ${ident(seq.name)} ` +
         `INCREMENT BY ${seq.increment_by} MINVALUE ${seq.min_value} MAXVALUE ${seq.max_value} ` +
         `START WITH ${seq.start_value} CACHE ${seq.cache_size}${seq.cycle ? " CYCLE" : ""};`,
     );
-    const { rows } = await client.query(`SELECT last_value, is_called FROM ${ident(seq.name)}`);
-    if (rows.length) out.push(`SELECT setval('${seq.name}', ${rows[0].last_value}, ${rows[0].is_called});`);
+
+    await client.query("SAVEPOINT seq_read");
+    let readable = false;
+
+    try {
+      const { rows } = await client.query(`SELECT last_value, is_called FROM ${ident(seq.name)}`);
+      if (rows.length) out.push(`SELECT setval('${seq.name}', ${rows[0].last_value}, ${rows[0].is_called});`);
+      readable = true;
+      await client.query("RELEASE SAVEPOINT seq_read");
+    } catch (error) {
+      await client.query("ROLLBACK TO SAVEPOINT seq_read");
+    }
+
+    if (readable) continue;
+
+    const owner = sequenceOwners.get(seq.name);
+    let recovered = null;
+
+    if (owner) {
+      try {
+        const { rows } = await client.query(
+          `SELECT max(${ident(owner.column)}) AS max FROM ${ident(owner.table)}`,
+        );
+        if (rows.length && rows[0].max != null) recovered = rows[0].max;
+      } catch (error) {
+        recovered = null;
+      }
+    }
+
+    if (recovered != null) {
+      out.push(`SELECT setval('${seq.name}', ${recovered}, true);`);
+      recoveredSequences.push(seq.name);
+    } else {
+      unreadableSequences.push(seq.name);
+    }
   }
   if (meta.sequences.length) out.push("");
 
@@ -460,6 +516,16 @@ async function dumpDatabase(client, database) {
 
   if (skipped.length) {
     out.push(`-- Non exporte (secret ou type non restaurable) : ${skipped.join(", ")}`);
+  }
+
+  if (recoveredSequences.length) {
+    out.push(`-- setval deduit de max(colonne) (sequence non lisible) : ${recoveredSequences.join(", ")}`);
+  }
+
+  if (unreadableSequences.length) {
+    out.push(
+      `-- setval omis (sequence non lisible, aucune colonne rattachee) : ${unreadableSequences.join(", ")}`,
+    );
   }
 
   return out.join("\n");
