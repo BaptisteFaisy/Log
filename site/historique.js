@@ -2,6 +2,8 @@
 (function () {
   const ENDPOINT = "/api/pg-memoire";
   const DUMP_ENDPOINT = "/api/dump";
+  // Ligne entière : /api/pg-memoire tronque les cellules, la popup a besoin du texte complet.
+  const ROW_ENDPOINT = "/api/pg-memoire-row";
   const REFRESH_MS = 30000;
 
   const section = document.getElementById("observabilite");
@@ -555,6 +557,52 @@
 
     dialog.showModal();
     dialogBody.scrollTop = 0;
+
+    loadFullGuide(entry);
+  }
+
+  /* Texte complet du guide -------------------------------------------- */
+  // /api/pg-memoire tronque chaque cellule à 320 caractères : assez pour la
+  // liste, pas pour lire une résolution. La popup demande donc la ligne entière,
+  // puis reconstruit le guide avec les mêmes règles que le tableau.
+
+  let fullGuideToken = 0;
+
+  async function loadFullGuide(entry) {
+    const database = entry.key.split(".")[0];
+    const primaryKey = entry.table.key;
+    const id = primaryKey ? entry.r[primaryKey] : null;
+    if (!database || !entry.table.name || !primaryKey || id == null || id === "") return;
+
+    const token = ++fullGuideToken;
+    dialogStatus.textContent = "chargement du texte complet…";
+
+    const query = new URLSearchParams({ db: database, table: entry.table.name, id: String(id), key: primaryKey });
+
+    try {
+      const response = await fetch(`${ROW_ENDPOINT}?${query}`, { headers: { Accept: "application/json" } });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || !Array.isArray(data.columns)) {
+        throw new Error((data && data.error) || `HTTP ${response.status}`);
+      }
+      // Une autre ligne a été ouverte entre-temps : ce résultat est périmé.
+      if (token !== fullGuideToken) return;
+
+      // La ligne complète, remise sous la même forme que dans la liste.
+      const full = {};
+      data.columns.forEach((column, i) => {
+        full[column.name] = data.values[i];
+      });
+
+      entry.full = full;
+      dialogText.textContent = entry.preset.guide(full).text;
+      dialogStatus.textContent = data.truncated ? `texte coupé à ${data.cellLimit} caractères` : "";
+      log("inf", `GET ${ROW_ENDPOINT} 200 · ${database}.${entry.table.name} ${primaryKey}=${id} · texte complet`);
+    } catch (error) {
+      if (token !== fullGuideToken) return;
+      dialogStatus.textContent = "texte complet indisponible — texte tronqué affiché";
+      log("wrn", `GET ${ROW_ENDPOINT} failed · ${error.message}`);
+    }
   }
 
   function renderTable() {
@@ -749,8 +797,10 @@
   copyButton.addEventListener("click", async () => {
     const { entry } = guideView;
     if (!entry) return;
+    // Le texte complet s'il a été chargé, sinon celui de la liste (tronqué).
+    const text = entry.full ? entry.preset.guide(entry.full).text : entry.info.text;
     try {
-      await navigator.clipboard.writeText(entry.info.text);
+      await navigator.clipboard.writeText(text);
       dialogStatus.textContent = "Guide copié";
       log("ok", `guide copié · ${entry.key} · ${entry.title}`);
     } catch {
