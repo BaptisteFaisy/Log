@@ -103,8 +103,14 @@ function requireConfig() {
   return cfg;
 }
 
+/**
+ * Nom du topic. « reports » est special : les rapports d'agents vivent dans
+ * <prefix>-reports, HORS de l'espace otel.* qui ne contient que la telemetrie
+ * (meme regle que tools/kafkalib.py:topic).
+ */
 function topicName(suffix) {
-  return `${prefix()}.${suffix}`;
+  const p = prefix();
+  return suffix === 'reports' ? `${p}-reports` : `${p}.${suffix}`;
 }
 
 function withTimeout(promise, ms, message) {

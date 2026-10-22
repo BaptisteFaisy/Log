@@ -43,7 +43,7 @@ function kafkaConfig() {
     // Verification complete du certificat : sans CA la connexion est refusee.
     ssl: { ca: [ca], rejectUnauthorized: true },
     sasl: {
-      mechanism: process.env.KAFKA_MECHANISM || "scram-sha-256",
+      mechanism: process.env.KAFKA_SASL_MECHANISM || process.env.KAFKA_MECHANISM || "scram-sha-256",
       username: process.env.KAFKA_USERNAME,
       password: process.env.KAFKA_PASSWORD,
     },
