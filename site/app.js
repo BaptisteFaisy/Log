@@ -11,20 +11,14 @@ const agentFoot = document.getElementById("agentFoot");
 
 const MAX_ROWS = 160;
 const MAX_AGENTS = 3;
-const AGENT_STEPS = ["analyze", "patch", "verify", "ready"];
-const STEP_NAMES = {
-  analyze: "diagnose",
-  patch: "patch",
-  verify: "verify",
-  ready: "write_memo",
-};
+// Quatre segments dans la carte d'agent : mise en file, agent en cours,
+// verification, rapport recu. Ce sont les etapes REELLES du watcher.
+const AGENT_STEPS = ["queued", "running", "verify", "report"];
 
 const params = new URLSearchParams(window.location.search);
 const metrics = window.LogMetrics;
 const DEMO_WARM = params.get("demo") === "warm";
-const SPEED = DEMO_WARM ? 0.35 : 1;
 const PINNED = params.get("scenario");
-const FAIL = params.get("fail") === "1";
 
 const state = {
   scenario: 0,
@@ -217,7 +211,6 @@ const POLL_MAX_MS = 15 * 60 * 1000;
 
 function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code, run, traceId }) {
   const startedAt = Date.now();
-  let attempts = 0;
 
   const elapsed = () => {
     const s = Math.round((Date.now() - startedAt) / 1000);
@@ -247,7 +240,6 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
   addRow("inf", `trace ${traceId} · attente du watcher (kafka otel.logs → agent local)`);
 
   const poll = async () => {
-    attempts += 1;
     try {
       const response = await fetch(`/api/report?trace_id=${encodeURIComponent(traceId)}`, {
         headers: { Accept: "application/json" },
@@ -255,7 +247,7 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
       });
 
       if (response.status === 404) {
-        // pas encore de rapport : l'agent tourne (ou va demarrer)
+        // Pas encore de rapport : le watcher a pris la trace, l'agent tourne.
         setPhase(1, `running · ${elapsed()}`);
         if (Date.now() - startedAt > POLL_MAX_MS) {
           done(
@@ -280,56 +272,34 @@ function watchRealAgent({ card, entry, segments, stateEl, logTag, logText, code,
         return;
       }
 
-      // rapport recu : c'est la sortie reelle de l'agent
+      // Rapport recu : c'est la sortie REELLE de l'agent, pas une animation.
       const report = String(data.report || "").trim();
+      const ok = data.exit_code === 0;
+      const firstLine = report.split("\n")[0].slice(0, 160);
+      done(
+        ok ? "resolved" : "failed",
+        ok ? "ok" : "err",
+        firstLine || `${data.agent || "agent"} a termine sans texte de rapport · ${code}`,
+        "rapport recu",
+        ok ? "ok" : "err",
+      );
       setPhase(3, "ready");
-      card.dataset.outcome = data.exit_code === 0 ? "resolved" : "failed";
-      logTag.textContent = data.exit_code === 0 ? "ok" : "err";
-      logText.textContent = report
-        ? report.split("\n")[0].slice(0, 160)
-        : `${data.agent || "agent"} a termine sans texte de rapport · ${code}`;
 
-      const pre = document.createElement("pre");
-      pre.className = "card-stack";
-      pre.textContent = report || "(rapport vide)";
-      card.append(pre);
+      if (report) {
+        const pre = document.createElement("pre");
+        pre.className = "card-stack";
+        pre.textContent = report;
+        card.append(pre);
+      }
 
-      addRow("ok", `rapport recu · ${data.agent || "agent"} · ${code} · trace ${traceId}`);
+      addRow("inf", `rapport recu · ${data.agent || "agent"} · ${code} · trace ${traceId}`);
       if (data.session_id) addRow("inf", `session opencode ${data.session_id}`);
-      entry.state = "done";
-      card.dataset.state = "done";
-      setStatus("rapport recu");
-      metrics.endRun(run.run_id, { status: data.exit_code === 0 ? "resolved" : "failed" });
-      updateAgentsMeta();
     } catch (err) {
       done("failed", "err", `suivi interrompu · ${err.message} · ${code}`, "report unavailable", "err");
     }
   };
 
   entry.timers.push(setTimeout(poll, 2500));
-}
-
-/* ------------------------------------------------------------------ */
-/* Simulated tokens - deterministic per fingerprint                     */
-/* ------------------------------------------------------------------ */
-
-function seededRandom(text) {
-  let seed = 2166136261;
-  for (let i = 0; i < text.length; i += 1) seed = Math.imul(seed ^ text.charCodeAt(i), 16777619);
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function simulatedTokens(fingerprint, mode) {
-  const rand = seededRandom(`${fingerprint}|${mode}`);
-  const between = (min, max) => Math.round((min + rand() * (max - min)) / 10) * 10;
-  if (mode === "warm") return { input: between(2000, 6000), output: between(400, 1200) };
-  return { input: between(18000, 42000), output: between(2000, 6000) };
 }
 
 /* ------------------------------------------------------------------ */
@@ -409,6 +379,12 @@ function addErrorCard(error, code, real) {
   setTimeout(() => {
     card.dataset.fresh = "false";
   }, 2000);
+
+  // { blocked: true } : doublon deja explique par fireError(), carte seule.
+  if (real && real.blocked) {
+    updateAgentsMeta();
+    return;
+  }
 
   // Un seul agent par message : si le meme message a deja un agent en cours,
   // on affiche l'erreur mais on ne relance rien.
@@ -532,7 +508,7 @@ async function fireError() {
   const fp = metrics.fingerprint(scenario.code, error.message, error.stack);
   if (state.agents.some((a) => a.state !== "done" && a.fingerprint === fp)) {
     addRow("inf", `agent deja en cours sur ce message · ${scenario.code} · pas de publication`);
-    addErrorCard(error, scenario.code, null);
+    addErrorCard(error, scenario.code, { blocked: true });
     return;
   }
 
@@ -594,12 +570,88 @@ function testDatabase() {
   }, 420);
 }
 
-// Kafka Aiven est deja integre : le bouton reste en etat integre en permanence.
+/* ------------------------------------------------------------------ */
+/* Etat Kafka Aiven : verifie, jamais suppose                          */
+/* ------------------------------------------------------------------ */
+
+/* Le bouton ne passe au vert QU'APRES une reponse reelle du broker a
+   GET /api/logs (api/logs.js -> admin.describeCluster() : TCP + TLS + SASL).
+   Tant que ce n'est pas prouve il reste neutre ; si le broker ne repond plus,
+   il repasse en rouge et la verification se relance toutes les 30 s.
+   Deux echecs consecutifs sont exiges avant de repasser en rouge : une coupure
+   reseau d'un seul aller-retour ne doit pas faire clignoter le bouton. */
+const KAFKA_CHECK = "Kafka Aiven · checking…";
+const KAFKA_DONE = "Kafka Aiven integrated ✓";
+const KAFKA_DOWN = "Kafka Aiven · unreachable";
+const KAFKA_RETRY_MS = 30000;
+
+let kafkaState = "check";
+let kafkaFailures = 0;
+
+function paintKafka(stateName, label, title) {
+  if (!kafkaBtn) return;
+  kafkaState = stateName;
+  kafkaBtn.dataset.state = stateName;
+  kafkaBtn.textContent = label;
+  kafkaBtn.disabled = stateName === "check" || stateName === "done";
+  kafkaBtn.setAttribute("aria-disabled", kafkaBtn.disabled ? "true" : "false");
+  kafkaBtn.title = title || "";
+}
+
+async function verifyKafka(announce) {
+  if (!kafkaBtn) return null;
+  // Deja vert : on ne reaffiche pas « checking… » a chaque controle.
+  if (kafkaState !== "done") {
+    paintKafka("check", KAFKA_CHECK, "Verification du broker Aiven en cours…");
+  }
+
+  let health = null;
+  try {
+    const controller = new AbortController();
+    const guard = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch("/api/logs", {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(guard);
+    health = await response.json().catch(() => null);
+  } catch (error) {
+    health = null;
+  }
+
+  if (health && health.kafka === "up") {
+    kafkaFailures = 0;
+    const seen = new Date().toLocaleTimeString();
+    paintKafka(
+      "done",
+      KAFKA_DONE,
+      `Broker Aiven joint · topic ${health.topic} · ${health.brokers} brokers · verifie a ${seen}`,
+    );
+    if (announce) {
+      addRow("ok", `kafka aiven · verifie · topic ${health.topic} · ${health.brokers} brokers · ack=all`);
+      setStatus("kafka aiven verified");
+    }
+    return health;
+  }
+
+  kafkaFailures += 1;
+  const reason = (health && (health.hint || health.error)) || "pas de reponse de /api/logs";
+  // Premier echec apres un etat vert : on garde le vert et on retente dans 30 s.
+  if (kafkaState === "done" && kafkaFailures < 2) return null;
+
+  paintKafka("down", KAFKA_DOWN, `Kafka injoignable : ${reason}`);
+  if (announce) {
+    addRow("err", `kafka aiven · injoignable · ${reason}`);
+    setStatus("kafka aiven unreachable");
+  }
+  return null;
+}
+
 if (kafkaBtn) {
-  kafkaBtn.dataset.state = "done";
-  kafkaBtn.disabled = true;
-  kafkaBtn.setAttribute("aria-disabled", "true");
-  kafkaBtn.textContent = "Kafka Aiven integrated ✓";
+  kafkaBtn.addEventListener("click", () => verifyKafka(true));
+  verifyKafka(false);
+  setInterval(() => verifyKafka(false), KAFKA_RETRY_MS);
 }
 
 if (dbBtn) dbBtn.addEventListener("click", testDatabase);

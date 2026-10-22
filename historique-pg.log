@@ -103,3 +103,16 @@
     ~/logs/guides-pg-memoire.md (instantane des nouveaux guides, scan de secrets : PROPRE)
   - copies locales alignees : ~/log-site-vercel/api/pg-memoire.js et ~/Log/site/api/pg-memoire.js (8000)
   - aucun secret ecrit, aucune autre table touchee, aucun agent interrompu
+
+2026-10-22T14:40:00+02:00 [agent-opencode] Guides « prochain agent » : langue = anglais (choix de Baptiste)
+  - constat : entre 13:55 et 14:20, un intervenant hors de cette session (deploiements Vercel
+    14:06 et 14:07) a traduit en anglais les guides ET les noms de la table historique
+  - question posee a Baptiste -> reponse : garder l'anglais. Les 4 lignes deja traduites sont
+    conservees telles quelles ; les 7 memos et la ligne #1 sont passes en anglais dans le meme style
+    (TRACE / CAUSE / FIX / CHECK / PITFALL), memes traces, memes commandes, memes chiffres
+  - etat final en base : 5/5 guides historique (889-1133 car.) et 7/7 memos (guide de 1355 a 1976 car.)
+    complets, aucun « ... » de troncature cote site
+  - plafond /api/pg-memoire verifie sur la prod courante (dpl_39qCptpHrW7ZVPskB1TN3xSQbzBr) :
+    CELL_CHARS = CELL_SQL_CHARS = 8000
+  - ~/logs/guides-pg-memoire.md regenere en anglais (scan de secrets : PROPRE)
+  - aucun nom de probleme modifie par moi, aucune autre table touchee
