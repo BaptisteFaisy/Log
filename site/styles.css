@@ -1408,11 +1408,11 @@ body::before {
 .btn-sm { padding: 7px 11px; font-size: 10.5px; box-shadow: 3px 3px 0 var(--line); }
 
 .btn[data-state="done"] {
-  background: var(--ok);
-  color: #fff;
+  background: #5ffa74;
+  color: #0a0a0a;
   border-color: var(--line);
 }
-.btn[data-state="done"]:hover { transform: none; box-shadow: 4px 4px 0 var(--line); }
+.btn[data-state="done"]:hover { background: #8dff9c; transform: none; box-shadow: 4px 4px 0 var(--line); }
 .btn[data-state="done"][disabled] { opacity: 1; }
 
 .terminal,
