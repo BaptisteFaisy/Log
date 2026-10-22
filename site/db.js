@@ -95,10 +95,12 @@
   dialog.append(dialogHead, dialogBody, dialogFoot);
   document.body.append(dialog);
 
-  // Texte mis dans le presse-papiers : la colonne « resolution » si elle existe,
+  // Texte mis dans le presse-papiers : la colonne qui porte la resolution si
+  // elle existe (« resolution » dans historique, « fix » dans error_resolutions),
   // sinon la valeur la plus longue de la ligne.
   let copyText = "";
 
+  const TEXT_COLUMNS = ["resolution", "fix", "cause", "message", "text"];
   const textLength = (value) => (value === null || value === undefined ? 0 : String(value).length);
 
   function renderRow(row) {
@@ -106,9 +108,9 @@
     dialogTitle.textContent = `${row.table} · ${row.primaryKey} ${row.key}`;
 
     const fields = row.columns.map((column, i) => ({ name: column.name, type: column.type, value: row.values[i] }));
-    const resolution = fields.find((field) => field.name === "resolution");
+    const guide = TEXT_COLUMNS.map((name) => fields.find((field) => field.name === name)).find(Boolean);
     const longest = fields.reduce((best, field) => (textLength(field.value) > textLength(best.value) ? field : best), fields[0]);
-    copyText = String((resolution || longest || {}).value || "");
+    copyText = String((guide || longest || {}).value || "");
 
     const blocks = fields.map((field) => {
       const block = el("div", "db-field");

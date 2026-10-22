@@ -1,0 +1,215 @@
+/* ------------------------------------------------------------------ */
+/* Historique — pg-memoire dans la fenêtre Observability (historique.js) */
+/* Tout le reste vient des classes obs-* de styles.css.                  */
+/* ------------------------------------------------------------------ */
+
+.obs-history,
+.obs-history-only { display: none; }
+
+#observabilite[data-view="historique"] .obs-history { display: grid; gap: 12px; }
+#observabilite[data-view="historique"] .btn.obs-history-only { display: inline-flex; }
+#observabilite[data-view="historique"] span.obs-history-only { display: inline; }
+#observabilite[data-view="historique"] .obs-source.obs-history-only { display: inline-block; }
+#observabilite[data-view="historique"] p.obs-history-only { display: block; }
+
+/* Les vues métriques restent rendues par observability.js : elles sont seulement masquées. */
+#observabilite[data-view="historique"] #obsKpis,
+#observabilite[data-view="historique"] #obsSource,
+#observabilite[data-view="historique"] .obs-body > .obs-table-wrap,
+#observabilite[data-view="historique"] .obs-body > .obs-legend,
+#observabilite[data-view="historique"] .obs-toolbar > [data-action],
+#observabilite[data-view="historique"] .obs-titles > p:not(.obs-history-sub) { display: none; }
+
+.obs-history-toggle[aria-pressed="true"],
+.obs-history-tables .btn[aria-pressed="true"] { background: var(--red); }
+
+.obs-history-only[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
+
+/* Choix de la table */
+
+.obs-history-tables {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.obs-history-db {
+  margin: 0 2px 0 10px;
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.obs-history-db:first-child { margin-left: 0; }
+
+.obs-history-tables .btn[data-empty="true"] { color: var(--ink-3); }
+
+/* Cellules longues et détail d'une ligne */
+
+.obs-clamp {
+  display: -webkit-box;
+  max-width: 360px;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.obs-fields {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 3px 14px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.obs-fields dt {
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.obs-fields dd {
+  margin: 0;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Guide pour le prochain agent */
+
+.obs-guide {
+  display: grid;
+  gap: 7px;
+  justify-items: start;
+  min-width: 220px;
+}
+
+.obs-guide .obs-clamp { white-space: pre-line; }
+
+.obs-fields dd.obs-guide-full { font-weight: 700; }
+
+/* Plein écran du guide (un seul <dialog>, style de la fenêtre Observability) */
+
+.obs-guide-dialog {
+  width: min(860px, calc(100vw - 48px));
+  max-width: none;
+  max-height: min(86vh, 900px);
+  padding: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--panel);
+  border: 3px solid var(--line);
+  box-shadow: 9px 9px 0 var(--red), 9px 9px 0 3px var(--line);
+}
+
+.obs-guide-dialog[open] { display: flex; flex-direction: column; }
+
+.obs-guide-dialog::backdrop { background: rgba(10, 10, 10, 0.62); }
+
+.obs-guide-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #fff;
+  background: var(--ink);
+  border-bottom: 3px solid var(--line);
+}
+
+.obs-guide-titles { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
+
+.obs-guide-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.obs-guide-head h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.obs-guide-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.obs-guide-text {
+  margin: 0;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+}
+
+.obs-guide-meta { font-size: 11px; }
+
+.obs-guide-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-top: 3px solid var(--line);
+}
+
+.obs-guide-status {
+  margin-right: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .obs-clamp { max-width: none; }
+  .obs-fields { grid-template-columns: minmax(0, 1fr); }
+  .obs-fields dd { margin-bottom: 4px; }
+
+  /* En cartes, le guide prend toute la largeur. */
+  .obs-table td.obs-cell-guide { grid-column: 1 / -1; }
+  .obs-guide { min-width: 0; }
+
+  .obs-guide-dialog {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    height: 100dvh;
+    max-height: 100%;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .obs-guide-text { font-size: 14px; }
+  .obs-guide-foot { flex-wrap: wrap; }
+  .obs-guide-status { flex: 1 1 100%; }
+}
