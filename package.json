@@ -10,7 +10,8 @@
     "db:schema": "node scripts/apply-schema.mjs",
     "api:test": "node scripts/test-api.cjs",
     "test": "node --test scripts/*.test.mjs",
-    "consumer:reports": "node scripts/consumer-reports.cjs"
+    "consumer:reports": "node scripts/consumer-reports.cjs",
+    "db:status": "node scripts/db-status.cjs"
   },
   "repository": {
     "type": "git",
