@@ -374,6 +374,13 @@ body[data-bg="halo"] .bg-stage::after { opacity: 0.12; }
 
 /* Source reelle des lignes : pending (aucune preuve) | kafka (topic lu) | down.
    Pose par app.js apres GET /api/tail — jamais en dur dans le HTML. */
+.term-right {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  white-space: nowrap;
+}
+
 .term-source {
   display: inline-flex;
   align-items: center;

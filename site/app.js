@@ -588,6 +588,24 @@ const KAFKA_RETRY_MS = 30000;
 let kafkaState = "check";
 let kafkaFailures = 0;
 
+/* ------------------------------------------------------------------ */
+/* Banniere : source reelle des lignes                                 */
+/* ------------------------------------------------------------------ */
+
+/* La banniere du terminal affiche la meme verite que le bouton : « kafka
+   aiven » seulement apres une reponse reelle de GET /api/logs. Elle ne fait
+   aucun appel reseau de son propre chef — elle lit l'etat deja verifie par
+   verifyKafka(), pour ne pas doubler les requetes ni contredire le bouton. */
+const sourceEl = document.getElementById("source");
+
+function paintSource(kind, label, title) {
+  if (!sourceEl) return;
+  sourceEl.dataset.source = kind;
+  const dot = document.createElement("i");
+  sourceEl.replaceChildren(dot, document.createTextNode(label));
+  sourceEl.title = title || "";
+}
+
 function paintKafka(stateName, label, title) {
   if (!kafkaBtn) return;
   kafkaState = stateName;
@@ -603,6 +621,7 @@ async function verifyKafka(announce) {
   // Deja vert : on ne reaffiche pas « checking… » a chaque controle.
   if (kafkaState !== "done") {
     paintKafka("check", KAFKA_CHECK, "Verification du broker Aiven en cours…");
+    paintSource("check", "source · …", "Verification du broker Aiven en cours…");
   }
 
   let health = null;
@@ -628,6 +647,11 @@ async function verifyKafka(announce) {
       KAFKA_DONE,
       `Broker Aiven joint · topic ${health.topic} · ${health.brokers} brokers · verifie a ${seen}`,
     );
+    paintSource(
+      "kafka",
+      `kafka aiven · ${health.topic}`,
+      `Les lignes partent dans Aiven Kafka (topic ${health.topic}, ${health.brokers} brokers, ack=all) · verifie a ${seen}`,
+    );
     if (announce) {
       addRow("ok", `kafka aiven · verifie · topic ${health.topic} · ${health.brokers} brokers · ack=all`);
       setStatus("kafka aiven verified");
@@ -641,6 +665,7 @@ async function verifyKafka(announce) {
   if (kafkaState === "done" && kafkaFailures < 2) return null;
 
   paintKafka("down", KAFKA_DOWN, `Kafka injoignable : ${reason}`);
+  paintSource("down", "kafka aiven · injoignable", `Kafka injoignable : ${reason}`);
   if (announce) {
     addRow("err", `kafka aiven · injoignable · ${reason}`);
     setStatus("kafka aiven unreachable");
