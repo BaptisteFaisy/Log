@@ -42,11 +42,10 @@
     });
   };
 
-  function kpi(label, value, sub, tone) {
+  function kpi(label, value, tone) {
     const card = el("div", "obs-kpi");
     if (tone) card.dataset.tone = tone;
     card.append(el("span", "obs-kpi-label", label), el("strong", "obs-kpi-value", value));
-    if (sub) card.append(el("span", "obs-kpi-sub", sub));
     return card;
   }
 
@@ -64,13 +63,13 @@
     kpisEl.replaceChildren(
       kpi("Median time before", fmtMs(t.median_duration_cold)),
       kpi("Median time after", fmtMs(t.median_duration_warm)),
-      kpi("Time saved", fmtDelta(t.delta_time_pct), `${fmtMs(t.time_saved_ms)} saved`, "gain"),
+      kpi("Time saved", fmtDelta(t.delta_time_pct), "gain"),
       kpi("Median tokens before", tok(t.median_tokens_cold)),
       kpi("Median tokens after", tok(t.median_tokens_warm)),
-      kpi("Tokens saved", fmtDelta(t.delta_tokens_pct), `${fmtTokens(t.tokens_saved)} saved`, "gain"),
-      kpi("Tokens used", tok(t.tokens_total), `${fmtTokens(t.tokens_cold)} cold · ${fmtTokens(t.tokens_warm)} warm`),
-      kpi("Memo hit rate", t.memo_hit_rate == null ? "—" : `${Math.round(t.memo_hit_rate * 100)} %`, `${t.n_warm} warm · ${t.n_warm_degraded} degraded`),
-      kpi("Resolutions", `${t.resolved} / ${t.runs}`, `${t.n_cold} cold · ${t.n_warm} warm · ${t.n_failed} failed`),
+      kpi("Tokens saved", fmtDelta(t.delta_tokens_pct), "gain"),
+      kpi("Tokens used", tok(t.tokens_total)),
+      kpi("Memo hit rate", t.memo_hit_rate == null ? "—" : `${Math.round(t.memo_hit_rate * 100)} %`),
+      kpi("Resolutions", `${t.resolved} / ${t.runs}`),
     );
   }
 

@@ -328,10 +328,9 @@
 
   const wrap = el("div", "obs-table-wrap");
   const tableEl = el("table", "obs-table");
-  const caption = el("caption");
   const thead = el("thead");
   const tbody = el("tbody");
-  tableEl.append(caption, thead, tbody);
+  tableEl.append(thead, tbody);
   wrap.append(tableEl);
 
   const legend = el("p", "obs-legend");
@@ -426,28 +425,14 @@
 
   function renderKpis() {
     const cards = [];
-    const historique = find("historique.historique");
-    const memos = find("historique.error_resolutions");
     const runs = find("historique.agent_runs");
     const logs = find("historique.logs");
-
-    if (historique) {
-      const rows = rowsOf(historique.table);
-      cards.push(kpi("Problèmes connus", String(historique.table.rows), `${sum(rows, "occurrences")} occurrences${sampled(historique.table)}`));
-    }
-
-    if (memos) {
-      const rows = rowsOf(memos.table);
-      cards.push(kpi("Mémos de résolution", String(memos.table.rows), `${sum(rows, "runs")} runs · ${fmtTokens(sum(rows, "tokens_used"))} tokens${sampled(memos.table)}`));
-    }
 
     if (runs) {
       const rows = rowsOf(runs.table);
       const count = (test) => rows.filter(test).length;
-      const hits = count((r) => r.memo_hit === "true");
       cards.push(
         kpi("Runs d'agents", String(runs.table.rows), `${count((r) => r.mode === "cold")} cold · ${count((r) => r.mode === "warm")} warm · ${count((r) => r.status !== "resolved")} failed`),
-        kpi("Memo hit rate", rows.length ? `${Math.round((hits / rows.length) * 100)} %` : "—", `${hits} / ${rows.length} runs`, hits ? "gain" : null),
         kpi("Tokens des runs", fmtTokens(sum(rows, "tokens_total")), `${fmtMs(sum(rows, "duration_ms"))} au total${sampled(runs.table)}`),
       );
     }
@@ -458,13 +443,8 @@
       cards.push(kpi("Logs reçus", String(logs.table.rows), last ? `dernier ${fmtDate(last)}` : "aucun"));
     }
 
-    const all = tables();
-    cards.push(
-      kpi("Lignes", String(all.reduce((total, { table }) => total + table.rows, 0)), `${plural(all.length, "table")} · ${plural(state.data.databases.length, "base")}`),
-      kpi("PostgreSQL", state.data.version || "—", state.data.databases.map((db) => `${db.name} ${db.size || "indisponible"}`).join(" · ")),
-    );
-
     kpisEl.replaceChildren(...cards);
+    kpisEl.hidden = cards.length === 0;
   }
 
   function renderTabs() {
@@ -581,7 +561,6 @@
     const found = find(state.current);
 
     if (!found) {
-      caption.textContent = "pg-memoire";
       thead.replaceChildren();
       tbody.replaceChildren(emptyRow("Aucune table lisible.", 1));
       return;
@@ -590,12 +569,6 @@
     const { db, table } = found;
     const preset = PRESETS[`${db.name}.${table.name}`] || generic(table);
     const columns = preset.columns;
-
-    const bits = [`${db.name}.${table.name}`, plural(table.rows, "ligne")];
-    if (table.rows > table.sample.length) bits.push(`${table.sample.length} plus récentes`);
-    if (table.orderBy) bits.push(`tri ${table.orderBy} ↓`);
-    if (table.hidden.length) bits.push(`colonnes masquées : ${table.hidden.join(", ")}`);
-    caption.textContent = `${bits.join(" · ")}. Cliquez une ligne pour le détail.`;
 
     const head = el("tr");
     columns.forEach((column, i) => {
@@ -639,7 +612,6 @@
   }
 
   function renderStatus(text) {
-    caption.textContent = "pg-memoire";
     thead.replaceChildren();
     kpisEl.replaceChildren();
     tbody.replaceChildren(emptyRow(text, 1));
