@@ -71,3 +71,10 @@
     export 5 fichiers (2 lignes pour une entree creee, 4 apres un append), rejeu du demo idempotent (occurrences=2)
   - livrable : /home/baptistefaisy/PROMPT-AGENT-DEBUG-HISTORIQUE.md (prompt d'usage de l'agent de debug,
     commandes CLI au lieu du SQL, regles, verification) ; l'ancien prompt de construction est marque HISTORIQUE
+2026-10-22T10:00:00+02:00 [agent-opencode] Prompt de l'agent de debug : version finale
+  - PROMPT-AGENT-DEBUG-HISTORIQUE.md reecrit : texte d'origine conserve mot pour mot,
+    seule la partie "comment on fait" est rendue executable (4 commandes du client, refus de set,
+    verification export) -> aucune connaissance SQL requise
+  - 4 commandes verifiees apres reecriture : trouver / get / set / ajouter / exporter (5/5 OK)
+  - export d'une entree enrichie = 4 lignes (nom + resolution + separateur horodate + resolution)
+  - README du repo Log mis a jour et pousse (commit 9d1c19c)
