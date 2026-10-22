@@ -2657,3 +2657,1243 @@
   "missing_topics": [],
   "warnings": []
 }
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-dump-323ffe9b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-42a9978b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-a4a56b93",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-e73a21be",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-dbg3",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-323ffe9b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-42a9978b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-a4a56b93",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-e73a21be",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-dbg3",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-323ffe9b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-37fcf9df",
+      "state": "ConsumerGroupState.PREPARING_REBALANCING"
+    },
+    {
+      "group_id": "otel-watch-dump-42a9978b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-a4a56b93",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-e73a21be",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-dbg3",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-0016b84d",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-323ffe9b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-37fcf9df",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-42a9978b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-915e19fe",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-dump-a4a56b93",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-e73a21be",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-dbg3",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-0016b84d",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-323ffe9b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-37fcf9df",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-42a9978b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-71fb5653",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-915e19fe",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-a4a56b93",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-e73a21be",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-dbg3",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-0016b84d",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-1d5b1f1a",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-323ffe9b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-37fcf9df",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-42a9978b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-431b9023",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-71fb5653",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-915e19fe",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-a4a56b93",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-b5a8f03b",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-dump-e73a21be",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2,
+            1
+          ],
+          "isrs": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1,
+            2
+          ],
+          "isrs": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "159.65.91.108",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "165.232.32.158",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-proof",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-1792653815594-36e9e5",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-site-1792653831624-a0h6ue",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
