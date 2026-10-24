@@ -120240,3 +120240,955 @@ cluster Kafka actif : fallback (46.101.146.123:21505,64.226.91.132:21505,kafka-1
   "missing_topics": [],
   "warnings": []
 }
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+{
+  "ok": true,
+  "bootstrap": "localhost:9092",
+  "topics": {
+    "otel.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel.traces": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 2,
+          "replicas": [
+            2
+          ],
+          "isrs": [
+            2
+          ]
+        }
+      ]
+    },
+    "otel-proof.logs": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel-reports": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    },
+    "otel.metrics": {
+      "partitions": 1,
+      "topic_id": "",
+      "detail": [
+        {
+          "id": 0,
+          "leader": 1,
+          "replicas": [
+            1
+          ],
+          "isrs": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "brokers": [
+    {
+      "id": 1,
+      "host": "46.101.146.123",
+      "port": 21505
+    },
+    {
+      "id": 2,
+      "host": "64.226.91.132",
+      "port": 21505
+    }
+  ],
+  "consumer_groups": [
+    {
+      "group_id": "logsite-fire-test-1792661358858",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-fire-test-1792663279699",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659801694",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792659962108",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "logsite-smoke-1792663287807",
+      "state": "ConsumerGroupState.EMPTY"
+    },
+    {
+      "group_id": "otel-watch-otel",
+      "state": "ConsumerGroupState.STABLE"
+    },
+    {
+      "group_id": "otel-watch-site-reader",
+      "state": "ConsumerGroupState.EMPTY"
+    }
+  ],
+  "expected_topics": [
+    "otel.traces",
+    "otel.logs",
+    "otel.metrics"
+  ],
+  "missing_topics": [],
+  "warnings": []
+}
+%3|1792870007.737|FAIL|rdkafka#producer-1| [thrd:sasl_ssl://46.101.146.123:21505/bootstrap]: sasl_ssl://46.101.146.123:21505/bootstrap: Connect to ipv4#46.101.146.123:21505 failed: No route to host (after 3738ms in state CONNECT)
+%3|1792870007.737|FAIL|rdkafka#producer-1| [thrd:sasl_ssl://64.226.91.132:21505/bootstrap]: sasl_ssl://64.226.91.132:21505/bootstrap: Connect to ipv4#64.226.91.132:21505 failed: No route to host (after 3842ms in state CONNECT)
+%3|1792870010.809|FAIL|rdkafka#producer-1| [thrd:sasl_ssl://46.101.146.123:21505/bootstrap]: sasl_ssl://46.101.146.123:21505/bootstrap: Connect to ipv4#46.101.146.123:21505 failed: No route to host (after 3071ms in state CONNECT, 1 identical error(s) suppressed)
+%3|1792870010.809|FAIL|rdkafka#producer-1| [thrd:sasl_ssl://64.226.91.132:21505/bootstrap]: sasl_ssl://64.226.91.132:21505/bootstrap: Connect to ipv4#64.226.91.132:21505 failed: No route to host (after 3019ms in state CONNECT, 1 identical error(s) suppressed)
+%3|1792870013.955|FAIL|rdkafka#producer-1| [thrd:sasl_ssl://kafka-1687d005-baptiste-c04f.j.aivencloud.com:21505/]: sasl_ssl://kafka-1687d005-baptiste-c04f.j.aivencloud.com:21505/bootstrap: Failed to resolve 'kafka-1687d005-baptiste-c04f.j.aivencloud.com:21505': Name or service not known (after 10008ms in state CONNECT)
+{"ok": false, "error": "kafka_unreachable", "hint": "broker injoignable sur localhost:9092 : KafkaError{code=_TRANSPORT,val=-195,str=\"Failed to get metadata: Local: Broker transport failure\"} -> verifie le service Aiven (avn service get <service>), le port dans components[], les identifiants (KAFKA_USERNAME/KAFKA_PASSWORD) et l'ACL Describe"}
+{"ok": false, "error": "kafka_unreachable", "hint": "broker injoignable sur localhost:9092 : KafkaError{code=_TRANSPORT,val=-195,str=\"Failed to get metadata: Local: Broker transport failure\"} -> verifie le service Aiven (avn service get <service>), le port dans components[], les identifiants (KAFKA_USERNAME/KAFKA_PASSWORD) et l'ACL Describe"}
