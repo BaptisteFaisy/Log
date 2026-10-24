@@ -35,3 +35,25 @@ Toute mise à jour du site https://log-lac-five.vercel.app suit ce chemin unique
    (`git merge-base --is-ancestor baptiste/main HEAD`). Si ce n'est pas le cas,
    intégrer `baptiste/main` (merge/rebase) et résoudre les conflits en
    conservant le travail distant. Jamais de `--force`.
+
+## Code — règles de conception (obligatoires)
+
+- **Aucun fichier de plus de 500 lignes.** Un fichier qui approche la limite se
+  découpe par responsabilité avant d'accueillir du code en plus.
+- **Aucune fonction de plus de 50 lignes.** On extrait des fonctions nommées au
+  lieu d'allonger une fonction existante.
+- **Réutilisabilité maximale.** Chercher l'existant avant d'écrire (`lib/`,
+  `site/lib`, composants, types déjà présents) ; préférer une fonction
+  paramétrable à une copie modifiée. Zéro duplication de logique métier.
+- Si la règle impose un refactor, **le refactor fait partie de la tâche**.
+
+## CI — budget de 5 minutes, jamais dépassé
+
+- **Toute CI doit finir en moins de 5 minutes.** Budget dur, pas indicatif.
+- À poser dès le premier commit de tout nouveau repo : `timeout-minutes: 5`
+  par job (ou équivalent), cache des dépendances (clé = lockfile) + cache de
+  build, jobs indépendants en parallèle (`fail-fast`), matrice réduite à ce
+  qui est réellement testé, aucun job cosmétique.
+- Si la CI approche 5 min : découper, cacher, ou sortir les tests lents
+  (> 60 s) dans un job parallèle. Jamais rallonger le budget.
+- Modèle de départ : `~/.config/opencode/templates/ci-5min.yml`.
